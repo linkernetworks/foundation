@@ -1,15 +1,8 @@
 package logger
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"time"
-
-	"bitbucket.org/linkernetworks/cv-tracker/server/config"
-	"github.com/lestrrat/go-file-rotatelogs"
-	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 // the singleton logger
@@ -17,56 +10,7 @@ var Logger *logrus.Logger
 
 func init() {
 	Logger = logrus.New()
-}
-
-func Setup(cf *config.Config) {
-	Logger.Formatter = &logrus.TextFormatter{
-		DisableSorting:  true,
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02 15:04:05",
-	}
-	logDir := cf.App.LogDir
-	err := os.MkdirAll(logDir, os.ModePerm)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// TODO hook to console and log file
-	// TODO symlink
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s%s.%s", logDir, "/cv-tracker.log", "%Y%m%d"),
-		rotatelogs.WithLinkName(logDir),
-		rotatelogs.WithMaxAge(24*time.Hour),
-		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour),
-	)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	Logger.Hooks.Add(
-		lfshook.NewHook(
-			lfshook.WriterMap{
-				logrus.DebugLevel: writer,
-				logrus.InfoLevel:  writer,
-				logrus.WarnLevel:  writer,
-				logrus.ErrorLevel: writer,
-				logrus.FatalLevel: writer,
-			},
-		),
-	)
-
-	switch cf.App.LogLevel {
-	case "error":
-		Logger.SetLevel(logrus.ErrorLevel)
-	case "warn":
-		Logger.SetLevel(logrus.WarnLevel)
-	case "info":
-		Logger.SetLevel(logrus.InfoLevel)
-	case "debug":
-		Logger.SetLevel(logrus.DebugLevel)
-	default:
-		Logger.SetLevel(logrus.InfoLevel)
-	}
+	Logger.Formatter = new(prefixed.TextFormatter)
 }
 
 func Info(args ...interface{}) {

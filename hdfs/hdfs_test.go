@@ -7,9 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	HadoopTestUserName        = "TEST_HADOOP_USER_NAME"
+	HadoopTestNamenodeAddress = "TEST_HADOOP_NAMENODE_ADDRESS"
+	HadoopTestNamenodePort    = "TEST_HADOOP_NAMENODE_PORT"
+)
+
 func TestNewClientForUser(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
-	client, err := NewClientForUser("35.201.180.4:8020", "root")
+	url := os.Getenv(HadoopTestNamenodeAddress) + ":" + os.Getenv(HadoopTestNamenodePort)
+	client, err := NewClientForUser(url, os.Getenv(HadoopTestUserName))
 	defer client.Close()
 
 	assert.NoError(err)
@@ -17,6 +29,11 @@ func TestNewClientForUser(t *testing.T) {
 }
 
 func TestNewClientForUser_1_error(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
 	client, err := NewClientForUser("", "root")
 
@@ -25,10 +42,15 @@ func TestNewClientForUser_1_error(t *testing.T) {
 }
 
 func TestNewClient_1(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
-	os.Setenv(HadoopUserName, "root")
-	os.Setenv(HadoopNamenodeAddress, "35.201.180.4")
-	os.Setenv(HadoopNamenodePort, "8020")
+	os.Setenv(HadoopUserName, os.Getenv(HadoopTestUserName))
+	os.Setenv(HadoopNamenodeAddress, os.Getenv(HadoopTestNamenodeAddress))
+	os.Setenv(HadoopNamenodePort, os.Getenv(HadoopTestNamenodePort))
 	client, err := NewClient()
 	defer client.Close()
 
@@ -37,9 +59,14 @@ func TestNewClient_1(t *testing.T) {
 }
 
 func TestNewClient_2(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
-	os.Setenv(HadoopUserName, "root")
-	os.Setenv(HadoopNamenodeAddress, "35.201.180.4")
+	os.Setenv(HadoopUserName, os.Getenv(HadoopTestUserName))
+	os.Setenv(HadoopNamenodeAddress, os.Getenv(HadoopTestNamenodeAddress))
 	os.Setenv(HadoopNamenodePort, "")
 	client, err := NewClient()
 
@@ -49,10 +76,15 @@ func TestNewClient_2(t *testing.T) {
 }
 
 func TestNewClient_3(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
-	os.Setenv(HadoopUserName, "root")
+	os.Setenv(HadoopUserName, os.Getenv(HadoopTestUserName))
 	os.Setenv(HadoopNamenodeAddress, "")
-	os.Setenv(HadoopNamenodePort, "8020")
+	os.Setenv(HadoopNamenodePort, os.Getenv(HadoopTestNamenodePort))
 	client, err := NewClient()
 
 	assert.Error(err)
@@ -60,11 +92,16 @@ func TestNewClient_3(t *testing.T) {
 }
 
 func TestNewClient_4(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_HDFS"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	assert := assert.New(t)
 	// client will use the current user as default user
 	os.Setenv(HadoopUserName, "")
-	os.Setenv(HadoopNamenodeAddress, "35.201.180.4")
-	os.Setenv(HadoopNamenodePort, "8020")
+	os.Setenv(HadoopNamenodeAddress, os.Getenv(HadoopTestNamenodeAddress))
+	os.Setenv(HadoopNamenodePort, os.Getenv(HadoopTestNamenodePort))
 	client, err := NewClient()
 
 	assert.NoError(err)

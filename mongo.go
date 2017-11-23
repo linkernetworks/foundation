@@ -40,8 +40,8 @@ func (d *DataStore) C(collection string) *mgo.Collection {
 	return d.Session.DB("").C(collection)
 }
 
-func (d *DataStore) FindOne(collection string, key string, value interface{}, r Record) error {
-	return d.C(collection).Find(bson.M{key: value}).One(r)
+func (d *DataStore) FindOne(collection string, query bson.M, r Record) error {
+	return d.C(collection).Find(query).One(r)
 }
 
 func (d *DataStore) Count(collection string, query interface{}) (n int, err error) {

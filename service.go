@@ -10,7 +10,7 @@ import (
 
 type Service struct {
 	Server  *socketio.Server
-	clients map[string]client
+	clients map[string]*client
 }
 
 func NewService() *Service {
@@ -20,7 +20,7 @@ func NewService() *Service {
 	}
 	return &Service{
 		Server:  io,
-		clients: map[string]client{},
+		clients: map[string]*client{},
 	}
 }
 
@@ -30,47 +30,52 @@ type client struct {
 	expiredAt  int64
 	pubSubConn *redis.PubSubConn
 	toEvent    string
+	closed     bool
 }
 
-func (s *Service) NewClientSubscription(socket socketio.Socket, psc *redis.PubSubConn, toEvent string) {
-	client := client{
+// Create client with a given token. Front-End can recover client with ths same token
+func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redis.PubSubConn, toEvent string) {
+	client := &client{
 		socket:     socket,
-		expiredAt:  time.Now().Unix() + 3600,
+		expiredAt:  time.Now().Unix() + 5*60,
 		pubSubConn: psc,
 		toEvent:    toEvent,
+		closed:     false,
 	}
-	s.clients[socket.Id()] = client
+	client.channel = make(chan string, 10)
+	s.clients[token] = client
 
 	go client.pipe() // from redis to chan
 	go client.emit() // to socket event
 }
 
-func (s *Service) Reconnect(socket socketio.Socket, oldClientId string) error {
-	if existedClient, ok := s.clients[oldClientId]; ok {
+func (s *Service) Reconnect(socket socketio.Socket, token string) error {
+	if existedClient, ok := s.clients[token]; ok {
 		// Replace disconnected socket with new socket
 		existedClient.socket = socket
 	} else {
-		msg := fmt.Sprint("Try to reconnect previous client: %s but not found.", oldClientId)
+		msg := fmt.Sprintf("Try to reconnect previous client token: %s but not found.", token)
 		return errors.New(msg)
 	}
 	return nil
 }
 
-func (s *Service) Subscribe(clientId string, topic string) error {
-	if _, ok := s.clients[clientId]; !ok {
-		msg := fmt.Sprint("Client: %s not found and can't subscribe.", clientId)
+func (s *Service) Subscribe(token string, topic string) error {
+	client, ok := s.clients[token]
+	if !ok {
+		msg := fmt.Sprintf("Client token: %s not found and can't subscribe.", token)
 		return errors.New(msg)
 	}
-	s.clients[clientId].pubSubConn.Subscribe(topic)
-	return nil
+	return client.pubSubConn.Subscribe(topic)
 }
 
-func (s *Service) UnSubscribe(clientId string, topic string) error {
-	if _, ok := s.clients[clientId]; !ok {
-		msg := fmt.Sprint("Client: %s not found and can't unsubscribe.", clientId)
+func (s *Service) UnSubscribe(token string, topic string) error {
+	client, ok := s.clients[token]
+	if !ok {
+		msg := fmt.Sprintf("Client token: %s not found and can't unsubscribe.", token)
 		return errors.New(msg)
 	}
-	return s.clients[clientId].pubSubConn.Unsubscribe(topic)
+	return client.pubSubConn.Unsubscribe(topic)
 }
 
 // pipe from redis pubsubconn to chan
@@ -80,13 +85,13 @@ func (c *client) pipe() error {
 		case redis.Message:
 			c.channel <- string(v.Data)
 			//TODO use logger instead
-			fmt.Sprintf("REDIS: received message %s: %s\n", v.Channel, v.Data)
+			fmt.Printf("REDIS: received message %s: %s\n", v.Channel, v.Data)
 		case redis.Subscription:
 			// v.Kind could be "subscribe", "unsubscribe" ...
-			fmt.Sprintf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
+			fmt.Printf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
 		// when the connection is closed, redigo returns an error "connection closed" here
 		case error:
-			fmt.Sprintf("REDIS: pubsub error, exiting:", v)
+			fmt.Printf("REDIS: pubsub error, exiting:", v)
 			return v
 		}
 	}
@@ -98,7 +103,7 @@ func (c *client) pipe() error {
 func (c *client) emit() {
 	for msg := range c.channel {
 		if err := c.socket.Emit(c.toEvent, msg); err != nil {
-			fmt.Println(err.Error())
+			fmt.Printf("REDIS: emit error. %s", err.Error())
 		}
 	}
 }
@@ -108,17 +113,26 @@ func (s *Service) Close(clientId string) error {
 	if err := client.pubSubConn.Close(); err != nil {
 		return err
 	}
-	close(client.channel)
 
+	if client.closed {
+		return nil
+	}
+
+	close(client.channel)
 	delete(s.clients, clientId)
+	client.pubSubConn.Close()
+	client.socket.Disconnect()
+	client.closed = true
+
 	return nil
 }
 
 func (s *Service) CleanUp() error {
 	now := time.Now().Unix()
-	for id, client := range s.clients {
+	for token, client := range s.clients {
 		if client.expiredAt < now {
-			if err := s.Close(id); err != nil {
+			fmt.Println("Clean up socket clients")
+			if err := s.Close(token); err != nil {
 				return err
 			}
 		}
@@ -126,7 +140,12 @@ func (s *Service) CleanUp() error {
 	return nil
 }
 
-func (s *Service) Refresh(clientId string) {
-	client := s.clients[clientId]
-	client.expiredAt = time.Now().Unix() + 3600
+func (s *Service) Refresh(clientId string) error {
+	client, ok := s.clients[clientId]
+	if !ok {
+		msg := fmt.Sprint("Client: %s not found and can't refresh.", clientId)
+		return errors.New(msg)
+	}
+	client.expiredAt = time.Now().Unix() + 5*60
+	return nil
 }

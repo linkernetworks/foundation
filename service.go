@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"errors"
 	"fmt"
 	redis "github.com/garyburd/redigo/redis"
 	socketio "github.com/googollee/go-socket.io"
@@ -44,11 +45,31 @@ func (s *Service) NewClientSubscription(socket socketio.Socket, psc *redis.PubSu
 	go client.emit() // to socket event
 }
 
+func (s *Service) Reconnect(socket socketio.Socket, oldClientId string) error {
+	if existedClient, ok := s.clients[oldClientId]; ok {
+		// Replace disconnected socket with new socket
+		existedClient.socket = socket
+	} else {
+		msg := fmt.Sprint("Try to reconnect previous client: %s but not found.", oldClientId)
+		return errors.New(msg)
+	}
+	return nil
+}
+
 func (s *Service) Subscribe(clientId string, topic string) error {
-	return s.clients[clientId].pubSubConn.Subscribe(topic)
+	if _, ok := s.clients[clientId]; !ok {
+		msg := fmt.Sprint("Client: %s not found and can't subscribe.", clientId)
+		return errors.New(msg)
+	}
+	s.clients[clientId].pubSubConn.Subscribe(topic)
+	return nil
 }
 
 func (s *Service) UnSubscribe(clientId string, topic string) error {
+	if _, ok := s.clients[clientId]; !ok {
+		msg := fmt.Sprint("Client: %s not found and can't unsubscribe.", clientId)
+		return errors.New(msg)
+	}
 	return s.clients[clientId].pubSubConn.Unsubscribe(topic)
 }
 

@@ -13,7 +13,10 @@ func FormatOutputToJson(r *client.Response) (JsonOutput, error) {
 	out := JsonOutput{}
 	if len(r.Results) > 1 || len(r.Results[0].Series) > 1 {
 		return out, errors.New("Format failed. Response has more than one Result or Series")
+	} else if len(r.Results) == 0 || len(r.Results[0].Series) == 0 {
+		return out, nil
 	}
+
 	series := r.Results[0].Series[0]
 	columns := series.Columns
 

@@ -38,7 +38,8 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 	// try find existed client with token, generate new client if not found
 	if existedClient, ok := s.clients[token]; !ok {
 		// Create new client
-		fmt.Printf("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
+		//TODO import logger
+		// fmt.Printf("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
 		client := &client{
 			socket:     socket,
 			expiredAt:  time.Now().Unix() + 5*60,
@@ -84,7 +85,7 @@ func (c *client) pipe() error {
 		case redis.Message:
 			c.channel <- string(v.Data)
 			//TODO use logger instead
-			fmt.Printf("REDIS: received message channel: %s message: %s\n", v.Channel, v.Data)
+			// fmt.Printf("REDIS: received message channel: %s message: %s\n", v.Channel, v.Data)
 		case redis.Subscription:
 			// v.Kind could be "subscribe", "unsubscribe" ...
 			fmt.Printf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
@@ -105,7 +106,6 @@ func (c *client) emit() {
 			// FIXME emit EOF
 			//fmt.Printf("REDIS: emit error. %s \n", err.Error())
 		}
-		fmt.Printf("REDIS: emit message %s to event %s \n", msg, c.toEvent)
 	}
 }
 
@@ -132,7 +132,6 @@ func (s *Service) CleanUp() error {
 	now := time.Now().Unix()
 	for token, client := range s.clients {
 		if client.expiredAt < now {
-			fmt.Println("Clean up socket clients")
 			if err := s.Close(token); err != nil {
 				return err
 			}
@@ -142,6 +141,10 @@ func (s *Service) CleanUp() error {
 }
 
 func (s *Service) Refresh(clientId string) error {
+	if len(clientId) == 0 {
+		msg := fmt.Sprint("Token is empty. Can't refresh.")
+		return errors.New(msg)
+	}
 	client, ok := s.clients[clientId]
 	if !ok {
 		msg := fmt.Sprint("Client: %s not found and can't refresh.", clientId)

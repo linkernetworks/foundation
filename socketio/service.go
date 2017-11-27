@@ -35,12 +35,8 @@ type client struct {
 
 // Create client with a given token. Front-End can recover client with ths same token
 func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redis.PubSubConn, toEvent string) {
-	// if token already exist, replace disconnected socket with new socket
-	if existedClient, ok := s.clients[token]; ok {
-		fmt.Printf("WS a client socketId: %s reconnected with token %s.\n", socket.Id(), token)
-		existedClient.socket = socket
-
-	} else {
+	// try find existed client with token, generate new client if not found
+	if existedClient, ok := s.clients[token]; !ok {
 		// Create new client
 		fmt.Printf("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
 		client := &client{
@@ -55,6 +51,11 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 
 		go client.pipe() // from redis to chan
 		go client.emit() // to socket event
+
+	} else {
+		// if token already exist, replace disconnected socket with new socket
+		fmt.Printf("WS a client socketId: %s reconnected with token %s.\n", socket.Id(), token)
+		existedClient.socket = socket
 	}
 }
 
@@ -101,7 +102,8 @@ func (c *client) pipe() error {
 func (c *client) emit() {
 	for msg := range c.channel {
 		if err := c.socket.Emit(c.toEvent, msg); err != nil {
-			fmt.Printf("REDIS: emit error. %s \n", err.Error())
+			// FIXME emit EOF
+			//fmt.Printf("REDIS: emit error. %s \n", err.Error())
 		}
 		fmt.Printf("REDIS: emit message %s to event %s \n", msg, c.toEvent)
 	}

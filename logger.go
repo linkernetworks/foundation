@@ -18,10 +18,15 @@ var Logger *logrus.Logger
 
 func init() {
 	Logger = logrus.New()
-	Logger.Formatter = new(prefixed.TextFormatter)
 }
 
-func New(c config.LoggerConfig) *logrus.Logger {
+func Setup(c config.LoggerConfig) {
+	configure(Logger, c)
+}
+
+func configure(logger *logrus.Logger, c config.LoggerConfig) {
+	logger.Formatter = new(prefixed.TextFormatter)
+
 	// preparing log dir
 	dir := c.Dir
 
@@ -56,7 +61,7 @@ func New(c config.LoggerConfig) *logrus.Logger {
 		log.Panic(err)
 	}
 
-	Logger.Hooks.Add(
+	logger.Hooks.Add(
 		lfshook.NewHook(
 			lfshook.WriterMap{
 				logrus.DebugLevel: writer,
@@ -70,18 +75,22 @@ func New(c config.LoggerConfig) *logrus.Logger {
 
 	switch c.Level {
 	case "error":
-		Logger.SetLevel(logrus.ErrorLevel)
+		logger.SetLevel(logrus.ErrorLevel)
 	case "warn":
-		Logger.SetLevel(logrus.WarnLevel)
+		logger.SetLevel(logrus.WarnLevel)
 	case "info":
-		Logger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(logrus.InfoLevel)
 	case "debug":
-		Logger.SetLevel(logrus.DebugLevel)
+		logger.SetLevel(logrus.DebugLevel)
 	default:
-		Logger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(logrus.InfoLevel)
 	}
+}
 
-	return Logger
+func New(c config.LoggerConfig) *logrus.Logger {
+	var logger = logrus.New()
+	configure(logger, c)
+	return logger
 }
 
 func Info(args ...interface{}) {

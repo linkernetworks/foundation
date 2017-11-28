@@ -16,12 +16,19 @@ import (
 // the singleton logger
 var Logger *logrus.Logger
 
-func init() {
-	Logger = logrus.New()
+// Setup Logger in packge. Enable Logger after import
+func Setup(c config.LoggerConfig) {
+	if Logger == nil {
+		Logger = logrus.New()
+		configure(Logger, c)
+	}
 }
 
-func Setup(c config.LoggerConfig) {
-	configure(Logger, c)
+// New a logger in scope
+func New(c config.LoggerConfig) *logrus.Logger {
+	var logger = logrus.New()
+	configure(logger, c)
+	return logger
 }
 
 func configure(logger *logrus.Logger, c config.LoggerConfig) {
@@ -85,12 +92,6 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 	default:
 		logger.SetLevel(logrus.InfoLevel)
 	}
-}
-
-func New(c config.LoggerConfig) *logrus.Logger {
-	var logger = logrus.New()
-	configure(logger, c)
-	return logger
 }
 
 func Info(args ...interface{}) {

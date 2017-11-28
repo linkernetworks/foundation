@@ -1,15 +1,13 @@
 package logger
 
-import "testing"
+import (
+	"github.com/sirupsen/logrus"
+	"testing"
+)
 
-func TestInfo(t *testing.T) {
-	Info("test")
-}
-
-func TestInfoln(t *testing.T) {
-	Infoln("test", "line2")
-}
-
-func TestDebug(t *testing.T) {
-	Debug("test", "line2")
+func TestLogger(t *testing.T) {
+	logger := logrus.New()
+	logger.Info("test")
+	logger.Infoln("test", "line2")
+	logger.Debug("test", "line2")
 }

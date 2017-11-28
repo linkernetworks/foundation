@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"bitbucket.org/linkernetworks/cv-tracker/src/logger"
 	"errors"
 	"fmt"
 	redis "github.com/garyburd/redigo/redis"
@@ -38,8 +39,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 	// try find existed client with token, generate new client if not found
 	if existedClient, ok := s.clients[token]; !ok {
 		// Create new client
-		//TODO import logger
-		// fmt.Printf("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
+		logger.Infof("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
 		client := &client{
 			socket:     socket,
 			expiredAt:  time.Now().Unix() + 5*60,
@@ -55,7 +55,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 
 	} else {
 		// if token already exist, replace disconnected socket with new socket
-		fmt.Printf("WS a client socketId: %s reconnected with token %s.\n", socket.Id(), token)
+		logger.Infof("WS a client socketId: %s reconnected with token %s.\n", socket.Id(), token)
 		existedClient.socket = socket
 	}
 }
@@ -84,14 +84,13 @@ func (c *client) pipe() error {
 		switch v := c.pubSubConn.Receive().(type) {
 		case redis.Message:
 			c.channel <- string(v.Data)
-			//TODO use logger instead
-			// fmt.Printf("REDIS: received message channel: %s message: %s\n", v.Channel, v.Data)
+			logger.Debugf("REDIS: received message channel: %s message: %s\n", v.Channel, v.Data)
 		case redis.Subscription:
 			// v.Kind could be "subscribe", "unsubscribe" ...
-			fmt.Printf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
+			logger.Debugf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
 		// when the connection is closed, redigo returns an error "connection closed" here
 		case error:
-			fmt.Printf("REDIS: pubsub error, exiting:", v)
+			logger.Error("REDIS: pubsub error, exiting:", v)
 			return v
 		}
 	}
@@ -104,7 +103,7 @@ func (c *client) emit() {
 	for msg := range c.channel {
 		if err := c.socket.Emit(c.toEvent, msg); err != nil {
 			// FIXME emit EOF
-			//fmt.Printf("REDIS: emit error. %s \n", err.Error())
+			// logger.Errorf("REDIS: emit error. %s \n", err.Error())
 		}
 	}
 }

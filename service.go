@@ -100,10 +100,14 @@ Pipe:
 			case redis.Subscription:
 				// v.Kind could be "subscribe", "unsubscribe" ...
 				logger.Debugf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
+				if v.Count == 0 {
+					return nil
+				}
 			// when the connection is closed, redigo returns an error "connection closed" here
 			case error:
 				logger.Error("REDIS: ", v)
-				return v
+				//	return v
+				break Pipe
 			}
 		}
 	}
@@ -120,10 +124,9 @@ Emit:
 			logger.Debug("SOCKET: channel recieve close signal")
 			c.stopEmit <- true
 			break Emit
+
 		case msg := <-c.channel:
-			// stop signal
 			if err := c.socket.Emit(c.toEvent, msg); err != nil {
-				// FIXME emit EOF
 				logger.Errorf("SOCKET: emit error. %s \n", err.Error())
 			}
 		}
@@ -139,11 +142,11 @@ func (s *Service) CleanUp() error {
 
 		} else if client.closed {
 			logger.Debugf("SOCKET: closing client token: %s. Active clients: %v", token, len(s.clients))
+
 			client.Stop()
-			if err := client.pubSubConn.Close(); err != nil {
+			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error(err)
 			}
-			// send stop signal to break pipe
 			client.socket.Disconnect()
 			close(client.channel)
 			delete(s.clients, token)

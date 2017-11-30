@@ -39,11 +39,11 @@ func NewClient() (*hdfs.Client, error) {
 }
 
 func NewClientForUser(address string, user string) (*hdfs.Client, error) {
-	if len(address) < 0 {
+	if address == "" {
 		logger.Errorf("address: can't be empty!")
 		return nil, errors.New("address: can't be empty!")
 	}
-	if len(user) < 0 {
+	if user == "" {
 		logger.Errorf("user: can't be empty!")
 		return nil, errors.New("user: can't be empty!")
 	}

@@ -15,29 +15,6 @@ const (
 	HadoopNamenodePort    = "HADOOP_NAMENODE_PORT"
 )
 
-func NewClient() (*hdfs.Client, error) {
-	if len(os.Getenv(HadoopUserName)) < 0 {
-		logger.Error("Env: HADOOP_USER_NAME isn't set!")
-		return nil, errors.New("Env: HADOOP_USER_NAME isn't set!")
-	}
-	if len(os.Getenv(HadoopNamenodeAddress)) < 0 {
-		logger.Errorf("Env: HADOOP_NAMENODE_ADDRESS isn't set!")
-		return nil, errors.New("Env: HADOOP_NAMENODE_ADDRESS isn't set!")
-	}
-	if len(os.Getenv(HadoopNamenodePort)) < 0 {
-		logger.Errorf("Env: HADOOP_NAMENODE_PORT isn't set!")
-		return nil, errors.New("Env: HADOOP_NAMENODE_PORT isn't set!")
-	}
-
-	address := os.Getenv(HadoopNamenodeAddress) + ":" + os.Getenv(HadoopNamenodePort)
-	user := os.Getenv(HadoopUserName)
-
-	logger.Infof("Connect to hdfs address: %s, with user: %s", address, user)
-
-	client, error := hdfs.NewForUser(address, user)
-	return client, error
-}
-
 func NewClientForUser(address string, user string) (*hdfs.Client, error) {
 	if address == "" {
 		logger.Errorf("address: can't be empty!")

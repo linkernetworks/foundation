@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"bitbucket.org/linkernetworks/cv-tracker/src/logger"
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"github.com/colinmarc/hdfs"
 )
 

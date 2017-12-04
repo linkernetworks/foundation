@@ -1,7 +1,7 @@
 package socketio
 
 import (
-	"bitbucket.org/linkernetworks/cv-tracker/src/logger"
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"fmt"
 	redis "github.com/garyburd/redigo/redis"

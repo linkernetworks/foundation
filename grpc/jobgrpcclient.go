@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	pb "bitbucket.org/linkernetworks/cv-tracker/src/grpc/messages"
+	pb "bitbucket.org/linkernetworks/aurora/src/grpc/messages"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

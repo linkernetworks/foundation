@@ -2,6 +2,7 @@ package session
 
 import (
 	"github.com/boj/redistore"
+	"github.com/gorilla/securecookie"
 )
 
 var Service *service
@@ -16,29 +17,30 @@ type configuration struct {
 	Network  string
 	Address  string
 	Password string
-	KeyPairs []byte
+	KeyPair  []byte
+	MaxAge   int
 }
 
-func NewService(size int, network string, address string, password string, keyPairs []byte) error {
+func NewService(size int, network string, address string, password string, sessionAge int) error {
+	keyPair := securecookie.GenerateRandomKey(32)
 	config := &configuration{
 		Size:     size,
 		Network:  network,
 		Address:  address,
 		Password: password,
-		KeyPairs: keyPairs,
+		KeyPair:  keyPair,
+		MaxAge:   sessionAge,
 	}
-	store, err := redistore.NewRediStore(size, network, address, password, keyPairs)
+	store, err := redistore.NewRediStore(size, network, address, password, keyPair)
 	if err != nil {
 		return err
 	}
+
 	Service = &service{
 		Config: config,
 		Store:  store,
 	}
-
-	// age in second
-	// TODO config
-	Service.Store.SetMaxAge(3600 * 30)
-
+	// session age in second
+	Service.Store.SetMaxAge(sessionAge)
 	return nil
 }

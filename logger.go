@@ -6,7 +6,7 @@ import (
 	"path"
 	"time"
 
-	"bitbucket.org/linkernetworks/cv-tracker/server/config"
+	"bitbucket.org/linkernetworks/aurora/server/config"
 	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"

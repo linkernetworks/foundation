@@ -2,7 +2,6 @@ package session
 
 import (
 	"github.com/boj/redistore"
-	"github.com/gorilla/securecookie"
 )
 
 var Service *service
@@ -22,7 +21,7 @@ type configuration struct {
 }
 
 func NewService(size int, network string, address string, password string, sessionAge int) error {
-	keyPair := securecookie.GenerateRandomKey(32)
+	keyPair := []byte("secret-key")
 	config := &configuration{
 		Size:     size,
 		Network:  network,

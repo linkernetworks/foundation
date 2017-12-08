@@ -16,12 +16,16 @@ import (
 // the singleton logger
 var Logger *logrus.Logger
 
+func init() {
+	Logger = logrus.New()
+}
+
 // Setup Logger in packge. Enable Logger after import
 func Setup(c config.LoggerConfig) {
 	if Logger == nil {
 		Logger = logrus.New()
-		configure(Logger, c)
 	}
+	configure(Logger, c)
 }
 
 // New a logger in scope

@@ -30,7 +30,9 @@ func TestReadLocalConfig(t *testing.T) {
 func TestReadTestingHdfsConfig(t *testing.T) {
 	configPath := "../../config/testing.json"
 	cf := Read(configPath)
-	assert.Equal(t, "35.201.180.4", cf.Hdfs.Host)
-	assert.Equal(t, 8020, cf.Hdfs.Port)
-	assert.Equal(t, "root", cf.Hdfs.Username)
+	if cf.Hdfs != nil {
+		assert.Equal(t, "35.201.180.4", cf.Hdfs.Host)
+		assert.Equal(t, 8020, cf.Hdfs.Port)
+		assert.Equal(t, "root", cf.Hdfs.Username)
+	}
 }

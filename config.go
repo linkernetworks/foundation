@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"bitbucket.org/linkernetworks/aurora/server/netutils"
+	"bitbucket.org/linkernetworks/aurora/src/netutils"
 )
 
 type ServiceConfig interface {

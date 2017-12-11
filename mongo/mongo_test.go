@@ -11,18 +11,18 @@ func (t TestRecord) GetCollection() string {
 	return collection
 }
 
-// func TestDataStoreCRUD(t *testing.T) {
+// func TestContextCRUD(t *testing.T) {
 // 	assert := assert.New(t)
 
 // 	cf := config.Read("../config/testing.json")
 // 	as := NewServiceProviderFromConfig(cf)
 
-// 	dataStore := as.Mongo.NewDataStore()
-// 	defer dataStore.Close()
-// 	assert.NotNil(dataStore, "DataStore should not be nil after service provider")
-// 	assert.NotNil(dataStore.Session, "DataStore session should not be nil after service provider")
+// 	context := as.Mongo.NewContext()
+// 	defer context.Close()
+// 	assert.NotNil(context, "Context should not be nil after service provider")
+// 	assert.NotNil(context.Session, "Context session should not be nil after service provider")
 
-// 	count, err := dataStore.Count(collection, bson.M{})
+// 	count, err := context.Count(collection, bson.M{})
 // 	assert.NoError(err)
 // 	assert.Equal(0, count, "Count empty collection should return 0")
 
@@ -30,13 +30,13 @@ func (t TestRecord) GetCollection() string {
 // 		Test: "test-content",
 // 	}
 
-// 	err = dataStore.Insert(collection, record)
+// 	err = context.Insert(collection, record)
 // 	assert.NoError(err)
 
-// 	count, err = dataStore.Count(collection, bson.M{})
+// 	count, err = context.Count(collection, bson.M{})
 // 	assert.NoError(err)
 // 	assert.Equal(1, count, "Count collection should return 1 after insert")
 
-// 	err = dataStore.DropCollection(collection)
+// 	err = context.DropCollection(collection)
 // 	assert.NoError(err)
 // }

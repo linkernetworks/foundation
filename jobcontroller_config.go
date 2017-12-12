@@ -1,7 +1,8 @@
 package config
 
 import (
-	"fmt"
+	"net"
+	"strconv"
 	"time"
 )
 
@@ -13,6 +14,6 @@ type JobControllerConfig struct {
 	TickerSec         time.Duration               `json:"tickerSec"`
 }
 
-func (c *JobControllerConfig) ServerAddr() string {
-	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+func (c *JobControllerConfig) Addr() string {
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }

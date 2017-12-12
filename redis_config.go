@@ -38,6 +38,6 @@ func (c *RedisConfig) GetPublic() ServiceConfig {
 	return c.Public
 }
 
-func (c *RedisConfig) URL() string {
+func (c *RedisConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }

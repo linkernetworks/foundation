@@ -1,6 +1,9 @@
 package config
 
-import "net"
+import (
+	"net"
+	"strconv"
+)
 
 type GearmanConfig struct {
 	Host      string         `json:"host"`

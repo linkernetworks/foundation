@@ -1,6 +1,9 @@
 package config
 
-import "net"
+import (
+	"net"
+	"strconv"
+)
 
 type MemcachedConfig struct {
 	Host      string           `json:"host"`

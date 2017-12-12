@@ -5,7 +5,8 @@ import (
 )
 
 type InfluxdbService struct {
-	Url string
+	Url      string
+	Database string
 }
 
 func (i *InfluxdbService) NewClient() (client.Client, error) {

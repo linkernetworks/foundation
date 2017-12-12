@@ -20,8 +20,8 @@ type configuration struct {
 	MaxAge   int
 }
 
-func NewService(size int, network string, address string, password string, sessionAge int) error {
-	keyPair := []byte("secret-key")
+func NewService(size int, network string, address string, password string, sessionAge int, secret string) error {
+	keyPair := []byte(secret)
 	config := &configuration{
 		Size:     size,
 		Network:  network,

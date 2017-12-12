@@ -1,5 +1,7 @@
 package config
 
+import "net"
+
 type MemcachedConfig struct {
 	Host      string           `json:"host"`
 	Port      int              `json:"port"`
@@ -31,4 +33,8 @@ func (c *MemcachedConfig) GetInterface() string {
 
 func (c *MemcachedConfig) GetPublic() ServiceConfig {
 	return c.Public
+}
+
+func (c *MemcachedConfig) Addr() string {
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }

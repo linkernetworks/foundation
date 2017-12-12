@@ -1,6 +1,7 @@
 package config
 
 type HdfsConfig struct {
+	Enabled   bool        `json:"enabled"`
 	Host      string      `json:"host"`
 	Port      int         `json:"port"`
 	Username  string      `json:"username"`

@@ -81,11 +81,11 @@ func (d *Context) UpdateById(collection string, id bson.ObjectId, update interfa
 	return d.C(collection).UpdateId(id, update)
 }
 
-func (d *Context) Delete(collection string, key string, value interface{}) error {
+func (d *Context) Remove(collection string, key string, value interface{}) error {
 	return d.C(collection).Remove(bson.M{key: value})
 }
 
-func (d *Context) DeleteAll(collection string) (*mgo.ChangeInfo, error) {
+func (d *Context) RemoveAll(collection string) (*mgo.ChangeInfo, error) {
 	return d.C(collection).RemoveAll(bson.M{})
 }
 

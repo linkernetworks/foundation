@@ -30,7 +30,7 @@ func (c *RedisConfig) LoadDefaults() error {
 		c.Port = 6379
 	}
 	if c.Host == "" {
-		c.host = "localhost"
+		c.Host = "localhost"
 	}
 	return nil
 }

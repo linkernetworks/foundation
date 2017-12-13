@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"net"
 	"strconv"
 	"time"
@@ -24,11 +23,4 @@ func (c *JobControllerConfig) LoadDefaults() error {
 
 func (c *JobControllerConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c *JobControllerConfig) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, c); err != nil {
-		return err
-	}
-	return c.LoadDefaults()
 }

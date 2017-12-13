@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"net"
 	"strconv"
 )
@@ -46,11 +45,4 @@ func (c *RedisConfig) GetPublic() ServiceConfig {
 
 func (c *RedisConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c *RedisConfig) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, c); err != nil {
-		return err
-	}
-	return c.LoadDefaults()
 }

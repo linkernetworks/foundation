@@ -24,10 +24,11 @@ func (c *MemcachedConfig) SetPort(port int) {
 	c.Port = port
 }
 
-func (c *MemcachedConfig) LoadDefaults() {
+func (c *MemcachedConfig) LoadDefaults() error {
 	if c.Port == 0 {
 		c.Port = 11211
 	}
+	return nil
 }
 
 func (c *MemcachedConfig) GetInterface() string {

@@ -25,7 +25,7 @@ func (c *HdfsConfig) SetUsername(username string) {
 	c.Username = username
 }
 
-func (c *HdfsConfig) LoadDefaults() {
+func (c *HdfsConfig) LoadDefaults() error {
 	if c.Port == 0 {
 		c.Port = 8020
 	}
@@ -33,6 +33,7 @@ func (c *HdfsConfig) LoadDefaults() {
 	if len(c.Username) == 0 {
 		c.Username = "root"
 	}
+	return nil
 }
 
 func (c *HdfsConfig) GetInterface() string {

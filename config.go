@@ -17,7 +17,7 @@ type ServiceConfig interface {
 	GetInterface() string
 	Unresolved() bool
 	GetPublic() ServiceConfig
-	LoadDefaults()
+	LoadDefaults() error
 }
 
 type Config struct {

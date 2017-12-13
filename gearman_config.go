@@ -24,13 +24,14 @@ func (c *GearmanConfig) SetPort(port int) {
 	c.Port = port
 }
 
-func (c *GearmanConfig) LoadDefaults() {
+func (c *GearmanConfig) LoadDefaults() error {
 	if c.Host == "" {
 		c.Host = "localhost"
 	}
 	if c.Port == 0 {
 		c.Port = 4730
 	}
+	return nil
 }
 
 func (c *GearmanConfig) GetInterface() string {

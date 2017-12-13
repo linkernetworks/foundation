@@ -18,6 +18,7 @@ func (c *JobControllerConfig) LoadDefaults() error {
 	if c.Port == 0 {
 		c.Port = 50051
 	}
+	return nil
 }
 
 func (c *JobControllerConfig) Addr() string {

@@ -25,13 +25,14 @@ func (c *RedisConfig) SetPort(port int) {
 }
 
 // Implement DefaultLoader
-func (c *RedisConfig) LoadDefaults() {
+func (c *RedisConfig) LoadDefaults() error {
 	if c.Port == 0 {
 		c.Port = 6379
 	}
 	if c.Host == "" {
 		c.host = "localhost"
 	}
+	return nil
 }
 
 func (c *RedisConfig) GetInterface() string {

@@ -15,8 +15,8 @@ type JobControllerConfig struct {
 }
 
 func (c *JobControllerConfig) LoadDefaults() error {
-	if c.JobController.Port == 0 {
-		c.JobController.Port = 50051
+	if c.Port == 0 {
+		c.Port = 50051
 	}
 }
 

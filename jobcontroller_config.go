@@ -14,6 +14,12 @@ type JobControllerConfig struct {
 	TickerSec         time.Duration               `json:"tickerSec"`
 }
 
+func (c *JobControllerConfig) LoadDefaults() error {
+	if c.JobController.Port == 0 {
+		c.JobController.Port = 50051
+	}
+}
+
 func (c *JobControllerConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }

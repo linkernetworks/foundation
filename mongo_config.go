@@ -13,3 +13,7 @@ func (c *MongoConfig) Unresolved() bool {
 func (c *MongoConfig) GetInterface() string {
 	return c.Interface
 }
+
+func (c *MongoConfig) GetPublic() *MongoConfig {
+	return c.Public
+}

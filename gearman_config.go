@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"net"
 	"strconv"
 )
@@ -44,4 +45,11 @@ func (c *GearmanConfig) GetPublic() ServiceConfig {
 
 func (c *GearmanConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c *GearmanConfig) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, c); err != nil {
+		return err
+	}
+	return c.LoadDefaults()
 }

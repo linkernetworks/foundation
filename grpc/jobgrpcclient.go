@@ -62,6 +62,10 @@ func (c *JobGrpcClient) JobStop(req *pb.JobStopRequest) (*pb.JobResponse, error)
 	return c.grpcClient.JobStop(context.Background(), req) // TODO context with
 }
 
+func (c *JobGrpcClient) JobChangePriority(req *pb.JobChangeRequest) (*pb.JobResponse, error) {
+	return c.grpcClient.JobChangePriority(context.Background(), req) // TODO context with
+}
+
 // Close connection
 func (c *JobGrpcClient) Close() error {
 	return c.conn.Close()

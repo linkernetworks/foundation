@@ -9,64 +9,68 @@ type Context struct {
 	Session *mgo.Session
 }
 
-func (d *Context) Close() {
-	d.Session.Close()
+func (c *Context) NewDataStore(collection string) *DataStore {
+	return NewDataStore(c, collection)
 }
 
-func (d *Context) C(collection string) *mgo.Collection {
+func (c *Context) Close() {
+	c.Session.Close()
+}
+
+func (c *Context) C(collection string) *mgo.Collection {
 	// DB returns a value representing the named database. If name is empty, the database name provided in the dialed URL is used instead.
-	return d.Session.DB("").C(collection)
+	return c.Session.DB("").C(collection)
 }
 
-func (d *Context) FindOne(collection string, query bson.M, r Record) error {
-	return d.C(collection).Find(query).One(r)
+func (c *Context) FindOne(collection string, query bson.M, r Record) error {
+	return c.C(collection).Find(query).One(r)
 }
 
-func (d *Context) Count(collection string, query interface{}) (n int, err error) {
-	return d.C(collection).Find(query).Count()
+func (c *Context) Count(collection string, query interface{}) (n int, err error) {
+	return c.C(collection).Find(query).Count()
 }
 
-func (d *Context) FindAll(collection string, query interface{}, records interface{}) error {
-	return d.C(collection).Find(query).All(records)
+func (c *Context) FindAll(collection string, query interface{}, records interface{}) error {
+	return c.C(collection).Find(query).All(records)
 }
 
-func (d *Context) FindAllByPage(collection string, query interface{}, sort string, records interface{}, page int, pageSize int) error {
-	return d.C(collection).
+func (c *Context) FindAllByPage(collection string, query interface{}, sort string, records interface{}, page int, pageSize int) error {
+	return c.C(collection).
 		Find(query).
 		Sort(sort).
 		Skip((page - 1) * pageSize).
 		Limit(pageSize).All(records)
 }
 
-func (d *Context) Insert(collection string, r Record) error {
-	return d.C(collection).Insert(&r)
+func (c *Context) Insert(collection string, r Record) error {
+	return c.C(collection).Insert(&r)
 }
 
-func (d *Context) UpdateBy(collection string, key string, value interface{}, r Record) error {
-	return d.C(collection).Update(bson.M{key: value}, r)
+func (c *Context) UpdateBy(collection string, key string, value interface{}, r Record) error {
+	return c.C(collection).Update(bson.M{key: value}, r)
 }
 
-func (d *Context) Upsert(collection string, key string, value interface{}, r Record) (*mgo.ChangeInfo, error) {
+func (c *Context) Upsert(collection string, key string, value interface{}, r Record) (*mgo.ChangeInfo, error) {
 	query := bson.M{key: value}
-	return d.C(collection).Upsert(query, r)
+	return c.C(collection).Upsert(query, r)
 }
 
-func (d *Context) Update(collection string, query bson.M, modifier bson.M) error {
-	return d.C(collection).Update(query, modifier)
+func (c *Context) Update(collection string, query bson.M, modifier bson.M) error {
+	return c.C(collection).Update(query, modifier)
 }
 
-func (d *Context) UpdateById(collection string, id bson.ObjectId, update interface{}) error {
-	return d.C(collection).UpdateId(id, update)
+func (c *Context) UpdateById(collection string, id bson.ObjectId, update interface{}) error {
+	return c.C(collection).UpdateId(id, update)
 }
 
-func (d *Context) Remove(collection string, key string, value interface{}) error {
-	return d.C(collection).Remove(bson.M{key: value})
+func (c *Context) Remove(collection string, key string, value interface{}) error {
+	return c.C(collection).Remove(bson.M{key: value})
 }
 
-func (d *Context) RemoveAll(collection string) (*mgo.ChangeInfo, error) {
-	return d.C(collection).RemoveAll(bson.M{})
+func (c *Context) RemoveAll(collection string) (*mgo.ChangeInfo, error) {
+	return c.C(collection).RemoveAll(bson.M{})
 }
 
-func (d *Context) DropCollection(collection string) error {
-	return d.C(collection).DropCollection()
+func (c *Context) DropCollection(collection string) error {
+	return c.C(collection).DropCollection()
 }

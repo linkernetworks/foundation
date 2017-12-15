@@ -29,6 +29,7 @@ type Config struct {
 	Mongo         *MongoConfig     `json:"mongo"`
 	Hdfs          *HdfsConfig      `json:"hdfs"`
 	App           *AppConfig       `json:"app"`
+	Jupyter       *JupyterConfig   `json:"jupyter"`
 	JobController JobServerConfig  `json:"jobserver"`
 	Influxdb      *InfluxdbConfig  `json:"influxdb"`
 	DataDir       string           `json:"dataDir"`

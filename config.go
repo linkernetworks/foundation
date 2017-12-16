@@ -2,12 +2,14 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"path/filepath"
 	"reflect"
 
+	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 
@@ -34,9 +36,14 @@ type Config struct {
 	Version       string           `json:"version"`
 }
 
-//GetWorkspaceDir - Get batch process directory
-func (c *Config) GetWorkspaceDir() string {
+//GetWorkspaceRootDir - Get batch process directory
+func (c *Config) GetWorkspaceRootDir() string {
 	return filepath.Join(c.DataDir, c.Data.BatchDir)
+}
+
+func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
+	rootDir := c.GetWorkspaceRootDir()
+	return filepath.Join(rootDir, fmt.Sprintf("batch-%s", workspace.ID.Hex()))
 }
 
 //GetArchiveDir - Get archive directory.

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type JobControllerConfig struct {
+type JobServerConfig struct {
 	Host              string                      `json:"host"`
 	Port              int                         `json:"port"`
 	Logger            LoggerConfig                `json:"logger"`
@@ -14,13 +14,13 @@ type JobControllerConfig struct {
 	TickerSec         time.Duration               `json:"tickerSec"`
 }
 
-func (c *JobControllerConfig) LoadDefaults() error {
+func (c *JobServerConfig) LoadDefaults() error {
 	if c.Port == 0 {
 		c.Port = 50051
 	}
 	return nil
 }
 
-func (c *JobControllerConfig) Addr() string {
+func (c *JobServerConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }

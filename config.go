@@ -21,17 +21,17 @@ type ServiceConfig interface {
 }
 
 type Config struct {
-	Redis         *RedisConfig        `json:"redis"`
-	Gearman       *GearmanConfig      `json:"gearman"`
-	Memcached     *MemcachedConfig    `json:"memcached"`
-	Mongo         *MongoConfig        `json:"mongo"`
-	Hdfs          *HdfsConfig         `json:"hdfs"`
-	App           *AppConfig          `json:"app"`
-	JobController JobControllerConfig `json:"jobcontroller"`
-	Influxdb      *InfluxdbConfig     `json:"influxdb"`
-	DataDir       string              `json:"dataDir"`
-	Data          *DataConfig         `json:"data"`
-	Version       string              `json:"version"`
+	Redis         *RedisConfig     `json:"redis"`
+	Gearman       *GearmanConfig   `json:"gearman"`
+	Memcached     *MemcachedConfig `json:"memcached"`
+	Mongo         *MongoConfig     `json:"mongo"`
+	Hdfs          *HdfsConfig      `json:"hdfs"`
+	App           *AppConfig       `json:"app"`
+	JobController JobServerConfig  `json:"jobcontroller"`
+	Influxdb      *InfluxdbConfig  `json:"influxdb"`
+	DataDir       string           `json:"dataDir"`
+	Data          *DataConfig      `json:"data"`
+	Version       string           `json:"version"`
 }
 
 //GetWorkspaceDir - Get batch process directory

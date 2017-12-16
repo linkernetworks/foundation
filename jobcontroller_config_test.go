@@ -7,7 +7,7 @@ import (
 )
 
 func TestJobControllerConfig(t *testing.T) {
-	cf := JobControllerConfig{}
+	cf := JobServerConfig{}
 	jsontext := `{
 		"host": "localhost",
 		"port": 50051,

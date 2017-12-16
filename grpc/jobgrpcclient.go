@@ -53,9 +53,9 @@ func NewSSLJobClient(serverAddr string, sslCrt string) (client *JobGrpcClient, e
 	}, nil
 }
 
-// JobEnqueue call job enqueue
-func (c *JobGrpcClient) JobEnqueue(req *pb.JobRequest) (*pb.JobResponse, error) {
-	return c.grpcClient.JobEnqueue(context.Background(), req) // TODO context with
+// EnqueueJob call job enqueue
+func (c *JobGrpcClient) EnqueueJob(req *pb.JobRequest) (*pb.JobResponse, error) {
+	return c.grpcClient.EnqueueJob(context.Background(), req) // TODO context with
 }
 
 func (c *JobGrpcClient) JobStop(req *pb.JobStopRequest) (*pb.JobResponse, error) {

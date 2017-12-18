@@ -10,6 +10,9 @@ func Now() *time.Time {
 }
 
 func TruncateTime(t *time.Time, d time.Duration) *time.Time {
-	result := t.Truncate(d)
-	return &result
+	if t != nil {
+		result := t.Truncate(d)
+		return &result
+	}
+	return nil
 }

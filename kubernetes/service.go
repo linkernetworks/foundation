@@ -22,14 +22,14 @@ func (s *Service) LoadConfig() (*rest.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		return config
+		return config, nil
 	}
 
 	config, err := kubeconfig.Load(s.Config.Context, s.Config.ConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	return config
+	return config, nil
 }
 
 func (s *Service) CreateClientset() (*kubernetes.Clientset, error) {

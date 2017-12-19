@@ -6,17 +6,17 @@ import (
 )
 
 type DeploymentConfig struct {
-	Type       string               `json:"type"`
-	Kubernetes KubeDeploymentConfig `json:"kubernetes"`
+	Type       string           `json:"type"`
+	Kubernetes KubernetesConfig `json:"kubernetes"`
 }
 
-type KubeDeploymentConfig struct {
+type KubernetesConfig struct {
 	ConfigFile string `json:"config"`
 	Context    string `json:"context"`
 	Namespace  string `json:"namespace"`
 }
 
-func (kcf KubeDeploymentConfig) CreateClientset() (*kubernetes.Clientset, error) {
+func (kcf KubernetesConfig) CreateClientset() (*kubernetes.Clientset, error) {
 	config, err := kubeconfig.Load("", kcf.ConfigFile)
 	if err != nil {
 		return nil, err

@@ -35,6 +35,8 @@ type Config struct {
 	DataDir       string           `json:"dataDir"`
 	Data          *DataConfig      `json:"data"`
 	Version       string           `json:"version"`
+
+	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }
 
 //GetWorkspaceRootDir - Get batch process directory

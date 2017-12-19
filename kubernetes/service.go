@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/kubeconfig"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type Service struct {
@@ -14,12 +15,28 @@ func NewFromConfig(cf *config.KubernetesConfig) *Service {
 	return &Service{cf}
 }
 
-func (s *Service) CreateClientset() (*kubernetes.Clientset, error) {
+// Create the kubernetes config
+func (s *Service) LoadConfig() (*rest.Config, error) {
+	if s.Config.InCluster {
+		config, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+		return config
+	}
+
 	config, err := kubeconfig.Load(s.Config.Context, s.Config.ConfigFile)
 	if err != nil {
 		return nil, err
 	}
+	return config
+}
 
+func (s *Service) CreateClientset() (*kubernetes.Clientset, error) {
+	config, err := s.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err

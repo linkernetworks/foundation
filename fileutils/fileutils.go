@@ -6,6 +6,13 @@ import (
 	"os"
 )
 
+//MakeDirs create dir and make it as 777 (for jupyter notebook consideration)
+func MakeDirs(paths []string) {
+	for _, v := range paths {
+		os.MkdirAll(v, 777)
+	}
+}
+
 //Exists - check path if exist or not legal.
 func Exists(path string) (bool, error) {
 	_, err := os.Stat(path)

@@ -10,11 +10,11 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 	"path/filepath"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 /*
-import v1 "k8s.io/api/core/v1"
-
 type PodProvider interface {
 	NewPod() v1.Pod
 }
@@ -30,13 +30,12 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *Noteboo
 	return &NotebookSpawnerService{c, m, k}
 }
 
-func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectIdHex, pod v1.Pod) error {
+func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) error {
 	var context = s.Mongo.NewContext()
 	defer context.Close()
 
 	podStatus := pod.Status
 
-	// updateNotebookProxyInfo(context, knb.Name, pod.Status)
 	info := &entity.NotebookProxyInfo{
 		IP: podStatus.PodIP,
 

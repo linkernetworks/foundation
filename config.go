@@ -103,7 +103,7 @@ func SetupAddressFromInterface(c *Config) {
 	SetupServiceAddressFromInterface(c.Memcached)
 }
 
-func Read(path string) *Config {
+func Read(path string) Config {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("Failed to open config file: %v\n", err)
@@ -114,5 +114,5 @@ func Read(path string) *Config {
 		log.Fatalf("Failed to load config file: %v\n", err)
 	}
 	SetupAddressFromInterface(&c)
-	return &c
+	return c
 }

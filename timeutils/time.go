@@ -9,7 +9,7 @@ func Now() *time.Time {
 	return &t
 }
 
-func TruncateTime(t *time.Time, d time.Duration) *time.Time {
+func TruncateRedisDateTime(t *time.Time, d time.Duration) *time.Time {
 	if t != nil {
 		result := t.Truncate(d)
 		return &result

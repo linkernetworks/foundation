@@ -42,6 +42,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	return nil
 }
 
-func (s *NotebookSpawnerService) Stop() {
-
+func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
+	return nil
 }

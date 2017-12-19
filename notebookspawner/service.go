@@ -27,12 +27,13 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		return err
 	}
 
-	workspaceDir := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
+	// TODO: load workspace to ensure the workspace exists
+	workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 
 	// Start pod for notebook in workspace(batch)
 	nbs := internalservice.NewNotebookService(clientset, s.Mongo, notebook.KubeNotebook{
 		Name:      nb.ID.Hex(),
-		WorkSpace: workspaceDir,
+		Workspace: workspace,
 		ProxyURL:  s.Config.Jupyter.BaseUrl,
 		Image:     nb.Image,
 	})

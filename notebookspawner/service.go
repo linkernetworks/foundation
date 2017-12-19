@@ -8,14 +8,17 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 
-	v1 "k8s.io/api/core/v1"
-
+	"gopkg.in/mgo.v2/bson"
 	"path/filepath"
 )
 
+/*
+import v1 "k8s.io/api/core/v1"
+
 type PodProvider interface {
-	NewPod(podName string) v1.Pod
+	NewPod() v1.Pod
 }
+*/
 
 type NotebookSpawnerService struct {
 	Config     config.Config
@@ -26,6 +29,35 @@ type NotebookSpawnerService struct {
 func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{c, m, k}
 }
+
+func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectIdHex, pod v1.Pod) error {
+	var context = s.Mongo.NewContext()
+	defer context.Close()
+
+	podStatus := pod.Status
+
+	// updateNotebookProxyInfo(context, knb.Name, pod.Status)
+	info := &entity.NotebookProxyInfo{
+		IP: podStatus.PodIP,
+
+		// TODO: extract this as the service configuration
+		Port: notebook.NotebookContainerPort,
+
+		Phase:     podStatus.Phase,
+		Message:   podStatus.Message,
+		Reason:    podStatus.Reason,
+		StartTime: podStatus.StartTime,
+	}
+
+	q := bson.M{"_id": notebookID}
+	m := bson.M{"$set": bson.M{"pod": info}}
+	return context.C(entity.NotebookCollectionName).Update(q, m)
+}
+
+/*
+func updateNotebookProxyInfo(context *mongo.Context, name string, podStatus v1.PodStatus) error {
+}
+*/
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	clientset, err := s.Kubernetes.CreateClientset()

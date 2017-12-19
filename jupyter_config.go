@@ -1,9 +1,10 @@
 package config
 
 type JupyterConfig struct {
-	BaseUrl string       `json:"baseUrl"`
-	Cache   *CacheConfig `json:"cache"`
-	Dev     *DevConfig   `json:"dev"`
+	BaseUrl      string       `json:"baseUrl"`
+	DefaultImage string       `json:"defaultImage"`
+	Cache        *CacheConfig `json:"cache"`
+	Dev          *DevConfig   `json:"dev"`
 }
 
 type CacheConfig struct {

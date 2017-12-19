@@ -4,9 +4,9 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/internalservice"
-	"bitbucket.org/linkernetworks/aurora/src/notebook"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 
 	"path/filepath"
 )
@@ -44,5 +44,12 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 }
 
 func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
-	return nil
+	clientset, err := s.Kubernetes.CreateClientset()
+	if err != nil {
+		return err
+	}
+
+	knb := notebook.KubeNotebook{Name: nb.ID.Hex()}
+	nbs := internalservice.NewNotebookService(clientset, s.Mongo, knb)
+	return nbs.Stop()
 }

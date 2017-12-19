@@ -72,7 +72,7 @@ func (c *Config) GetModelArchiveDir() string {
 	return filepath.Join(c.DataDir, c.Data.ModelArchiveDir)
 }
 
-func setupAddressFromInterface(c ServiceConfig) {
+func SetupServiceAddressFromInterface(c ServiceConfig) {
 	if reflect.ValueOf(c).IsNil() {
 		return
 	}
@@ -90,17 +90,17 @@ func setupAddressFromInterface(c ServiceConfig) {
 	c.LoadDefaults()
 
 	if pc := c.GetPublic(); pc != nil {
-		setupAddressFromInterface(pc)
+		SetupServiceAddressFromInterface(pc)
 	}
 }
 
-// autoSetupConfig will scan the network interface setting if "interface" field
+// SetupAddressFromInterface will scan the network interface setting if "interface" field
 // is defined.
-func autoSetupConfig(c *Config) {
+func SetupAddressFromInterface(c *Config) {
 	log.Println("Resolving service configurations...")
-	setupAddressFromInterface(c.Redis)
-	setupAddressFromInterface(c.Gearman)
-	setupAddressFromInterface(c.Memcached)
+	SetupServiceAddressFromInterface(c.Redis)
+	SetupServiceAddressFromInterface(c.Gearman)
+	SetupServiceAddressFromInterface(c.Memcached)
 }
 
 func Read(path string) *Config {
@@ -113,6 +113,6 @@ func Read(path string) *Config {
 	if err := decoder.Decode(&c); err != nil {
 		log.Fatalf("Failed to load config file: %v\n", err)
 	}
-	autoSetupConfig(&c)
+	SetupAddressFromInterface(&c)
 	return &c
 }

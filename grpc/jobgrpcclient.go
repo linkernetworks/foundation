@@ -58,8 +58,8 @@ func (c *JobGrpcClient) EnqueueJob(req *pb.JobRequest) (*pb.JobResponse, error) 
 	return c.grpcClient.EnqueueJob(context.Background(), req) // TODO context with
 }
 
-func (c *JobGrpcClient) JobStop(req *pb.JobStopRequest) (*pb.JobResponse, error) {
-	return c.grpcClient.JobStop(context.Background(), req) // TODO context with
+func (c *JobGrpcClient) StopJob(req *pb.StopJobRequest) (*pb.JobResponse, error) {
+	return c.grpcClient.StopJob(context.Background(), req) // TODO context with
 }
 
 // Close connection

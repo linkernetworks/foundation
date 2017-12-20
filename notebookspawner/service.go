@@ -3,7 +3,6 @@ package notebookspawner
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"bitbucket.org/linkernetworks/aurora/src/internalservice"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
@@ -15,6 +14,7 @@ import (
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const PodNamePrefix = "pod-"
@@ -160,10 +160,15 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
 		return err
 	}
 
-	nbs := internalservice.NewNotebookService(clientset, s.Mongo)
 	knb := notebook.KubeNotebook{
 		Notebook: nb,
 		Name:     nb.ID.Hex(),
 	}
-	return nbs.Stop(knb)
+
+	podName := "pod-" + knb.DeploymentID()
+	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
+	if err != nil {
+		return err
+	}
+	return nil
 }

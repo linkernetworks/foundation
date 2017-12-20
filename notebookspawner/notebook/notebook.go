@@ -3,6 +3,8 @@ package notebook
 import (
 	"strconv"
 
+	"bitbucket.org/linkernetworks/aurora/src/entity"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,21 +16,20 @@ const (
 )
 
 type KubeNotebook struct {
+	Notebook  *entity.Notebook
 	Name      string
 	Workspace string
 	ProxyURL  string
 	Image     string
 }
 
-func (nb *KubeNotebook) GetPodName() string {
-	return NotebookPodNamePrefix + nb.Name
+func (nb *KubeNotebook) DeploymentID() string {
+	return nb.Notebook.ID.Hex()
 }
 
-func (nb *KubeNotebook) NewPod() v1.Pod {
+func (nb *KubeNotebook) NewPod(podName string) v1.Pod {
 	return v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: nb.GetPodName(),
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: podName},
 		Spec: v1.PodSpec{
 			RestartPolicy: "Never",
 			Containers:    nb.Containers(),
@@ -44,6 +45,15 @@ func (nb *KubeNotebook) NewPod() v1.Pod {
 			},
 		},
 	}
+}
+
+// Backward compatible method
+func (nb *KubeNotebook) Pod() v1.Pod {
+	return nb.NewPod(nb.GetPodName())
+}
+
+func (nb *KubeNotebook) GetPodName() string {
+	return NotebookPodNamePrefix + nb.Name
 }
 
 func (nb *KubeNotebook) Containers() []v1.Container {

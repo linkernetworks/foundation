@@ -14,11 +14,36 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-/*
-type PodProvider interface {
-	NewPod() v1.Pod
+const PodNamePrefix = "pod-"
+
+// Object as Pod
+type PodFactory interface {
+	NewPod(podName string) v1.Pod
 }
-*/
+
+type PodLabelProvider interface {
+	PodLabels() map[string]string
+}
+
+type ProxyInfoProvider interface {
+	Host() string
+	Port() string
+	BaseURL() string
+}
+
+type DeploymentIDProvider interface {
+	DeploymentID() string
+}
+
+type PodDeployment interface {
+	DeploymentIDProvider
+	PodFactory
+}
+
+type NotebookPodDeployment interface {
+	PodDeployment
+	ProxyInfoProvider
+}
 
 type NotebookSpawnerService struct {
 	Config     config.Config
@@ -42,6 +67,7 @@ func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) erro
 		// TODO: extract this as the service configuration
 		Port: notebook.NotebookContainerPort,
 
+		// TODO: pull the pod info to another section
 		Phase:     podStatus.Phase,
 		Message:   podStatus.Message,
 		Reason:    podStatus.Reason,
@@ -51,6 +77,10 @@ func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) erro
 	q := bson.M{"_id": notebookID}
 	m := bson.M{"$set": bson.M{"pod": info}}
 	return context.C(entity.NotebookCollectionName).Update(q, m)
+}
+
+func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
+	return nil
 }
 
 /*
@@ -71,6 +101,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	nbs := internalservice.NewNotebookService(clientset, s.Mongo)
 
 	knb := notebook.KubeNotebook{
+		Notebook:  nb,
 		Name:      nb.ID.Hex(),
 		Workspace: workspace,
 		ProxyURL:  s.Config.Jupyter.BaseUrl,
@@ -89,6 +120,9 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
 	}
 
 	nbs := internalservice.NewNotebookService(clientset, s.Mongo)
-	knb := notebook.KubeNotebook{Name: nb.ID.Hex()}
+	knb := notebook.KubeNotebook{
+		Notebook: nb,
+		Name:     nb.ID.Hex(),
+	}
 	return nbs.Stop(knb)
 }

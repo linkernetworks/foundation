@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
+	// "bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -26,30 +26,29 @@ func TestStartInternalService(t *testing.T) {
 		return
 	}
 
+	var err error
+
 	//Get mongo service
 	cf := config.Read(testingConfigPath)
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
-	clientset, err := kubernetesService.CreateClientset()
-	assert.NoError(t, err)
 
 	mongoService := mongo.NewMongoService(cf.Mongo.Url)
 
 	spawner := New(cf, mongoService, kubernetesService)
 
-	batchDir := "batch-" + NOTEBOOK_NAME
-	baseURL := "/v1/notebooks/proxy/"
-
+	// proxyURL := "/v1/notebooks/proxy/"
 	context := mongoService.NewContext()
 	defer context.Close()
 
 	workspace := entity.Workspace{
-		ID:        bson.NewObjectId(),
-		Name:      "testing workspace",
-		Type:      "general",
-		Directory: batchDir,
+		ID:   NOTEBOOK_NAME,
+		Name: "testing workspace",
+		Type: "general",
 	}
-	err := context.C(entity.WorkspaceCollectionName).Insert(workspace)
+	workspace.Directory = "batch-" + NOTEBOOK_NAME
+
+	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 
 	notebook := entity.Notebook{
@@ -58,6 +57,12 @@ func TestStartInternalService(t *testing.T) {
 		WorkspaceID: workspace.ID,
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)
+	assert.NoError(t, err)
+
+	err = spawner.Start(&notebook)
+	assert.NoError(t, err)
+
+	err = spawner.Stop(&notebook)
 	assert.NoError(t, err)
 
 	/*

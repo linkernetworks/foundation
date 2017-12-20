@@ -87,11 +87,6 @@ func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
 	return nil
 }
 
-/*
-func updateNotebookProxyInfo(context *mongo.Context, name string, podStatus v1.PodStatus) error {
-}
-*/
-
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	clientset, err := s.Kubernetes.CreateClientset()
 	if err != nil {

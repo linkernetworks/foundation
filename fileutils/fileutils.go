@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 )
 
 //MakeDirs create dir and make it as 777 (for jupyter notebook consideration)
@@ -38,4 +40,20 @@ func WriteLines(filepath string, lines []string) error {
 		fmt.Fprintln(w, line)
 	}
 	return w.Flush()
+}
+
+//FindFilesByExtension find files by specific extension name
+func FindFilesByExtension(pathS, ext string) []string {
+
+	var files []string
+	filepath.Walk(pathS, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() {
+			r, err := regexp.MatchString(ext, f.Name())
+			if err == nil && r {
+				files = append(files, f.Name())
+			}
+		}
+		return nil
+	})
+	return files
 }

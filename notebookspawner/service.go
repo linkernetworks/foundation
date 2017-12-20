@@ -102,8 +102,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 
 	// Start pod for notebook in workspace(batch)
-	nbs := internalservice.NewNotebookService(clientset, s.Mongo)
-
 	knb := notebook.KubeNotebook{
 		Notebook:  nb,
 		Name:      nb.ID.Hex(),
@@ -124,7 +122,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	go func() {
 		context := s.Mongo.NewContext()
 		defer context.Close()
-		o, stop := trackPodStatus(clientset, podName, s.namespace)
+		o, stop := trackPod(clientset, podName, s.namespace)
 	Watch:
 		for {
 			pod := <-o
@@ -136,14 +134,12 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 					waitingReason := c.State.Waiting.Reason
 					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
 						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
-						close(o)
 						break Watch
 					}
 				}
 			case "Running", "Failed", "Succeeded", "Unknown":
 				logger.Infof("Notebook %s is %s\n", podName, phase)
 				// updateNotebookProxyInfo(context, knb.Name, pod.Status)
-				close(o)
 				break Watch
 			}
 
@@ -152,11 +148,9 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		signal <- true
 		stop <- e
 		close(stop)
+		close(signal)
+		close(o)
 	}()
-
-	if _, err := nbs.Start(knb); err != nil {
-		return err
-	}
 	return nil
 }
 

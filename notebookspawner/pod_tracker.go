@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func trackPodStatus(clientset *kubernetes.Clientset, podName, namespace string) (chan *v1.Pod, chan struct{}) {
+func trackPod(clientset *kubernetes.Clientset, podName, namespace string) (chan *v1.Pod, chan struct{}) {
 	o := make(chan *v1.Pod)
 	stop := make(chan struct{})
 

@@ -8,6 +8,9 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 
+	// import global logger
+	"bitbucket.org/linkernetworks/aurora/src/logger"
+
 	"gopkg.in/mgo.v2/bson"
 	"path/filepath"
 
@@ -49,10 +52,11 @@ type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.MongoService
 	Kubernetes *kubernetes.Service
+	namespace  string
 }
 
 func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *NotebookSpawnerService {
-	return &NotebookSpawnerService{c, m, k}
+	return &NotebookSpawnerService{c, m, k, "default"}
 }
 
 func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) error {
@@ -107,6 +111,49 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		ProxyURL:  s.Config.Jupyter.BaseUrl,
 		Image:     nb.Image,
 	}
+
+	podName := "pod-" + knb.DeploymentID()
+	pod := knb.NewPod(podName)
+
+	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
+	if err != nil {
+		return err
+	}
+
+	var signal = make(chan bool, 1)
+	go func() {
+		context := s.Mongo.NewContext()
+		defer context.Close()
+		o, stop := trackPodStatus(clientset, podName, s.namespace)
+	Watch:
+		for {
+			pod := <-o
+			switch phase := pod.Status.Phase; phase {
+			case "Pending":
+				// updateNotebookProxyInfo(context, knb.Name, pod.Status)
+				// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
+				for _, c := range pod.Status.ContainerStatuses {
+					waitingReason := c.State.Waiting.Reason
+					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
+						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+						close(o)
+						break Watch
+					}
+				}
+			case "Running", "Failed", "Succeeded", "Unknown":
+				logger.Infof("Notebook %s is %s\n", podName, phase)
+				// updateNotebookProxyInfo(context, knb.Name, pod.Status)
+				close(o)
+				break Watch
+			}
+
+		}
+		var e struct{}
+		signal <- true
+		stop <- e
+		close(stop)
+	}()
+
 	if _, err := nbs.Start(knb); err != nil {
 		return err
 	}

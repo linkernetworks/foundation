@@ -1,16 +1,15 @@
 package notebookspawner
 
 import (
-	"strconv"
-
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const NotebookContainerPort = "8888"
+const NotebookContainerPort = 8888
 
 type NotebookPodFactory struct {
 	Notebook *entity.Notebook
@@ -23,7 +22,7 @@ type NotebookPodParameters struct {
 	Image        string
 	BaseURL      string
 	Bind         string
-	Port         string
+	Port         int32
 }
 
 func (nb *NotebookPodFactory) DeploymentID() string {
@@ -44,7 +43,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 						"start-notebook.sh",
 						"--notebook-dir=" + params.WorkingDir,
 						"--ip=" + params.Bind,
-						"--port=" + params.Port,
+						"--port=" + strconv.Itoa(int(params.Port)),
 						"--NotebookApp.base_url=" + params.BaseURL,
 						"--NotebookApp.token=''",
 						"--NotebookApp.allow_origin='*'",
@@ -57,7 +56,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook-port",
-							ContainerPort: NotebookContainerPort,
+							ContainerPort: params.Port,
 							Protocol:      v1.ProtocolTCP,
 						},
 					},

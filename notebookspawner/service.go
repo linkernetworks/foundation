@@ -5,13 +5,11 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 
 	// import global logger
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	"gopkg.in/mgo.v2/bson"
-	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -103,18 +101,16 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	podName := PodNamePrefix + nb.DeploymentID()
 
 	podFactory := NotebookPodFactory{nb}
-	podFactory.NewPod(podName, NotebookPodParameters{
+	pod := podFactory.NewPod(podName, NotebookPodParameters{
 		Image:        nb.Image,
 		WorkspaceDir: workspace.Directory,
 		WorkingDir:   "/batch",
 		Bind:         "0.0.0.0",
 		Port:         NotebookContainerPort,
-		BaseURL:      s.Config.Jupyter.BaseUrl + "/" + nb.Notebook.ID.Hex(),
+		BaseURL:      s.Config.Jupyter.BaseUrl + "/" + nb.ID.Hex(),
 	})
 
 	// Start pod for notebook in workspace(batch)
-	pod := knb.NewPod(podName)
-
 	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
 	if err != nil {
 		return err

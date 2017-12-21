@@ -17,7 +17,7 @@ const (
 	testingConfigPath = "../../../config/testing.json"
 )
 
-func TestStartInternalService(t *testing.T) {
+func TestNotebookSpawnerService(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return
@@ -51,7 +51,6 @@ func TestStartInternalService(t *testing.T) {
 
 	notebook := entity.Notebook{
 		ID:          bson.NewObjectId(),
-		Backend:     entity.ProxyBackend{},
 		Image:       notebookImage,
 		WorkspaceID: workspace.ID,
 	}
@@ -66,47 +65,4 @@ func TestStartInternalService(t *testing.T) {
 
 	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
-
-	/*
-		knb := notebook.KubeNotebook{
-			Name:      NOTEBOOK_NAME,
-			Workspace: batchDir,
-			ProxyURL:  baseURL,
-			Image:     NOTEBOOK_IMAGE,
-		}
-		nbs := NewNotebookService(clientset, mongoService)
-		signal, err := nbs.Start(knb)
-		assert.NoError(t, err)
-		assert.NotNil(t, signal)
-		<-signal
-	*/
 }
-
-/*
-func TestStopInternalService(t *testing.T) {
-	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
-		t.SkipNow()
-		return
-	}
-
-	cf := config.Read(testingConfigPath)
-	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
-	clientset, err := kubernetesService.CreateClientset()
-	assert.NoError(t, err)
-
-	mongoService := mongo.NewMongoService(cf.Mongo.Url)
-
-	nbs := NewNotebookService(clientset, mongoService)
-	knb := notebook.KubeNotebook{
-		Name: NOTEBOOK_NAME,
-	}
-	err = nbs.Stop(knb)
-	assert.NoError(t, err)
-
-	context := mongoService.NewContext()
-	defer context.Close()
-
-	err = context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": bson.ObjectIdHex(NOTEBOOK_NAME)})
-	assert.NoError(t, err)
-}
-*/

@@ -21,13 +21,16 @@ func NewPodTracker(clientset *kubernetes.Clientset, namespace string) *PodTracke
 	return &PodTracker{clientset, namespace, make(chan struct{})}
 }
 
-func matchPod(obj interface{}, podName string) (bool, *v1.Pod) {
+func matchPod(obj interface{}, podName string) (*v1.Pod, bool) {
 	pod, ok := obj.(*v1.Pod)
-	return ok && podName == pod.ObjectMeta.Name, pod
+	if !ok {
+		return nil, false
+	}
+	return pod, podName == pod.ObjectMeta.Name
 }
 
 func (t *PodTracker) Track(podName string, callback PodReceiver) {
-	_, controller := kubemon.WatchPods(clientset, namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+	_, controller := kubemon.WatchPods(t.clientset, t.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if pod, ok := matchPod(newObj); ok {
 				if callback(pod) {

@@ -131,7 +131,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	podName := PodNamePrefix + nb.DeploymentID()
 	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
 	if err != nil {
-		return podTracker, err
+		return nil, err
 	}
 
 	podTracker := s.startTracking(clientset, podName, nb)

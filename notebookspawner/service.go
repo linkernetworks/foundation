@@ -59,24 +59,27 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *Noteboo
 	return &NotebookSpawnerService{c, m, m.NewContext(), k, "default"}
 }
 
-func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) error {
-	podStatus := pod.Status
-
-	info := &entity.NotebookProxyInfo{
-		IP: podStatus.PodIP,
-
+func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
+	backend := entity.ProxyBackend{
 		// TODO: extract this as the service configuration
+		IP:   pod.Status.PodIP,
 		Port: NotebookContainerPort,
+	}
 
-		// TODO: pull the pod info to another section
-		Phase:     podStatus.Phase,
-		Message:   podStatus.Message,
-		Reason:    podStatus.Reason,
-		StartTime: podStatus.StartTime,
+	podInfo := entity.PodInfo{
+		Phase:     pod.Status.Phase,
+		Message:   pod.Status.Message,
+		Reason:    pod.Status.Reason,
+		StartTime: pod.Status.StartTime,
 	}
 
 	q := bson.M{"_id": notebookID}
-	m := bson.M{"$set": bson.M{"pod": info}}
+	m := bson.M{
+		"$set": bson.M{
+			"backend": backend,
+			"pod":     podInfo,
+		},
+	}
 	return s.Context.C(entity.NotebookCollectionName).Update(q, m)
 }
 
@@ -116,8 +119,8 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error)
 		return nil, err
 	}
 
-	podTracker := PodTracker{clientset, s.namespace, podName}
-	podTracker.Track(podName, func(pod *v1.Pod) bool {
+	podTracker := NewPodTracker(clientset, s.namespace, podName)
+	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook %s: %s\n", podName, phase)
 

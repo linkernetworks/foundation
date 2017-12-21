@@ -14,9 +14,6 @@ import (
 )
 
 const (
-	NOTEBOOK_NAME  = "5a094b3f2517e191e088e65c"
-	NOTEBOOK_IMAGE = "jupyter/minimal-notebook"
-
 	testingConfigPath = "../../../config/testing.json"
 )
 
@@ -26,6 +23,7 @@ func TestStartInternalService(t *testing.T) {
 		return
 	}
 
+	var notebookImage = "jupyter/minimal-notebook"
 	var err error
 
 	//Get mongo service
@@ -42,28 +40,32 @@ func TestStartInternalService(t *testing.T) {
 	defer context.Close()
 
 	workspace := entity.Workspace{
-		ID:   NOTEBOOK_NAME,
+		ID:   bson.NewObjectId(),
 		Name: "testing workspace",
 		Type: "general",
 	}
-	workspace.Directory = "batch-" + NOTEBOOK_NAME
+	workspace.Directory = "batch-" + workspace.ID.Hex()
 
 	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 
 	notebook := entity.Notebook{
 		ID:          bson.NewObjectId(),
-		Pod:         entity.NotebookProxyInfo{},
+		Backend:     entity.ProxyBackend{},
+		Image:       notebookImage,
 		WorkspaceID: workspace.ID,
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)
 	assert.NoError(t, err)
 
-	err = spawner.Start(&notebook)
+	_, err = spawner.Start(&notebook)
 	assert.NoError(t, err)
 
 	err = spawner.Stop(&notebook)
 	assert.NoError(t, err)
+
+	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
+	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
 	/*
 		knb := notebook.KubeNotebook{

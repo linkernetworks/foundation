@@ -130,6 +130,9 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 			waitingReason := c.State.Waiting.Reason
 			if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
 				logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+
+				// stop tracking
+				return true
 			}
 		}
 
@@ -144,16 +147,40 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 	return podTracker, nil
 }
 
-func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
+func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTracker, error) {
 	clientset, err := s.Kubernetes.CreateClientset()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	podName := PodNamePrefix + nb.DeploymentID()
+
+	// prepare the pod tracker before we delete the pod
+	podTracker := podtracker.New(clientset, s.namespace, podName)
+	podTracker.Track(func(pod *v1.Pod) bool {
+		phase := pod.Status.Phase
+		logger.Infof("Tracking notebook %s: %s\n", podName, phase)
+
+		// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
+		for _, c := range pod.Status.ContainerStatuses {
+			waitingReason := c.State.Waiting.Reason
+			if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
+				logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+			}
+		}
+
+		switch phase {
+		case "Pending", "Running", "Failed", "Succeeded", "Unknown":
+			s.Sync(nb.ID, pod)
+			return true
+		}
+
+		return false
+	})
+
 	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
 	if err != nil {
-		return err
+		return podTracker, err
 	}
-	return nil
+	return podTracker, nil
 }

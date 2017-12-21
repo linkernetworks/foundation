@@ -62,7 +62,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	_, err = spawner.Start(&notebook)
 	assert.NoError(t, err)
 
-	err = spawner.Stop(&notebook)
+	_, err = spawner.Stop(&notebook)
 	assert.NoError(t, err)
 
 	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})

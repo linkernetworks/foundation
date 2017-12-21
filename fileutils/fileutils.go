@@ -6,10 +6,15 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"syscall"
 )
 
 //MakeDirs create dir and make it as 777 (for jupyter notebook consideration)
 func MakeDirs(paths []string) {
+	//Must unmask first to make sure it will works on jenkins
+	mask := syscall.Umask(0)
+	defer syscall.Umask(mask)
+
 	for _, v := range paths {
 		os.MkdirAll(v, 777)
 	}

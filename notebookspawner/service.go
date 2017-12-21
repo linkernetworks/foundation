@@ -116,6 +116,38 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		return err
 	}
 
+
+	go func() {
+		podTracker := PodTracker{clientset, s.namespace}
+		o := podTracker.Track(podName)
+
+		Watch:
+		for {
+			pod := <-o
+			phase := pod.Status.Phase
+
+			logger.Infof("Tracking notebook %s: %s\n", podName, phase)
+			switch phase {
+			case "Pending":
+				s.Sync(nb.ID, pod)
+
+				// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
+				for _, c := range pod.Status.ContainerStatuses {
+					waitingReason := c.State.Waiting.Reason
+					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
+						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+						break Watch
+					}
+				}
+			case "Running", "Failed", "Succeeded", "Unknown":
+				s.Sync(nb.ID, pod)
+				break Watch
+			}
+
+		}
+		o.Stop()
+	}
+
 	var signal = make(chan bool, 1)
 	go func() {
 		o, stop := trackPod(clientset, podName, s.namespace)

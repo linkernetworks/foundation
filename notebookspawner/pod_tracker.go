@@ -9,24 +9,40 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func trackPod(clientset *kubernetes.Clientset, podName, namespace string) (chan *v1.Pod, chan struct{}) {
-	o := make(chan *v1.Pod)
-	stop := make(chan struct{})
+type PodTracker struct {
+	clientset *kubernetes.Clientset
+	namespace string
+	C         chan *v1.Pod
+	stop      chan struct{}
+}
 
+func NewPodTracker(clientset *kubernetes.Clientset, namespace string) *PodTracker {
+	return &PodTracker{clientset, namespace, make(chan *v1.Pod), make(chan struct{})}
+}
+
+func matchPod(obj interface{}, podName string) (bool, *v1.Pod) {
+	pod, ok := newObj.(*v1.Pod)
+	return ok && podName == pod.ObjectMeta.Name, pod
+}
+
+func (t *PodTracker) Track(podName string) chan *v1.Pod {
 	_, controller := kubemon.WatchPods(clientset, namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			var pod *v1.Pod
-			var ok bool
-			if pod, ok = newObj.(*v1.Pod); !ok {
-				return
+			if pod, ok := matchPod(newObj) ; ok {
+				t.C <- pod
 			}
-			if podName != pod.ObjectMeta.Name {
-				return
+		},
+		DeleteFunc: func(obj interface{}) {
+			if pod, ok := matchPod(obj) ; ok {
+				t.C <- pod
 			}
-			o <- pod
 		},
 	})
 
-	go controller.Run(stop)
-	return o, stop
+	go controller.Run(t.stop)
+	return t.C
+}
+
+func (t *PodTracker) Stop() {
+	t.stop<-
 }

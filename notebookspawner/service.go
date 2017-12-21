@@ -15,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const PodNamePrefix = "pod-"
+const PodNamePrefix = "notebook-"
 
 // Object as Pod
 type PodFactory interface {

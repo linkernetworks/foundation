@@ -60,8 +60,9 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *Noteboo
 func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
 	backend := entity.ProxyBackend{
 		// TODO: extract this as the service configuration
-		IP:   pod.Status.PodIP,
-		Port: NotebookContainerPort,
+		IP:        pod.Status.PodIP,
+		Port:      NotebookContainerPort,
+		Connected: pod.Status.PodIP != "",
 	}
 
 	podInfo := entity.PodInfo{

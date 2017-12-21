@@ -87,7 +87,7 @@ func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error) {
 	clientset, err := s.Kubernetes.CreateClientset()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	workspace := entity.Workspace{}
@@ -116,7 +116,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error)
 		return nil, err
 	}
 
-	podTracker := PodTracker{clientset, s.namespace}
+	podTracker := PodTracker{clientset, s.namespace, podName}
 	podTracker.Track(podName, func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook %s: %s\n", podName, phase)

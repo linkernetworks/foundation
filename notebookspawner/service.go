@@ -51,18 +51,17 @@ type NotebookPodDeployment interface {
 type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.MongoService
+	Context    *mongo.Context
 	Kubernetes *kubernetes.Service
 	namespace  string
 }
 
 func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *NotebookSpawnerService {
-	return &NotebookSpawnerService{c, m, k, "default"}
+	// FIXME: provide method to free context
+	return &NotebookSpawnerService{c, m, m.NewContext(), k, "default"}
 }
 
 func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) error {
-	var context = s.Mongo.NewContext()
-	defer context.Close()
-
 	podStatus := pod.Status
 
 	info := &entity.NotebookProxyInfo{
@@ -80,7 +79,7 @@ func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) erro
 
 	q := bson.M{"_id": notebookID}
 	m := bson.M{"$set": bson.M{"pod": info}}
-	return context.C(entity.NotebookCollectionName).Update(q, m)
+	return s.Context.C(entity.NotebookCollectionName).Update(q, m)
 }
 
 func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
@@ -93,19 +92,25 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		return err
 	}
 
+	workspace := entity.Workspace{}
+	err = s.Context.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
+	if err != nil {
+		return err
+	}
+
 	// TODO: load workspace to ensure the workspace exists
-	workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
+	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 
 	// Start pod for notebook in workspace(batch)
 	knb := notebook.KubeNotebook{
 		Notebook:  nb,
 		Name:      nb.ID.Hex(),
-		Workspace: workspace,
+		Workspace: workspace.Directory,
 		ProxyURL:  s.Config.Jupyter.BaseUrl,
 		Image:     nb.Image,
 	}
 
-	podName := "pod-" + knb.DeploymentID()
+	podName := "pod-" + nb.DeploymentID()
 	pod := knb.NewPod(podName)
 
 	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
@@ -115,8 +120,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 
 	var signal = make(chan bool, 1)
 	go func() {
-		context := s.Mongo.NewContext()
-		defer context.Close()
 		o, stop := trackPod(clientset, podName, s.namespace)
 	Watch:
 		for {
@@ -155,12 +158,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
 		return err
 	}
 
-	knb := notebook.KubeNotebook{
-		Notebook: nb,
-		Name:     nb.ID.Hex(),
-	}
-
-	podName := "pod-" + knb.DeploymentID()
+	podName := "pod-" + nb.DeploymentID()
 	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
 	if err != nil {
 		return err

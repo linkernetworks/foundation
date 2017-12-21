@@ -1,9 +1,11 @@
 package config
 
+/*
 import (
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"errors"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,6 +19,14 @@ func LoadRemoteService(c Config) (Config, error) {
 
 	k8s := kubernetes.NewFromConfig(c.Kubernetes)
 	clientset := k8s.CreateClientset()
+
+	res, err := clientset.Core()
+		.Pods("default")
+		.Patch("mongo-0", []byte{`[ { "op": "add", "path": "/metadata/labels/podindex", "value": "0" } ]`})
+	_ = res
+	if err != nil {
+		return dst, err
+	}
 
 	return dst, nil
 }
@@ -49,3 +59,4 @@ func NewExternalMongoService() v1.Service {
 		},
 	}
 }
+*/

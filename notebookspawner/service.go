@@ -68,7 +68,7 @@ func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod v1.Pod) erro
 		IP: podStatus.PodIP,
 
 		// TODO: extract this as the service configuration
-		Port: notebook.NotebookContainerPort,
+		Port: NotebookContainerPort,
 
 		// TODO: pull the pod info to another section
 		Phase:     podStatus.Phase,
@@ -100,17 +100,19 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 
 	// TODO: load workspace to ensure the workspace exists
 	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
+	podName := PodNamePrefix + nb.DeploymentID()
+
+	podFactory := NotebookPodFactory{nb}
+	podFactory.NewPod(podName, NotebookPodParameters{
+		Image:        nb.Image,
+		WorkspaceDir: workspace.Directory,
+		WorkingDir:   "/batch",
+		Bind:         "0.0.0.0",
+		Port:         NotebookContainerPort,
+		BaseURL:      s.Config.Jupyter.BaseUrl + "/" + nb.Notebook.ID.Hex(),
+	})
 
 	// Start pod for notebook in workspace(batch)
-	knb := notebook.KubeNotebook{
-		Notebook:  nb,
-		Name:      nb.ID.Hex(),
-		Workspace: workspace.Directory,
-		ProxyURL:  s.Config.Jupyter.BaseUrl,
-		Image:     nb.Image,
-	}
-
-	podName := "pod-" + nb.DeploymentID()
 	pod := knb.NewPod(podName)
 
 	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
@@ -158,7 +160,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {
 		return err
 	}
 
-	podName := "pod-" + nb.DeploymentID()
+	podName := PodNamePrefix + nb.DeploymentID()
 	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
 	if err != nil {
 		return err

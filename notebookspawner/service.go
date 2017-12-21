@@ -110,7 +110,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error)
 		WorkingDir:   "/batch",
 		Bind:         "0.0.0.0",
 		Port:         NotebookContainerPort,
-		BaseURL:      s.Config.Jupyter.BaseUrl + "/" + nb.ID.Hex(),
+		BaseURL:      nb.Url,
 	})
 
 	// Start pod for notebook in workspace(batch)

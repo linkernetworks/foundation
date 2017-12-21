@@ -49,10 +49,12 @@ func TestNotebookSpawnerService(t *testing.T) {
 	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 
+	notebookID := bson.NewObjectId()
 	notebook := entity.Notebook{
-		ID:          bson.NewObjectId(),
+		ID:          notebookID,
 		Image:       notebookImage,
 		WorkspaceID: workspace.ID,
+		Url:         cf.Jupyter.BaseUrl + "/" + notebookID.Hex(),
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)
 	assert.NoError(t, err)

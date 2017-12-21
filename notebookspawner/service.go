@@ -84,7 +84,7 @@ func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
 	return nil
 }
 
-func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
+func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error) {
 	clientset, err := s.Kubernetes.CreateClientset()
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	workspace := entity.Workspace{}
 	err = s.Context.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// TODO: load workspace to ensure the workspace exists
@@ -113,40 +113,31 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 	// Start pod for notebook in workspace(batch)
 	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	go func() {
-		podTracker := PodTracker{clientset, s.namespace}
-		o := podTracker.Track(podName)
+	podTracker := PodTracker{clientset, s.namespace}
+	podTracker.Track(podName, func(pod *v1.Pod) bool {
+		phase := pod.Status.Phase
+		logger.Infof("Tracking notebook %s: %s\n", podName, phase)
 
-		Watch:
-		for {
-			pod := <-o
-			phase := pod.Status.Phase
-
-			logger.Infof("Tracking notebook %s: %s\n", podName, phase)
-			switch phase {
-			case "Pending":
-				s.Sync(nb.ID, pod)
-
-				// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
-				for _, c := range pod.Status.ContainerStatuses {
-					waitingReason := c.State.Waiting.Reason
-					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
-						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
-						break Watch
-					}
-				}
-			case "Running", "Failed", "Succeeded", "Unknown":
-				s.Sync(nb.ID, pod)
-				break Watch
+		// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
+		for _, c := range pod.Status.ContainerStatuses {
+			waitingReason := c.State.Waiting.Reason
+			if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
+				logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
 			}
-
 		}
-		o.Stop()
-	}
-	return nil
+
+		switch phase {
+		case "Pending", "Running", "Failed", "Succeeded", "Unknown":
+			s.Sync(nb.ID, pod)
+			return true
+		}
+
+		return false
+	})
+	return podTracker, nil
 }
 
 func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) error {

@@ -12,35 +12,38 @@ import (
 type PodTracker struct {
 	clientset *kubernetes.Clientset
 	namespace string
-	C         chan *v1.Pod
 	stop      chan struct{}
 }
 
+type PodReceiver func(pod *v1.Pod) bool
+
 func NewPodTracker(clientset *kubernetes.Clientset, namespace string) *PodTracker {
-	return &PodTracker{clientset, namespace, make(chan *v1.Pod), make(chan struct{})}
+	return &PodTracker{clientset, namespace, make(chan struct{})}
 }
 
 func matchPod(obj interface{}, podName string) (bool, *v1.Pod) {
-	pod, ok := newObj.(*v1.Pod)
+	pod, ok := obj.(*v1.Pod)
 	return ok && podName == pod.ObjectMeta.Name, pod
 }
 
-func (t *PodTracker) Track(podName string) chan *v1.Pod {
+func (t *PodTracker) Track(podName string, callback PodReceiver) {
 	_, controller := kubemon.WatchPods(clientset, namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			if pod, ok := matchPod(newObj); ok {
-				t.C <- pod
+				if callback(pod) {
+					t.Stop()
+				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			if pod, ok := matchPod(obj); ok {
-				t.C <- pod
+				if callback(pod) {
+					t.Stop()
+				}
 			}
 		},
 	})
-
 	go controller.Run(t.stop)
-	return t.C
 }
 
 func (t *PodTracker) Stop() {

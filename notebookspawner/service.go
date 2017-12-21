@@ -166,6 +166,9 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 			waitingReason := c.State.Waiting.Reason
 			if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
 				logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+
+				// stop tracking
+				return true
 			}
 		}
 

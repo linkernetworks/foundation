@@ -30,7 +30,7 @@ type Config struct {
 	Hdfs          *HdfsConfig      `json:"hdfs"`
 	App           *AppConfig       `json:"app"`
 	Jupyter       *JupyterConfig   `json:"jupyter"`
-	JobController JobServerConfig  `json:"jobserver"`
+	JobController *JobServerConfig `json:"jobserver"`
 	Influxdb      *InfluxdbConfig  `json:"influxdb"`
 	DataDir       string           `json:"dataDir"`
 	Data          *DataConfig      `json:"data"`

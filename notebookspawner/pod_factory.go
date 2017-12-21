@@ -23,6 +23,7 @@ type NotebookPodParameters struct {
 	BaseURL      string
 	Bind         string
 	Port         int32
+	Labels       map[string]string
 }
 
 func (nb *NotebookPodFactory) DeploymentID() string {
@@ -31,7 +32,10 @@ func (nb *NotebookPodFactory) DeploymentID() string {
 
 func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameters) v1.Pod {
 	return v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Name: podName},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   podName,
+			Labels: params.Labels,
+		},
 		Spec: v1.PodSpec{
 			RestartPolicy: "Never",
 			Containers: []v1.Container{

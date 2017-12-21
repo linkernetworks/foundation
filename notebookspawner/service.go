@@ -116,7 +116,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		return err
 	}
 
-
 	go func() {
 		podTracker := PodTracker{clientset, s.namespace}
 		o := podTracker.Track(podName)
@@ -147,38 +146,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) error {
 		}
 		o.Stop()
 	}
-
-	var signal = make(chan bool, 1)
-	go func() {
-		o, stop := trackPod(clientset, podName, s.namespace)
-	Watch:
-		for {
-			pod := <-o
-			switch phase := pod.Status.Phase; phase {
-			case "Pending":
-				// updateNotebookProxyInfo(context, knb.Name, pod.Status)
-				// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
-				for _, c := range pod.Status.ContainerStatuses {
-					waitingReason := c.State.Waiting.Reason
-					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
-						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
-						break Watch
-					}
-				}
-			case "Running", "Failed", "Succeeded", "Unknown":
-				logger.Infof("Notebook %s is %s\n", podName, phase)
-				// updateNotebookProxyInfo(context, knb.Name, pod.Status)
-				break Watch
-			}
-
-		}
-		var e struct{}
-		signal <- true
-		stop <- e
-		close(stop)
-		close(signal)
-		close(o)
-	}()
 	return nil
 }
 

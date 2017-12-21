@@ -43,7 +43,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 	existedClient, ok := s.clients[token]
 	if !ok || existedClient.closed {
 		// Create new client
-		logger.Infof("WS a new client socketId: %s connected with new token %s.\n", socket.Id(), token)
+		logger.Infof("WS a new client socketId: %s connected with new token %s.", socket.Id(), token)
 		client := &client{
 			socket:     socket,
 			expiredAt:  time.Now().Unix() + 5*60,
@@ -61,7 +61,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 
 	} else {
 		// if token already exist and client still valid, replace disconnected socket with new socket
-		logger.Infof("WS a client socketId: %s reconnected with token %s.\n", socket.Id(), token)
+		logger.Infof("WS a client socketId: %s reconnected with token %s.", socket.Id(), token)
 		existedClient.socket = socket
 	}
 }
@@ -96,10 +96,10 @@ Pipe:
 			switch v := c.pubSubConn.Receive().(type) {
 			case redis.Message:
 				c.channel <- string(v.Data)
-				logger.Debugf("REDIS: received message channel: %s message: %s\n", v.Channel, v.Data)
+				logger.Debugf("REDIS: received message channel: %s message: %s", v.Channel, v.Data)
 			case redis.Subscription:
 				// v.Kind could be "subscribe", "unsubscribe" ...
-				logger.Debugf("REDIS: subscription channel:%s kind:%s count:%d\n", v.Channel, v.Kind, v.Count)
+				logger.Debugf("REDIS: subscription channel:%s kind:%s count:%d", v.Channel, v.Kind, v.Count)
 				if v.Count == 0 {
 					return nil
 				}
@@ -127,7 +127,7 @@ Emit:
 
 		case msg := <-c.channel:
 			if err := c.socket.Emit(c.toEvent, msg); err != nil {
-				logger.Errorf("SOCKET: emit error. %s \n", err.Error())
+				logger.Errorf("SOCKET: emit error. %s", err.Error())
 			}
 		}
 	}

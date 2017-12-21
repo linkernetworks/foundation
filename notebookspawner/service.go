@@ -3,6 +3,7 @@ package notebookspawner
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 
@@ -87,7 +88,7 @@ func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
 	return nil
 }
 
-func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error) {
+func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTracker, error) {
 	clientset, err := s.Kubernetes.CreateClientset()
 	if err != nil {
 		return nil, err
@@ -119,7 +120,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*PodTracker, error)
 		return nil, err
 	}
 
-	podTracker := NewPodTracker(clientset, s.namespace, podName)
+	podTracker := podtracker.New(clientset, s.namespace, podName)
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook %s: %s\n", podName, phase)

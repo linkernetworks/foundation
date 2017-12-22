@@ -51,5 +51,5 @@ func (c *HdfsConfig) GetPublic() ServiceConfig {
 }
 
 func (c *HdfsConfig) Addr() string {
-	return c.Host + ":" + strconv.Itoa(int(c.Port))
+	return net.JoinHostPort(c.Host, strconv.Itoa(int(c.Port)))
 }

@@ -56,6 +56,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					},
 					VolumeMounts: []v1.VolumeMount{
 						{Name: "data-volume", SubPath: params.WorkspaceDir, MountPath: params.WorkingDir},
+						{Name: "config-volume", MountPath: "/home/jovyan/.jupyter/custom"},
 					},
 					Ports: []v1.ContainerPort{
 						{
@@ -88,6 +89,16 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					VolumeSource: v1.VolumeSource{
 						PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 							ClaimName: "data-storage",
+						},
+					},
+				},
+				{
+					Name: "config-volume",
+					VolumeSource: v1.VolumeSource{
+						ConfigMap: &v1.ConfigMapVolumeSource{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "jupyter-notebook-config",
+							},
 						},
 					},
 				},

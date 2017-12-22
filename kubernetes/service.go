@@ -5,6 +5,8 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubeconfig"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 type Service struct {

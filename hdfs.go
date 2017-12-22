@@ -1,5 +1,10 @@
 package config
 
+import (
+	"net"
+	"strconv"
+)
+
 type HdfsConfig struct {
 	Enabled   bool        `json:"enabled"`
 	Host      string      `json:"host"`
@@ -42,4 +47,9 @@ func (c *HdfsConfig) GetInterface() string {
 
 func (c *HdfsConfig) GetPublic() ServiceConfig {
 	return c.Public
+
+}
+
+func (c *HdfsConfig) Addr() string {
+	return c.Host + ":" + strconv.Itoa(int(c.Port))
 }

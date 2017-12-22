@@ -15,7 +15,7 @@ import (
 
 type ServiceConfig interface {
 	SetHost(host string)
-	SetPort(port int)
+	SetPort(port int32)
 	GetInterface() string
 	Unresolved() bool
 	GetPublic() ServiceConfig

@@ -3,7 +3,7 @@ package config
 type HdfsConfig struct {
 	Enabled   bool        `json:"enabled"`
 	Host      string      `json:"host"`
-	Port      int         `json:"port"`
+	Port      int32       `json:"port"`
 	Username  string      `json:"username"`
 	Interface string      `json:"interface"`
 	Public    *HdfsConfig `json:"public"`
@@ -17,7 +17,7 @@ func (c *HdfsConfig) SetHost(host string) {
 	c.Host = host
 }
 
-func (c *HdfsConfig) SetPort(port int) {
+func (c *HdfsConfig) SetPort(port int32) {
 	c.Port = port
 }
 

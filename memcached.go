@@ -7,7 +7,7 @@ import (
 
 type MemcachedConfig struct {
 	Host      string           `json:"host"`
-	Port      int              `json:"port"`
+	Port      int32            `json:"port"`
 	Interface string           `json:"interface"`
 	Public    *MemcachedConfig `json:"public"`
 }
@@ -20,7 +20,7 @@ func (c *MemcachedConfig) SetHost(host string) {
 	c.Host = host
 }
 
-func (c *MemcachedConfig) SetPort(port int) {
+func (c *MemcachedConfig) SetPort(port int32) {
 	c.Port = port
 }
 
@@ -40,5 +40,5 @@ func (c *MemcachedConfig) GetPublic() ServiceConfig {
 }
 
 func (c *MemcachedConfig) Addr() string {
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	return net.JoinHostPort(c.Host, strconv.Itoa(int(c.Port)))
 }

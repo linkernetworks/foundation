@@ -7,7 +7,7 @@ import (
 
 type GearmanConfig struct {
 	Host      string         `json:"host"`
-	Port      int            `json:"port"`
+	Port      int32          `json:"port"`
 	Interface string         `json:"interface"`
 	Public    *GearmanConfig `json:"public"`
 }
@@ -20,7 +20,7 @@ func (c *GearmanConfig) SetHost(host string) {
 	c.Host = host
 }
 
-func (c *GearmanConfig) SetPort(port int) {
+func (c *GearmanConfig) SetPort(port int32) {
 	c.Port = port
 }
 
@@ -43,5 +43,5 @@ func (c *GearmanConfig) GetPublic() ServiceConfig {
 }
 
 func (c *GearmanConfig) Addr() string {
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	return net.JoinHostPort(c.Host, strconv.Itoa(int(c.Port)))
 }

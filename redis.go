@@ -7,7 +7,7 @@ import (
 
 type RedisConfig struct {
 	Host      string       `json:"host"`
-	Port      int          `json:"port"`
+	Port      int32        `json:"port"`
 	Interface string       `json:"interface"`
 	Public    *RedisConfig `json:"public"`
 }
@@ -20,7 +20,7 @@ func (c *RedisConfig) SetHost(host string) {
 	c.Host = host
 }
 
-func (c *RedisConfig) SetPort(port int) {
+func (c *RedisConfig) SetPort(port int32) {
 	c.Port = port
 }
 
@@ -44,5 +44,5 @@ func (c *RedisConfig) GetPublic() ServiceConfig {
 }
 
 func (c *RedisConfig) Addr() string {
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+	return net.JoinHostPort(c.Host, strconv.Itoa(int(c.Port)))
 }

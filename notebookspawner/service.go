@@ -113,20 +113,16 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 		BaseURL:      nb.Url,
 	})
 
-	var p *v1.Pod
-
-	// swallowing the error it can be pod not found error
-	p, _ = kubemon.FindPod(clientset, s.namespace, podName)
-
-	// pod already exists
-	if p != nil {
+	_, err = kubemon.FindPod(clientset, s.namespace, podName)
+	if errors.IsNotFound(err) {
+		// Pod not found. Start pod for notebook in workspace(batch)
+		_, err = clientset.Core().Pods(s.namespace).Create(&pod)
+		if err != nil {
+			return nil, err
+		}
 		podTracker := s.startTracking(clientset, podName, nb)
 		return podTracker, nil
-	}
-
-	// Start pod for notebook in workspace(batch)
-	_, err = clientset.Core().Pods(s.namespace).Create(&pod)
-	if err != nil {
+	} else if err != nil {
 		return nil, err
 	}
 

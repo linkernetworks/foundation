@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"gopkg.in/mgo.v2/bson"
 

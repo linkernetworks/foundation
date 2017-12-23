@@ -3,11 +3,11 @@ package notebookspawner
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"bitbucket.org/linkernetworks/aurora/src/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"k8s.io/apimachinery/pkg/api/errors"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -114,15 +114,13 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 		BaseURL:      nb.Url,
 	})
 
-	_, err = kubemon.FindPod(clientset, s.namespace, podName)
+	_, err = clientset.CoreV1().Pods(s.namespace).Get(podName, meta_v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		// Pod not found. Start pod for notebook in workspace(batch)
+		// Pod not found. Start a pod for notebook in workspace(batch)
 		_, err = clientset.Core().Pods(s.namespace).Create(&pod)
 		if err != nil {
 			return nil, err
 		}
-		podTracker := s.startTracking(clientset, podName, nb)
-		return podTracker, nil
 	} else if err != nil {
 		return nil, err
 	}

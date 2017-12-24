@@ -40,9 +40,10 @@ func TestNotebookSpawnerService(t *testing.T) {
 	defer context.Close()
 
 	workspace := entity.Workspace{
-		ID:   bson.NewObjectId(),
-		Name: "testing workspace",
-		Type: "general",
+		ID:    bson.NewObjectId(),
+		Name:  "testing workspace",
+		Type:  "general",
+		Owner: bson.NewObjectId(),
 	}
 	workspace.Directory = "batch-" + workspace.ID.Hex()
 

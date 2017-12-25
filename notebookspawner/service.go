@@ -121,9 +121,11 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 		// Pod not found. Start a pod for notebook in workspace(batch)
 		_, err = clientset.Core().Pods(s.namespace).Create(&pod)
 		if err != nil {
+			s.stopTracking(clientset, podName)
 			return nil, err
 		}
 	} else if err != nil {
+		s.stopTracking(clientset, podName)
 		return nil, err
 	}
 	return podTracker, nil
@@ -141,6 +143,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 
 	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
 	if err != nil {
+		s.stopTracking(clientset, podName)
 		return nil, err
 	}
 	return podTracker, nil

@@ -105,9 +105,13 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 	podName := PodNamePrefix + nb.DeploymentID()
 
 	podFactory := NotebookPodFactory{nb}
+
+	// volumeMounts subPath should not have a root dir. the correct one is like batches/batch-xxx
+	workspaceDir := s.Config.FormatWorkspaceBasename(&workspace)
+
 	pod := podFactory.NewPod(podName, NotebookPodParameters{
 		Image:        nb.Image,
-		WorkspaceDir: workspace.Directory,
+		WorkspaceDir: workspaceDir,
 		WorkingDir:   "/batch",
 		Bind:         "0.0.0.0",
 		Port:         NotebookContainerPort,

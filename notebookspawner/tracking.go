@@ -42,3 +42,9 @@ func (s *NotebookSpawnerService) startTracking(clientset *kubernetes.Clientset, 
 	})
 	return podTracker
 }
+
+func (s *NotebookSpawnerService) stopTracking(clientset *kubernetes.Clientset, podName string) {
+	podTracker := podtracker.New(clientset, s.namespace, podName)
+	podTracker.Stop()
+	return nil
+}

@@ -50,7 +50,7 @@ func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
 }
 
 func (c *Config) FormatWorkspaceBasename(workspace *entity.Workspace) string {
-	return fmt.Sprintf("batch-%s", workspace.ID.Hex())
+	return filepath.Join(c.Data.BatchDir, fmt.Sprintf("batch-%s", workspace.ID.Hex()))
 }
 
 //GetArchiveDir - Get archive directory.

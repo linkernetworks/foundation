@@ -7,7 +7,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"k8s.io/apimachinery/pkg/api/errors"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -120,7 +119,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 	// Start tracking first
 	podTracker := s.startTracking(clientset, podName, nb)
 
-	_, err = clientset.CoreV1().Pods(s.namespace).Get(podName, meta_v1.GetOptions{})
+	_, err = clientset.CoreV1().Pods(s.namespace).Get(podName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
 		_, err = clientset.Core().Pods(s.namespace).Create(&pod)
@@ -145,7 +144,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	// Start tracking first
 	podTracker := s.startTracking(clientset, podName, nb)
 
-	err = clientset.Core().Pods(s.namespace).Delete(podName, metav1.NewDeleteOptions(0))
+	err = clientset.Core().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if err != nil {
 		podTracker.Stop()
 		return nil, err

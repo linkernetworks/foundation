@@ -68,17 +68,17 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					Env: []v1.EnvVar{
 						{
 							Name:  "CPU_GUARANTEE",
-							Value: "200m",
+							Value: "50m",
 						},
 						{
 							Name:  "MEM_GUARANTEE",
-							Value: "256Mi",
+							Value: "64Mi",
 						},
 					},
 					Resources: v1.ResourceRequirements{
 						Requests: v1.ResourceList{
-							"cpu":    resource.MustParse("200m"),
-							"memory": resource.MustParse("256Mi"),
+							"cpu":    resource.MustParse("50m"),
+							"memory": resource.MustParse("64Mi"),
 						},
 					},
 				},

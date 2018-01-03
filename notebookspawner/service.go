@@ -51,12 +51,19 @@ type NotebookSpawnerService struct {
 	Mongo      *mongo.MongoService
 	Context    *mongo.Context
 	Kubernetes *kubernetes.Service
+	Redis      *redis.Service
 	namespace  string
 }
 
-func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rs *redis.Service) *NotebookSpawnerService {
-	// FIXME: provide method to free context
-	return &NotebookSpawnerService{c, m, m.NewContext(), k, "default"}
+func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *redis.Service) *NotebookSpawnerService {
+	return &NotebookSpawnerService{
+		Config:     c,
+		Mongo:      m,
+		Context:    m.NewContext(),
+		Kubernetes: k,
+		Redis:      rds,
+		namespace:  "default",
+	}
 }
 
 func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {

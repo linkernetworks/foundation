@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"gopkg.in/mgo.v2/bson"
@@ -53,7 +54,7 @@ type NotebookSpawnerService struct {
 	namespace  string
 }
 
-func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service) *NotebookSpawnerService {
+func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rs *redis.Service) *NotebookSpawnerService {
 	// FIXME: provide method to free context
 	return &NotebookSpawnerService{c, m, m.NewContext(), k, "default"}
 }

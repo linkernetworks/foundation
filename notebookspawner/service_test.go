@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	// "bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
@@ -32,8 +33,9 @@ func TestNotebookSpawnerService(t *testing.T) {
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 
 	mongoService := mongo.NewMongoService(cf.Mongo.Url)
+	redisService := redis.NewService(cf.Redis)
 
-	spawner := New(cf, mongoService, kubernetesService)
+	spawner := New(cf, mongoService, kubernetesService, redisService)
 
 	// proxyURL := "/v1/notebooks/proxy/"
 	context := mongoService.NewContext()

@@ -2,6 +2,7 @@ package notebookspawner
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/event"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
 	// import global logger
@@ -12,10 +13,24 @@ import (
 )
 
 func (s *NotebookSpawnerService) startTracking(clientset *kubernetes.Clientset, podName string, nb *entity.Notebook) *podtracker.PodTracker {
+	topic := nb.Topic()
+
 	podTracker := podtracker.New(clientset, s.namespace, podName)
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook pod=%s phase=%s", podName, phase)
+
+		s.Redis.PublishAndSetJSON(topic, event.RecordEvent{
+			Type: "record.update",
+			Update: &event.RecordUpdateEvent{
+				Document: "notebooks",
+				Id:       nb.ID.Hex(),
+				Record:   nb,
+				Setter: map[string]interface{}{
+					"pod.phase": phase,
+				},
+			},
+		})
 
 		switch phase {
 		case "Pending":

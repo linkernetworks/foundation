@@ -76,6 +76,9 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 						},
 					},
 					Resources: v1.ResourceRequirements{
+						Limits: v1.ResourceList{
+							"cpu": resource.MustParse("1000m"),
+						},
 						Requests: v1.ResourceList{
 							"cpu":    resource.MustParse("50m"),
 							"memory": resource.MustParse("64Mi"),

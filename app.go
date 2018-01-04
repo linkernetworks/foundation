@@ -1,9 +1,11 @@
 package config
 
 type AppConfig struct {
-	Logger               LoggerConfig   `json:"logger"`
-	Session              *SessionConfig `json:"session"`
-	EnableAuthentication bool           `json:"enableAuthentication"`
+	Brand   *BrandConfig   `json:"brandIdentifier"`
+	Session *SessionConfig `json:"session"`
+	Logger  LoggerConfig   `json:"logger"`
+
+	EnableAuthentication bool `json:"enableAuthentication"`
 
 	// TODO: move this the dataset config
 	MaxThumbnailWidth  uint   `json:"maxThumbnailWidth"`

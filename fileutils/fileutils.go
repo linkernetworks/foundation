@@ -1,13 +1,16 @@
 package fileutils
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+
+	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 )
 
 //Exists - check path if exist or not legal.
@@ -58,4 +61,26 @@ func CopyFile(srcDir, destDir, file string) error {
 
 	err, _, _ := sysutils.ExecuteCommand(cmd)
 	return err
+}
+
+//FolderCopy copy whole folder using os console command to avoid edge effect of golang file copy.
+func FolderCopy(src, dst string) error {
+	cmd := exec.Command("cp", "-R", src, dst)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer stdout.Close()
+	if err := cmd.Start(); err != nil {
+		log.Println(err)
+		return err
+	}
+	opBytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	log.Println(string(opBytes))
+	return nil
 }

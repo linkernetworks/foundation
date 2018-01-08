@@ -27,6 +27,7 @@ func (s *NotebookSpawnerService) startTracking(clientset *kubernetes.Clientset, 
 				Id:       nb.ID.Hex(),
 				Record:   nb,
 				Setter: map[string]interface{}{
+					"pod.ip":    pod.Status.PodIP,
 					"pod.phase": phase,
 				},
 			},

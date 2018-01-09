@@ -75,17 +75,21 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *red
 	}
 }
 
-func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
-	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
-	if err != nil {
-		return err
-	}
-	podInfo := entity.PodInfo{
+func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
+	return &entity.PodInfo{
 		Phase:     pod.Status.Phase,
 		Message:   pod.Status.Message,
 		Reason:    pod.Status.Reason,
 		StartTime: pod.Status.StartTime,
 	}
+}
+
+func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
+	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
+	if err != nil {
+		return err
+	}
+	podInfo := NewPodInfo(pod)
 
 	q := bson.M{"_id": notebookID}
 	m := bson.M{

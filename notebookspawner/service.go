@@ -5,7 +5,6 @@ import (
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"bitbucket.org/linkernetworks/aurora/src/event"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
@@ -91,10 +90,10 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 	if kerrors.IsNotFound(err) {
 		defer func() {
 			topic := nb.Topic()
-			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 				"backend.connected": false,
-				"pod": nil,
-			})
+				"pod":               nil,
+			}))
 		}()
 
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
@@ -111,11 +110,11 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 
 		defer func() {
 			topic := nb.Topic()
-			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 				"backend.connected": false,
 				"backend.error":     err.Error(),
-				"pod": nil,
-			})
+				"pod":               nil,
+			}))
 		}()
 
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
@@ -150,13 +149,13 @@ func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (
 
 	defer func() {
 		topic := nb.Topic()
-		s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+		s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 			"backend.connected": pod.Status.PodIP != "",
 			"pod.phase":         pod.Status.Phase,
 			"pod.message":       pod.Status.Message,
 			"pod.reason":        pod.Status.Reason,
 			"pod.startTime":     pod.Status.StartTime,
-		})
+		}))
 	}()
 	return err
 }

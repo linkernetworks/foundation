@@ -40,7 +40,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebo
 
 		switch phase {
 		case "Pending":
-			s.Sync(nb.ID, pod)
+			s.SyncFromPod(nb.ID, pod)
 			// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
 			for _, c := range pod.Status.ContainerStatuses {
 				waitingReason := c.State.Waiting.Reason
@@ -53,7 +53,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebo
 			}
 
 		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
-			s.Sync(nb.ID, pod)
+			s.SyncFromPod(nb.ID, pod)
 
 			// stop tracking
 			return true

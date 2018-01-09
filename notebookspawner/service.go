@@ -84,7 +84,34 @@ func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
 	}
 }
 
-func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
+func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
+	q := bson.M{"_id": nb.ID}
+	pod, err := s.GetPod(nb)
+	if kerrors.IsNotFound(err) {
+		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
+			"$unset": bson.M{
+				"backend.connected": false,
+				"backend.host":      nil,
+				"backend.port":      nil,
+				"pod":               nil,
+			},
+		})
+	} else if err != nil {
+		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
+			"$set": bson.M{
+				"error":             true,
+				"message":           err.Error(),
+				"backend.connected": false,
+				"pod":               nil,
+			},
+		})
+	} else {
+		// found pod
+		return s.SyncFromPod(nb.ID, pod)
+	}
+}
+
+func (s *NotebookSpawnerService) SyncFromPod(notebookID bson.ObjectId, pod *v1.Pod) error {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err

@@ -97,10 +97,6 @@ func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) err
 	return s.Context.C(entity.NotebookCollectionName).Update(q, m)
 }
 
-func (s *NotebookSpawnerService) DeployPod(notebook PodDeployment) error {
-	return nil
-}
-
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
 	workspace := entity.Workspace{}
 	err = s.Context.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
@@ -126,7 +122,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		BaseURL:      nb.Url,
 	})
 	// Start tracking first
-	_, err = s.clientset.CoreV1().Pods(s.namespace).Get(podName, metav1.GetOptions{})
+	_, err = s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
 		tracker = s.startTracking(podName, nb)
@@ -152,15 +148,15 @@ func (s *NotebookSpawnerService) GetPod(nb *entity.Notebook) (*v1.Pod, error) {
 
 // Stop returns nil if it's already stopped
 func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTracker, error) {
-	podName := nb.DeploymentID()
-
-	// not created
-	_, err := s.clientset.CoreV1().Pods(s.namespace).Get(podName, metav1.GetOptions{})
+	// if it's not created
+	_, err := s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		return nil, err
 	}
+
+	podName := nb.DeploymentID()
 
 	// We found the pod, let's start a tracker first, and then delete the pod
 	podTracker := s.startTracking(podName, nb)

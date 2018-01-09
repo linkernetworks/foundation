@@ -1,14 +1,15 @@
 package notebookspawner
 
 import (
-	"fmt"
-
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
+
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"gopkg.in/mgo.v2/bson"
@@ -68,35 +69,8 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *red
 	}
 }
 
-// Select Container port from the given port by the port name
-func SelectPodContainerPort(pod *v1.Pod, portname string) (containerPort int32, found bool) {
-	for _, container := range pod.Spec.Containers {
-		for _, port := range container.Ports {
-			if port.Name == portname {
-				containerPort = port.ContainerPort
-				found = true
-				return
-			}
-		}
-	}
-	return containerPort, found
-}
-
-func NewProxyBackendFromPodStatus(pod *v1.Pod, portname string) (*entity.ProxyBackend, error) {
-	port, ok := SelectPodContainerPort(pod, portname)
-	if !ok {
-		return nil, fmt.Errorf("portname %s not found", portname)
-	}
-	backend := entity.ProxyBackend{
-		IP:        pod.Status.PodIP,
-		Port:      int(port),
-		Connected: pod.Status.PodIP != "",
-	}
-	return &backend, nil
-}
-
 func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
-	backend, err := NewProxyBackendFromPodStatus(pod, "notebook")
+	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,11 @@
 package config
 
 type JupyterConfig struct {
-	BaseUrl      string       `json:"baseUrl"`
+	BaseUrl string `json:"baseUrl"`
+
+	// default bind to "0.0.0.0"
+	Bind string `json:"bind"`
+
 	DefaultImage string       `json:"defaultImage"`
 	WorkingDir   string       `json:"workingDir"`
 	Cache        *CacheConfig `json:"cache"`

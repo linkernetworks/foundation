@@ -5,6 +5,7 @@ import (
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/event"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
@@ -89,43 +90,65 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 	pod, err := s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
-			"$unset": bson.M{
+			"$set": bson.M{
 				"backend.connected": false,
-				"backend.host":      nil,
-				"backend.port":      nil,
-				"pod":               nil,
+			},
+			"$unset": bson.M{
+				"backend.host": nil,
+				"backend.port": nil,
+				"pod":          nil,
 			},
 		})
 	} else if err != nil {
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
 			"$set": bson.M{
-				"error":             true,
-				"message":           err.Error(),
 				"backend.connected": false,
+				"backend.error":     err.Error(),
 				"pod":               nil,
 			},
 		})
 	} else {
 		// found pod
-		return s.SyncFromPod(nb.ID, pod)
+		return s.SyncFromPod(nb, pod)
 	}
 }
 
-func (s *NotebookSpawnerService) SyncFromPod(notebookID bson.ObjectId, pod *v1.Pod) error {
+func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err
 	}
 	podInfo := NewPodInfo(pod)
 
-	q := bson.M{"_id": notebookID}
+	q := bson.M{"_id": nb.ID}
 	m := bson.M{
 		"$set": bson.M{
 			"backend": backend,
 			"pod":     podInfo,
 		},
 	}
-	return s.Context.C(entity.NotebookCollectionName).Update(q, m)
+
+	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
+
+	topic := nb.Topic()
+	defer func() {
+		s.Redis.PublishAndSetJSON(topic, event.RecordEvent{
+			Type: "record.update",
+			Update: &event.RecordUpdateEvent{
+				Document: "notebooks",
+				Id:       nb.ID.Hex(),
+				Record:   nb,
+				Setter: map[string]interface{}{
+					"backend.connected": pod.Status.PodIP != "",
+					"pod.phase":         pod.Status.Phase,
+					"pod.message":       pod.Status.Message,
+					"pod.reason":        pod.Status.Reason,
+					"pod.startTime":     pod.Status.StartTime,
+				},
+			},
+		})
+	}()
+	return err
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {

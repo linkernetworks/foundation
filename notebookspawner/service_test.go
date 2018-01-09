@@ -32,7 +32,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 
-	mongoService := mongo.NewMongoService(cf.Mongo.Url)
+	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.NewService(cf.Redis)
 
 	spawner := New(cf, mongoService, kubernetesService, redisService)

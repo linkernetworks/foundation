@@ -9,13 +9,12 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
-func (s *NotebookSpawnerService) startTracking(clientset *kubernetes.Clientset, podName string, nb *entity.Notebook) *podtracker.PodTracker {
+func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebook) *podtracker.PodTracker {
 	topic := nb.Topic()
 
-	podTracker := podtracker.New(clientset, s.namespace, podName)
+	podTracker := podtracker.New(s.clientset, s.namespace, podName)
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook pod=%s phase=%s", podName, phase)

@@ -187,6 +187,11 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		Bind:         s.Config.Jupyter.Bind,
 		Port:         NotebookContainerPort,
 		BaseURL:      nb.Url,
+		Labels: map[string]string{
+			"service":   "notebook",
+			"workspace": nb.WorkspaceID.Hex(),
+			"user":      nb.CreatedBy.Hex(),
+		},
 	})
 	// Start tracking first
 	_, err = s.GetPod(nb)

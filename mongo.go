@@ -20,8 +20,8 @@ func New(url string) *Service {
 	}
 }
 
-func (s *Service) NewSession() *Context {
-	return &Context{
+func (s *Service) NewSession() *Session {
+	return &Session{
 		Session: s.globalSession.Copy(),
 	}
 }

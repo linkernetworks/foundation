@@ -9,7 +9,7 @@ type MongoService struct {
 	globalSession *mgo.Session
 }
 
-func NewMongoService(url string) *MongoService {
+func New(url string) *MongoService {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)

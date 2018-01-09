@@ -11,6 +11,11 @@ import (
 
 const NotebookContainerPort = 8888
 
+// Object as Pod
+type PodFactory interface {
+	NewPod(podName string) v1.Pod
+}
+
 type NotebookPodFactory struct {
 	Notebook *entity.Notebook
 }

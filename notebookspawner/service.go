@@ -20,11 +20,6 @@ import (
 
 const PodNamePrefix = "notebook-"
 
-// Object as Pod
-type PodFactory interface {
-	NewPod(podName string) v1.Pod
-}
-
 type PodLabelProvider interface {
 	PodLabels() map[string]string
 }

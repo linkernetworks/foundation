@@ -10,8 +10,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebook) *podtracker.PodTracker {
-	podTracker := podtracker.New(s.clientset, s.namespace, podName)
+func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebook) (*podtracker.PodTracker, error) {
+	clientset, err := s.getClientset()
+	if err != nil {
+		return nil, err
+	}
+
+	podTracker := podtracker.New(clientset, s.namespace, podName)
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook pod=%s phase=%s", podName, phase)
@@ -39,5 +44,5 @@ func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebo
 
 		return false
 	})
-	return podTracker
+	return podTracker, nil
 }

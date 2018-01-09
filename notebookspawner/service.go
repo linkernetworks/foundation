@@ -60,10 +60,6 @@ type NotebookSpawnerService struct {
 }
 
 func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *redis.Service) *NotebookSpawnerService {
-	clientset, err := k.CreateClientset()
-	if err != nil {
-		panic(err)
-	}
 	return &NotebookSpawnerService{
 		Config:     c,
 		Mongo:      m,
@@ -71,8 +67,16 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *red
 		Kubernetes: k,
 		Redis:      rds,
 		namespace:  "default",
-		clientset:  clientset,
 	}
+}
+
+func (s *NotebookSpawnerService) getClientset() (*kubernetesclient.Clientset, error) {
+	if s.clientset != nil {
+		return s.clientset, nil
+	}
+	var err error
+	s.clientset, err = s.Kubernetes.CreateClientset()
+	return s.clientset, err
 }
 
 func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
@@ -188,7 +192,11 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	_, err = s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker = s.startTracking(podName, nb)
+		tracker, err = s.startTracking(podName, nb)
+		if err != nil {
+			return nil, err
+		}
+
 		_, err = s.clientset.Core().Pods(s.namespace).Create(&pod)
 		if err != nil {
 			tracker.Stop()
@@ -201,12 +209,16 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	tracker = s.startTracking(podName, nb)
-	return tracker, nil
+	tracker, err = s.startTracking(podName, nb)
+	return tracker, err
 }
 
 func (s *NotebookSpawnerService) GetPod(nb *entity.Notebook) (*v1.Pod, error) {
-	return s.clientset.CoreV1().Pods(s.namespace).Get(nb.DeploymentID(), metav1.GetOptions{})
+	clientset, err := s.getClientset()
+	if err != nil {
+		return nil, err
+	}
+	return clientset.CoreV1().Pods(s.namespace).Get(nb.DeploymentID(), metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
@@ -221,9 +233,18 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 
 	podName := nb.DeploymentID()
 
+	clientset, err := s.getClientset()
+	if err != nil {
+		return nil, err
+	}
+
 	// We found the pod, let's start a tracker first, and then delete the pod
-	podTracker := s.startTracking(podName, nb)
-	err = s.clientset.Core().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
+	podTracker, err := s.startTracking(podName, nb)
+	if err != nil {
+		return nil, err
+	}
+
+	err = clientset.Core().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		podTracker.Stop()
 		return nil, ErrAlreadyStopped

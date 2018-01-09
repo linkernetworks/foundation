@@ -18,8 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const PodNamePrefix = "notebook-"
-
 type PodLabelProvider interface {
 	PodLabels() map[string]string
 }
@@ -104,7 +102,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (*podtracker.PodTrac
 
 	// TODO: load workspace to ensure the workspace exists
 	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
-	podName := PodNamePrefix + nb.DeploymentID()
+	podName := nb.DeploymentID()
 
 	podFactory := NotebookPodFactory{nb}
 
@@ -143,7 +141,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
-	podName := PodNamePrefix + nb.DeploymentID()
+	podName := nb.DeploymentID()
 	// Start tracking first
 	podTracker := s.startTracking(clientset, podName, nb)
 

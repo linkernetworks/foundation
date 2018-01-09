@@ -60,7 +60,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					},
 					Ports: []v1.ContainerPort{
 						{
-							Name:          "notebook-port",
+							Name:          "notebook",
 							ContainerPort: params.Port,
 							Protocol:      v1.ProtocolTCP,
 						},

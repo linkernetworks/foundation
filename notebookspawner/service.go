@@ -1,6 +1,8 @@
 package notebookspawner
 
 import (
+	"fmt"
+
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
@@ -66,14 +68,38 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *red
 	}
 }
 
-func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
+// Select Container port from the given port by the port name
+func SelectPodContainerPort(pod *v1.Pod, portname string) (containerPort int32, found bool) {
+	for _, container := range pod.Spec.Containers {
+		for _, port := range container.Ports {
+			if port.Name == portname {
+				containerPort = port.ContainerPort
+				found = true
+				return
+			}
+		}
+	}
+	return containerPort, found
+}
+
+func NewProxyBackendFromPodStatus(pod *v1.Pod, portname string) (*entity.ProxyBackend, error) {
+	port, ok := SelectPodContainerPort(pod, portname)
+	if !ok {
+		return nil, fmt.Errorf("portname %s not found", portname)
+	}
 	backend := entity.ProxyBackend{
-		// TODO: extract this as the service configuration
 		IP:        pod.Status.PodIP,
-		Port:      NotebookContainerPort,
+		Port:      int(port),
 		Connected: pod.Status.PodIP != "",
 	}
+	return &backend, nil
+}
 
+func (s *NotebookSpawnerService) Sync(notebookID bson.ObjectId, pod *v1.Pod) error {
+	backend, err := NewProxyBackendFromPodStatus(pod, "notebook")
+	if err != nil {
+		return err
+	}
 	podInfo := entity.PodInfo{
 		Phase:     pod.Status.Phase,
 		Message:   pod.Status.Message,

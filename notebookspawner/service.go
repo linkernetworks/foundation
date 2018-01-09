@@ -50,7 +50,7 @@ type NotebookPodDeployment interface {
 
 type NotebookSpawnerService struct {
 	Config     config.Config
-	Mongo      *mongo.MongoService
+	Mongo      *mongo.Service
 	Context    *mongo.Context
 	Kubernetes *kubernetes.Service
 	Redis      *redis.Service
@@ -59,7 +59,7 @@ type NotebookSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *redis.Service) *NotebookSpawnerService {
+func New(c config.Config, m *mongo.Service, k *kubernetes.Service, rds *redis.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{
 		Config:     c,
 		Mongo:      m,

@@ -4,23 +4,23 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-type MongoService struct {
+type Service struct {
 	Url           string
 	globalSession *mgo.Session
 }
 
-func New(url string) *MongoService {
+func New(url string) *Service {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)
 	}
-	return &MongoService{
+	return &Service{
 		Url:           url,
 		globalSession: session,
 	}
 }
 
-func (s *MongoService) NewSession() *Context {
+func (s *Service) NewSession() *Context {
 	return &Context{
 		Session: s.globalSession.Copy(),
 	}

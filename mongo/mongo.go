@@ -20,7 +20,7 @@ func New(url string) *MongoService {
 	}
 }
 
-func (s *MongoService) NewContext() *Context {
+func (s *MongoService) NewSession() *Context {
 	return &Context{
 		Session: s.globalSession.Copy(),
 	}

@@ -36,7 +36,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	spawner := New(cf, mongoService, kubernetesService, redisService)
 
 	// proxyURL := "/v1/notebooks/proxy/"
-	context := mongoService.NewContext()
+	context := mongoService.NewSession()
 	defer context.Close()
 
 	workspace := entity.Workspace{

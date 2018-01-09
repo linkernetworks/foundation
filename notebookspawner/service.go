@@ -63,7 +63,7 @@ func New(c config.Config, m *mongo.MongoService, k *kubernetes.Service, rds *red
 	return &NotebookSpawnerService{
 		Config:     c,
 		Mongo:      m,
-		Context:    m.NewContext(),
+		Context:    m.NewSession(),
 		Kubernetes: k,
 		Redis:      rds,
 		namespace:  "default",

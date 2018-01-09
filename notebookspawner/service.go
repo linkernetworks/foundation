@@ -51,7 +51,7 @@ type NotebookPodDeployment interface {
 type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.Service
-	Context    *mongo.Context
+	Context    *mongo.Session
 	Kubernetes *kubernetes.Service
 	Redis      *redis.Service
 

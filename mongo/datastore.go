@@ -6,13 +6,13 @@ import (
 )
 
 type DataStore struct {
-	Context    *Context
+	Context    *Session
 	Session    *mgo.Session
 	Collection string
 	C          *mgo.Collection
 }
 
-func NewDataStore(context *Context, collection string) *DataStore {
+func NewDataStore(context *Session, collection string) *DataStore {
 	c := context.Session.DB("").C(collection)
 	return &DataStore{context, context.Session, collection, c}
 }

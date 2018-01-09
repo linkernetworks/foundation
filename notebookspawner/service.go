@@ -89,6 +89,14 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 	q := bson.M{"_id": nb.ID}
 	pod, err := s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
+		defer func() {
+			topic := nb.Topic()
+			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+				"backend.connected": false,
+				"pod": nil,
+			})
+		}()
+
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
 			"$set": bson.M{
 				"backend.connected": false,
@@ -100,6 +108,16 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 			},
 		})
 	} else if err != nil {
+
+		defer func() {
+			topic := nb.Topic()
+			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+				"backend.connected": false,
+				"backend.error":     err.Error(),
+				"pod": nil,
+			})
+		}()
+
 		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
 			"$set": bson.M{
 				"backend.connected": false,
@@ -130,22 +148,14 @@ func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (
 
 	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
 
-	topic := nb.Topic()
 	defer func() {
-		s.Redis.PublishAndSetJSON(topic, event.RecordEvent{
-			Type: "record.update",
-			Update: &event.RecordUpdateEvent{
-				Document: "notebooks",
-				Id:       nb.ID.Hex(),
-				Record:   nb,
-				Setter: map[string]interface{}{
-					"backend.connected": pod.Status.PodIP != "",
-					"pod.phase":         pod.Status.Phase,
-					"pod.message":       pod.Status.Message,
-					"pod.reason":        pod.Status.Reason,
-					"pod.startTime":     pod.Status.StartTime,
-				},
-			},
+		topic := nb.Topic()
+		s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(map[string]interface{} {
+			"backend.connected": pod.Status.PodIP != "",
+			"pod.phase":         pod.Status.Phase,
+			"pod.message":       pod.Status.Message,
+			"pod.reason":        pod.Status.Reason,
+			"pod.startTime":     pod.Status.StartTime,
 		})
 	}()
 	return err

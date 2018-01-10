@@ -39,11 +39,13 @@ func TestNotebookSpawnerService(t *testing.T) {
 	context := mongoService.NewSession()
 	defer context.Close()
 
+	userId := bson.NewObjectId()
+
 	workspace := entity.Workspace{
 		ID:    bson.NewObjectId(),
 		Name:  "testing workspace",
 		Type:  "general",
-		Owner: bson.NewObjectId(),
+		Owner: userId,
 	}
 	workspace.Directory = "batch-" + workspace.ID.Hex()
 
@@ -56,7 +58,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 		Image:       notebookImage,
 		WorkspaceID: workspace.ID,
 		Url:         cf.Jupyter.BaseUrl + "/" + notebookID.Hex(),
-		CreatedBy:   bson.NewObjectId(),
+		CreatedBy:   userId,
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)
 	assert.NoError(t, err)

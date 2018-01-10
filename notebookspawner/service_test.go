@@ -51,6 +51,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 
 	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
+	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
 	notebookID := bson.NewObjectId()
 	notebook := entity.Notebook{
@@ -62,6 +63,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)
 	assert.NoError(t, err)
+	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
 	_, err = spawner.Start(&notebook)
 	assert.NoError(t, err)
@@ -75,6 +77,4 @@ func TestNotebookSpawnerService(t *testing.T) {
 	err = spawner.Sync(&notebook)
 	assert.NoError(t, err)
 
-	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
-	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 }

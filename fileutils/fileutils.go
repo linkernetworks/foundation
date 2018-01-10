@@ -1,9 +1,11 @@
 package fileutils
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 )
@@ -49,4 +51,11 @@ func FindFilesByExtension(pathS, ext string) []string {
 		return nil
 	})
 	return files
+}
+
+func CopyFile(srcDir, destDir, file string) error {
+	cmd := exec.Command("cp", srcDir+"/"+file, destDir+"/"+file)
+
+	err, _, _ := sysutils.ExecuteCommand(cmd)
+	return err
 }

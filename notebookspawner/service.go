@@ -243,6 +243,15 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
+	// force sending a terminating state to document
+	q := bson.M{"_id": nb.ID}
+	m := bson.M{
+		"$set": bson.M{
+			"pod": bson.M{"phase": "Terminating"},
+		},
+	}
+	s.Context.C(entity.NotebookCollectionName).Update(q, m)
+
 	// We found the pod, let's start a tracker first, and then delete the pod
 	podTracker, err := s.startTracking(podName, nb)
 	if err != nil {

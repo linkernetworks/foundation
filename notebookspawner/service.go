@@ -92,7 +92,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 	q := bson.M{"_id": nb.ID}
 	pod, err := s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
-		defer func() {
+		go func() {
 			topic := nb.Topic()
 			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 				"backend.connected": false,
@@ -112,7 +112,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 		})
 	} else if err != nil {
 
-		defer func() {
+		go func() {
 			topic := nb.Topic()
 			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 				"backend.connected": false,
@@ -151,7 +151,7 @@ func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (
 
 	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
 
-	defer func() {
+	go func() {
 		topic := nb.Topic()
 		s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
 			"backend.connected": pod.Status.PodIP != "",
@@ -202,7 +202,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 			return nil, err
 		}
 
-		_, err = s.clientset.Core().Pods(s.namespace).Create(&pod)
+		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
 		if err != nil {
 			tracker.Stop()
 			return nil, err
@@ -249,7 +249,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
-	err = clientset.Core().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
+	err = clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		podTracker.Stop()
 		return nil, ErrAlreadyStopped

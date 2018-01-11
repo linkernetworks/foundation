@@ -1,9 +1,10 @@
 package config
 
 type AppConfig struct {
-	Brand   *BrandConfig   `json:"brandIdentifier"`
-	Session *SessionConfig `json:"session"`
-	Logger  LoggerConfig   `json:"logger"`
+	Brand    *BrandConfig    `json:"brandIdentifier"`
+	Session  *SessionConfig  `json:"session"`
+	Logger   LoggerConfig    `json:"logger"`
+	Socketio *SocketioConfig `json:"socketio"`
 
 	EnableAuthentication bool `json:"enableAuthentication"`
 

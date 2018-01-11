@@ -14,11 +14,12 @@ type Service struct {
 	clients map[string]*client
 }
 
-func NewService() *Service {
+func NewService(maxConnection int) *Service {
 	io, err := socketio.NewServer(nil)
 	if err != nil {
 		panic(err)
 	}
+	io.SetMaxConnection(maxConnection)
 	return &Service{
 		Server:  io,
 		clients: map[string]*client{},
@@ -134,6 +135,7 @@ Emit:
 }
 func (s *Service) CleanUp() error {
 	now := time.Now().Unix()
+	logger.Debugf("SOCKET: clean up triggered. Server connection: %v. Active client: %v", s.Count(), len(s.clients))
 	for token, client := range s.clients {
 		// send close to client channel
 		if client.closed == false && client.expiredAt < now {
@@ -173,4 +175,9 @@ func (s *Service) Refresh(clientId string) error {
 	}
 	client.expiredAt = time.Now().Unix() + 5*60
 	return nil
+}
+
+// Count returns the current number of connected clients in session
+func (s *Service) Count() int {
+	return s.Server.Count()
 }

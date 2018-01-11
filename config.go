@@ -23,18 +23,19 @@ type ServiceConfig interface {
 }
 
 type Config struct {
-	Redis         *RedisConfig     `json:"redis"`
-	Gearman       *GearmanConfig   `json:"gearman"`
-	Memcached     *MemcachedConfig `json:"memcached"`
-	Mongo         *MongoConfig     `json:"mongo"`
-	Hdfs          *HdfsConfig      `json:"hdfs"`
-	App           *AppConfig       `json:"app"`
-	Jupyter       *JupyterConfig   `json:"jupyter"`
-	JobController *JobServerConfig `json:"jobserver"`
-	Influxdb      *InfluxdbConfig  `json:"influxdb"`
-	DataDir       string           `json:"dataDir"`
-	Data          *DataConfig      `json:"data"`
-	Version       string           `json:"version"`
+	Redis         *RedisConfig      `json:"redis"`
+	Gearman       *GearmanConfig    `json:"gearman"`
+	Memcached     *MemcachedConfig  `json:"memcached"`
+	Mongo         *MongoConfig      `json:"mongo"`
+	Hdfs          *HdfsConfig       `json:"hdfs"`
+	App           *AppConfig        `json:"app"`
+	Jupyter       *JupyterConfig    `json:"jupyter"`
+	JobController *JobServerConfig  `json:"jobserver"`
+	JobUpdater    *JobUpdaterConfig `json:"jobupdater"`
+	Influxdb      *InfluxdbConfig   `json:"influxdb"`
+	DataDir       string            `json:"dataDir"`
+	Data          *DataConfig       `json:"data"`
+	Version       string            `json:"version"`
 
 	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }

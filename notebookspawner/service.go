@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var ErrAlreadyStopped = errors.New("Already Stopped")
+var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type PodLabelProvider interface {
 	PodLabels() map[string]string

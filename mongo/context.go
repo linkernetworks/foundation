@@ -59,6 +59,10 @@ func (c *Session) Update(collection string, query bson.M, modifier bson.M) error
 	return c.C(collection).Update(query, modifier)
 }
 
+func (c *Session) UpdateAll(collection string, sel bson.M, update bson.M) (*mgo.ChangeInfo, error) {
+	return c.C(collection).UpdateAll(sel, update)
+}
+
 func (c *Session) UpdateById(collection string, id bson.ObjectId, update interface{}) error {
 	return c.C(collection).UpdateId(id, update)
 }

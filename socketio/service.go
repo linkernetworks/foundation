@@ -145,28 +145,27 @@ Emit:
 		}
 	}
 }
-func (s *Service) CleanUp() error {
+func (s *Service) CleanUp() (lasterr error) {
 	now := time.Now().Unix()
-	logger.Debugf("SOCKET: clean up triggered. Server connection: %v. Active client: %v", s.Count(), len(s.clients))
 	for token, client := range s.clients {
 		// send close to client channel
 		if client.closed == false && client.expiredAt < now {
-			logger.Debugf("SOCKET: marking client token: %s as closed. Active clients: %v", token, len(s.clients))
+			logger.Debugf("SOCKET: marking client=%s as closed. Active clients: %v", token, len(s.clients))
 			client.closed = true
 
 		} else if client.closed {
-			logger.Debugf("SOCKET: closing client token: %s. Active clients: %v", token, len(s.clients))
-
+			logger.Debugf("SOCKET: closing client=%s. Active clients: %v", token, len(s.clients))
 			client.Stop()
 			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error(err)
+				lasterr = err
 			}
 			client.socket.Disconnect()
 			close(client.channel)
 			delete(s.clients, token)
 		}
 	}
-	return nil
+	return lasterr
 }
 
 func (c *client) Stop() {

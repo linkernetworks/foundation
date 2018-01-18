@@ -13,7 +13,9 @@ type TimerService struct {
 }
 
 func New() *TimerService {
-	return &TimerService{}
+	return &TimerService{
+		Handlers: map[string]TimerHandler{},
+	}
 }
 
 func (s *TimerService) Bind(key string, handler TimerHandler) {

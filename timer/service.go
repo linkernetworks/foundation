@@ -6,7 +6,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 )
 
-type TimerHandler func()
+type TimerHandler func() error
 
 type TimerService struct {
 	Interval time.Duration
@@ -35,7 +35,11 @@ func (s *TimerService) Run() chan struct{} {
 			case <-ticker.C:
 				for key, handler := range s.Handlers {
 					logger.Debugf("Running timer handler: %s", key)
-					go handler()
+					go func() {
+						if err := handler(); err != nil {
+							logger.Errorf("%s: error=%v", key, err)
+						}
+					}()
 				}
 
 			case <-signal:

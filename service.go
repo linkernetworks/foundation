@@ -10,8 +10,9 @@ import (
 )
 
 type Service struct {
-	Server  *socketio.Server
-	clients map[string]*client
+	Server            *socketio.Server
+	clients           map[string]*client
+	connectionTimeout time.Duration
 }
 
 func NewService(maxConnection int) *Service {
@@ -19,10 +20,15 @@ func NewService(maxConnection int) *Service {
 	if err != nil {
 		panic(err)
 	}
+	/*
+		io.SetPingInterval(2 * time.Second)
+		io.SetPingTimeout(5 * time.Second)
+	*/
 	io.SetMaxConnection(maxConnection)
 	return &Service{
-		Server:  io,
-		clients: map[string]*client{},
+		Server:            io,
+		clients:           map[string]*client{},
+		connectionTimeout: 5 * time.Minute,
 	}
 }
 
@@ -168,13 +174,11 @@ func (s *Service) Refresh(clientId string) error {
 	if len(clientId) == 0 {
 		return errors.New("Token provided by front-end is empty. Can't refresh.")
 	}
-	client, ok := s.clients[clientId]
-	if !ok {
-		msg := fmt.Sprintf("Client: %s not found and can't refresh.", clientId)
-		return errors.New(msg)
+	if client, ok := s.clients[clientId]; ok {
+		client.expiredAt = time.Now().Add(s.connectionTimeout).Unix()
+		return nil
 	}
-	client.expiredAt = time.Now().Unix() + 5*60
-	return nil
+	return fmt.Errorf("Client: %s not found and can't refresh.", clientId)
 }
 
 // Count returns the current number of connected clients in session

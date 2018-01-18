@@ -22,9 +22,15 @@ func New(cf *config.SocketioConfig) *Service {
 		panic(err)
 	}
 
-	// io.SetPingInterval(2 * time.Second)
-	// io.SetPingTimeout(5 * time.Second)
-	io.SetMaxConnection(cf.MaxConnection)
+	if cf.Ping.Interval != 0 {
+		io.SetPingInterval(cf.Ping.Interval * time.Second)
+	}
+	if cf.Ping.Timeout != 0 {
+		io.SetPingTimeout(cf.Ping.Timeout * time.Second)
+	}
+	if cf.MaxConnection != 0 {
+		io.SetMaxConnection(cf.MaxConnection)
+	}
 	return &Service{
 		Server:            io,
 		clients:           map[string]*client{},

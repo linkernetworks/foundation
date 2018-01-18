@@ -161,7 +161,6 @@ func (s *Service) CleanUp() (lasterr error) {
 				lasterr = err
 			}
 			client.socket.Disconnect()
-			close(client.channel)
 			delete(s.clients, token)
 		}
 	}

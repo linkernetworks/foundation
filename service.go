@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"fmt"
@@ -15,16 +16,15 @@ type Service struct {
 	connectionTimeout time.Duration
 }
 
-func NewService(maxConnection int) *Service {
+func New(cf *config.SocketioConfig) *Service {
 	io, err := socketio.NewServer(nil)
 	if err != nil {
 		panic(err)
 	}
-	/*
-		io.SetPingInterval(2 * time.Second)
-		io.SetPingTimeout(5 * time.Second)
-	*/
-	io.SetMaxConnection(maxConnection)
+
+	// io.SetPingInterval(2 * time.Second)
+	// io.SetPingTimeout(5 * time.Second)
+	io.SetMaxConnection(cf.MaxConnection)
 	return &Service{
 		Server:            io,
 		clients:           map[string]*client{},

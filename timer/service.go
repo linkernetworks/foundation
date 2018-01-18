@@ -9,11 +9,13 @@ import (
 type TimerHandler func()
 
 type TimerService struct {
+	Interval time.Duration
 	Handlers map[string]TimerHandler
 }
 
-func New() *TimerService {
+func New(interval time.Duration) *TimerService {
 	return &TimerService{
+		Interval: interval,
 		Handlers: map[string]TimerHandler{},
 	}
 }
@@ -22,9 +24,11 @@ func (s *TimerService) Bind(key string, handler TimerHandler) {
 	s.Handlers[key] = handler
 }
 
-func (s *TimerService) Run() {
-	ticker := time.NewTicker(3 * time.Minute)
-	quit := make(chan struct{})
+func (s *TimerService) Run() chan struct{} {
+	ticker := time.NewTicker(s.Interval)
+
+	signal := make(chan struct{})
+
 	go func() {
 		for {
 			select {
@@ -34,10 +38,12 @@ func (s *TimerService) Run() {
 					go handler()
 				}
 
-			case <-quit:
+			case <-signal:
 				ticker.Stop()
 				return
 			}
 		}
 	}()
+
+	return signal
 }

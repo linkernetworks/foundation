@@ -23,10 +23,10 @@ func New(cf *config.SocketioConfig) *Service {
 	}
 
 	if cf.Ping.Interval != 0 {
-		io.SetPingInterval(cf.Ping.Interval * time.Second)
+		io.SetPingInterval(time.Duration(cf.Ping.Interval) * time.Second)
 	}
 	if cf.Ping.Timeout != 0 {
-		io.SetPingTimeout(cf.Ping.Timeout * time.Second)
+		io.SetPingTimeout(time.Duration(cf.Ping.Timeout) * time.Second)
 	}
 	if cf.MaxConnection != 0 {
 		io.SetMaxConnection(cf.MaxConnection)

@@ -10,6 +10,7 @@ import (
 func TestJobUpdaterConfig(t *testing.T) {
 	cf := JobUpdaterConfig{}
 	jsontext := `{
+		"bufferSize": 120,
 		"logger": {
             "dir": "./logs",
             "filePattern": "jobupdater.log.%Y%m%d",

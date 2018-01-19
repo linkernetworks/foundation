@@ -1,5 +1,6 @@
 package config
 
 type JobUpdaterConfig struct {
-	Logger LoggerConfig `json:"logger"`
+	BufferSize int          `json:"bufferSize"`
+	Logger     LoggerConfig `json:"logger"`
 }

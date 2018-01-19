@@ -32,6 +32,7 @@ type Config struct {
 	Jupyter       *JupyterConfig    `json:"jupyter"`
 	JobController *JobServerConfig  `json:"jobserver"`
 	JobUpdater    *JobUpdaterConfig `json:"jobupdater"`
+	Migration     *MigrationConfig  `json:"migration"`
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
 	DataDir       string            `json:"dataDir"`
 	Data          *DataConfig       `json:"data"`

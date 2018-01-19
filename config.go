@@ -31,6 +31,7 @@ type Config struct {
 	JobController *JobServerConfig  `json:"jobserver"`
 	JobUpdater    *JobUpdaterConfig `json:"jobupdater"`
 	Migration     *MigrationConfig  `json:"migration"`
+	Kudis         *KudisConfig      `json:"kudis"`
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
 	Data          *DataConfig       `json:"data"`
 

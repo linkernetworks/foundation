@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -41,18 +40,19 @@ type Config struct {
 	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }
 
-//GetWorkspaceRootDir - Get batch process directory
+// GetWorkspaceRootDir - Get batch process directory
 func (c *Config) GetWorkspaceRootDir() string {
 	return filepath.Join(c.DataDir, c.Data.BatchDir)
 }
 
+// Return the full path of a workspace directory
 func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
 	rootDir := c.GetWorkspaceRootDir()
-	return filepath.Join(rootDir, fmt.Sprintf("batch-%s", workspace.ID.Hex()))
+	return filepath.Join(rootDir, workspace.Basename())
 }
 
-func (c *Config) FormatWorkspaceBasename(workspace *entity.Workspace) string {
-	return filepath.Join(c.Data.BatchDir, fmt.Sprintf("batch-%s", workspace.ID.Hex()))
+func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {
+	return filepath.Join(c.Data.BatchDir, w.Basename())
 }
 
 //GetArchiveDir - Get archive directory.

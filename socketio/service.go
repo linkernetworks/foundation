@@ -109,22 +109,22 @@ Pipe:
 			switch v := c.pubSubConn.Receive().(type) {
 			case redis.Message:
 				c.channel <- string(v.Data)
-				logger.Debugf("REDIS: received message channel: %s message: %s", v.Channel, v.Data)
+				logger.Debugf("redis: received message channel: %s message: %s", v.Channel, v.Data)
 			case redis.Subscription:
 				// v.Kind could be "subscribe", "unsubscribe" ...
-				logger.Debugf("REDIS: subscription channel:%s kind:%s count:%d", v.Channel, v.Kind, v.Count)
+				logger.Debugf("redis: subscription channel:%s kind:%s count:%d", v.Channel, v.Kind, v.Count)
 				if v.Count == 0 {
 					return nil
 				}
 			// when the connection is closed, redigo returns an error "connection closed" here
 			case error:
-				logger.Error("REDIS: ", v)
+				logger.Error("redis: ", v)
 				//	return v
 				break Pipe
 			}
 		}
 	}
-	fmt.Println("REDIS: pipe exited")
+	logger.Debugf("redis: pipe exited")
 	return nil
 }
 

@@ -56,7 +56,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 	existedClient, ok := s.clients[token]
 	if !ok || existedClient.closed {
 		// Create new client
-		logger.Infof("WS a new client socketId: %s connected with new token %s.", socket.Id(), token)
+		logger.Infof("socketio: a new client connected with new token: id=%s token=%s.", socket.Id(), token)
 		client := &client{
 			socket:     socket,
 			expiredAt:  time.Now().Unix() + 5*60,
@@ -74,7 +74,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 
 	} else {
 		// if token already exist and client still valid, replace disconnected socket with new socket
-		logger.Infof("WS a client socketId: %s reconnected with token %s.", socket.Id(), token)
+		logger.Infof("socketio: a client reconnected with token id=%s token=%s.", socket.Id(), token)
 		existedClient.socket = socket
 	}
 }
@@ -134,13 +134,13 @@ Emit:
 	for {
 		select {
 		case <-c.stopEmit:
-			logger.Debug("SOCKET: channel recieve close signal")
+			logger.Debug("socketio: channel recieve close signal")
 			c.stopEmit <- true
 			break Emit
 
 		case msg := <-c.channel:
 			if err := c.socket.Emit(c.toEvent, msg); err != nil {
-				logger.Errorf("SOCKET: emit error. %s", err.Error())
+				logger.Errorf("socketio: emit error. %s", err.Error())
 			}
 		}
 	}
@@ -150,11 +150,11 @@ func (s *Service) CleanUp() (lasterr error) {
 	for token, client := range s.clients {
 		// send close to client channel
 		if client.closed == false && client.expiredAt < now {
-			logger.Debugf("SOCKET: marking client=%s as closed. Active clients: %v", token, len(s.clients))
+			logger.Debugf("socketio: marking client=%s as closed. Active clients: %v", token, len(s.clients))
 			client.closed = true
 
 		} else if client.closed {
-			logger.Debugf("SOCKET: closing client=%s. Active clients: %v", token, len(s.clients))
+			logger.Debugf("socketio: closing client=%s. Active clients: %v", token, len(s.clients))
 			client.Stop()
 			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error(err)

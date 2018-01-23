@@ -43,7 +43,7 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 
 	if dir == "" {
 		dir = "log"
-		log.Println("Log dir is not specified. Using default log dir:", dir)
+		logger.Infof("Log dir is not specified. Using default log dir: %s", dir)
 	}
 
 	err := os.MkdirAll(dir, os.ModePerm)

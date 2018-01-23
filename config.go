@@ -105,7 +105,6 @@ func SetupServiceAddressFromInterface(c ServiceConfig) {
 // SetupAddressFromInterface will scan the network interface setting if "interface" field
 // is defined.
 func SetupAddressFromInterface(c *Config) {
-	log.Println("Resolving service configurations...")
 	SetupServiceAddressFromInterface(c.Redis)
 	SetupServiceAddressFromInterface(c.Gearman)
 	SetupServiceAddressFromInterface(c.Memcached)

@@ -61,7 +61,7 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 		linkName = "access_log"
 	}
 
-	log.Println("Start writing log to", path.Join(dir, linkName))
+	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
 	writer, err := rotatelogs.New(
 		path.Join(dir, filePattern),
 		rotatelogs.WithLinkName(path.Join(dir, linkName)),

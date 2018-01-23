@@ -47,7 +47,8 @@ func TestNotebookSpawnerService(t *testing.T) {
 		Type:  "general",
 		Owner: userId,
 	}
-	workspace.Directory = "batch-" + workspace.ID.Hex()
+
+	// dir := cf.GetWorkspaceDir(workspace)
 
 	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)

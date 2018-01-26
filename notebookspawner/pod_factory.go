@@ -60,7 +60,11 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 						"--Session.debug=True",
 					},
 					VolumeMounts: []v1.VolumeMount{
-						{Name: "data-volume", SubPath: params.WorkspaceDir, MountPath: params.WorkingDir},
+						{
+							Name:      "data-volume",
+							SubPath:   params.WorkspaceDir,
+							MountPath: params.WorkingDir,
+						},
 						{Name: "config-volume", MountPath: "/home/jovyan/.jupyter/custom"},
 					},
 					Ports: []v1.ContainerPort{

@@ -14,7 +14,7 @@ func (t TestRecord) GetCollection() string {
 // func TestContextCRUD(t *testing.T) {
 // 	assert := assert.New(t)
 
-// 	cf := config.Read("../config/testing.json")
+// 	cf := config.MustRead("../config/testing.json")
 // 	as := NewServiceProviderFromConfig(cf)
 
 // 	context := as.Mongo.NewContext()

@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -113,12 +114,12 @@ func SetupAddressFromInterface(c *Config) {
 func MustRead(path string) Config {
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("Failed to open config file: %v\n", err)
+		panic(fmt.Errorf("Failed to open config file: %v\n", err))
 	}
 	decoder := json.NewDecoder(file)
 	c := Config{}
 	if err := decoder.Decode(&c); err != nil {
-		log.Fatalf("Failed to load config file: %v\n", err)
+		panic(fmt.Errorf("Failed to load config file: %v\n", err))
 	}
 	SetupAddressFromInterface(&c)
 	return c

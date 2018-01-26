@@ -110,7 +110,7 @@ func SetupAddressFromInterface(c *Config) {
 	SetupServiceAddressFromInterface(c.Memcached)
 }
 
-func Read(path string) Config {
+func MustRead(path string) Config {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("Failed to open config file: %v\n", err)

@@ -34,16 +34,19 @@ type Config struct {
 	JobUpdater    *JobUpdaterConfig `json:"jobupdater"`
 	Migration     *MigrationConfig  `json:"migration"`
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
-	DataDir       string            `json:"dataDir"`
 	Data          *DataConfig       `json:"data"`
-	Version       string            `json:"version"`
 
+	// the version settings of the current application
+	Version string `json:"version"`
+
+	// config for kubernetes service, container application instances like
+	// jupyter notebook will be created via this service.
 	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }
 
 // GetWorkspaceRootDir - Get batch process directory
 func (c *Config) GetWorkspaceRootDir() string {
-	return filepath.Join(c.DataDir, c.Data.BatchDir)
+	return c.Data.WorkspaceDir
 }
 
 // Return the full path of a workspace directory
@@ -53,32 +56,32 @@ func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
 }
 
 func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {
-	return filepath.Join(c.Data.BatchDir, w.Basename())
+	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
 }
 
 //GetArchiveDir - Get archive directory.
 func (c *Config) GetArchiveDir() string {
-	return filepath.Join(c.DataDir, c.Data.ArchiveDir)
+	return c.Data.ArchiveDir
 }
 
 //GetImageDir - Get image directory.
 func (c *Config) GetImageDir() string {
-	return filepath.Join(c.DataDir, c.Data.ImageDir)
+	return c.Data.ImageDir
 }
 
 //GetThumbnailDir - Get thumbnail directory.
 func (c *Config) GetThumbnailDir() string {
-	return filepath.Join(c.DataDir, c.Data.ThumbnailDir)
+	return c.Data.ThumbnailDir
 }
 
 //GetModelDir - Get model directory.
 func (c *Config) GetModelDir() string {
-	return filepath.Join(c.DataDir, c.Data.ModelDir)
+	return c.Data.ModelDir
 }
 
 //GetModelArchiveDir - Get model directory.
 func (c *Config) GetModelArchiveDir() string {
-	return filepath.Join(c.DataDir, c.Data.ModelArchiveDir)
+	return c.Data.ModelArchiveDir
 }
 
 func SetupServiceAddressFromInterface(c ServiceConfig) {

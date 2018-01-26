@@ -45,7 +45,7 @@ type Config struct {
 
 // GetWorkspaceRootDir - Get batch process directory
 func (c *Config) GetWorkspaceRootDir() string {
-	return c.Data.BatchDir
+	return c.Data.WorkspaceDir
 }
 
 // Return the full path of a workspace directory
@@ -55,7 +55,7 @@ func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
 }
 
 func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {
-	return filepath.Join(c.Data.BatchDir, w.Basename())
+	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
 }
 
 //GetArchiveDir - Get archive directory.

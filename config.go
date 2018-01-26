@@ -59,6 +59,13 @@ func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {
 	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
 }
 
+// GetWorkspaceSubpath - this is currently used by PV.  /data will be striped.
+// FIXME: the PV related path should be handled.
+// FIXME: workspace basename should be saved since we use "batch-{ID}" for all workspaces
+func (c *Config) GetWorkspacePVSubpath(w *entity.Workspace) string {
+	return filepath.Join(filepath.Base(c.Data.WorkspaceDir), w.Basename())
+}
+
 //GetArchiveDir - Get archive directory.
 func (c *Config) GetArchiveDir() string {
 	return c.Data.ArchiveDir

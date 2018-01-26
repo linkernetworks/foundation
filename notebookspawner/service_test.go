@@ -28,7 +28,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	var err error
 
 	//Get mongo service
-	cf := config.Read(testingConfigPath)
+	cf := config.MustRead(testingConfigPath)
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)

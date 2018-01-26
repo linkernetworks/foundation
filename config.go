@@ -111,16 +111,24 @@ func SetupAddressFromInterface(c *Config) {
 	SetupServiceAddressFromInterface(c.Memcached)
 }
 
-func MustRead(path string) Config {
+func Read(path string) (c Config, err error) {
 	file, err := os.Open(path)
 	if err != nil {
-		panic(fmt.Errorf("Failed to open config file: %v\n", err))
+		return c, fmt.Errorf("Failed to open the config file: %v\n", err)
 	}
+	defer file.Close()
 	decoder := json.NewDecoder(file)
-	c := Config{}
 	if err := decoder.Decode(&c); err != nil {
-		panic(fmt.Errorf("Failed to load config file: %v\n", err))
+		return c, fmt.Errorf("Failed to load the config file: %v\n", err)
 	}
 	SetupAddressFromInterface(&c)
+	return c, nil
+}
+
+func MustRead(path string) Config {
+	c, err := Read(path)
+	if err != nil {
+		panic(err)
+	}
 	return c
 }

@@ -34,8 +34,12 @@ type Config struct {
 	Migration     *MigrationConfig  `json:"migration"`
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
 	Data          *DataConfig       `json:"data"`
-	Version       string            `json:"version"`
 
+	// the version settings of the current application
+	Version string `json:"version"`
+
+	// config for kubernetes service, container application instances like
+	// jupyter notebook will be created via this service.
 	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }
 

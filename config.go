@@ -50,9 +50,8 @@ func (c *Config) GetWorkspaceRootDir() string {
 }
 
 // Return the full path of a workspace directory
-func (c *Config) GetWorkspaceDir(workspace *entity.Workspace) string {
-	rootDir := c.GetWorkspaceRootDir()
-	return filepath.Join(rootDir, workspace.Basename())
+func (c *Config) GetWorkspaceDir(w *entity.Workspace) string {
+	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
 }
 
 func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {

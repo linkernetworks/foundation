@@ -5,13 +5,24 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mime"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 )
+
+type FileInfo struct {
+	Name    string    `json:"name"`
+	Size    int64     `json:"size"`
+	Type    string    `json:"type"`
+	ModTime time.Time `json:"mtime"`
+	IsDir   bool      `json:"isDir"`
+}
 
 //Exists - check path if exist or not legal.
 func Exists(path string) (bool, error) {
@@ -83,4 +94,24 @@ func FolderCopy(src, dst string) error {
 	}
 	log.Println(string(opBytes))
 	return nil
+}
+
+func ScanDir(p string) ([]FileInfo, error) {
+	fileInfos := []FileInfo{}
+	files, err := ioutil.ReadDir(p)
+	if err != nil {
+		return fileInfos, err
+	}
+
+	for _, file := range files {
+		fileInfos = append(fileInfos, FileInfo{
+			Name:    file.Name(),
+			Size:    file.Size(),
+			ModTime: file.ModTime(),
+			IsDir:   file.IsDir(),
+			Type:    mime.TypeByExtension(path.Ext(file.Name())),
+		})
+	}
+
+	return fileInfos, nil
 }

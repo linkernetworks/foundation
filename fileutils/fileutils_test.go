@@ -31,3 +31,22 @@ func TestCopyFile(t *testing.T) {
 	err = os.RemoveAll(destDir)
 	assert.NoError(t, err)
 }
+
+func TestScanDir(t *testing.T) {
+	srcDir, err := ioutil.TempDir(".", "test-")
+	defer os.RemoveAll(srcDir)
+	assert.NoError(t, err)
+
+	testFile := "test"
+	f, err := os.Create(srcDir + "/" + testFile)
+	f.Close()
+	assert.NoError(t, err)
+
+	fileInfos, err := ScanDir(srcDir)
+	assert.NoError(t, err)
+
+	assert.Equal(t, fileInfos[0].Name, testFile)
+	assert.Equal(t, fileInfos[0].Size, int64(0))
+	assert.Equal(t, fileInfos[0].IsDir, false)
+	assert.Equal(t, fileInfos[0].Type, "")
+}

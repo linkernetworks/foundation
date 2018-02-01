@@ -33,12 +33,24 @@ func (s *NfsService) getClientset() (*kubernetesclient.Clientset, error) {
 	return s.clientset, err
 }
 
-func (s *NfsService) CreatePV(pv *v1.PersistentVolume) error {
+func (s *NfsService) CreatePV(pv *v1.PersistentVolume) (*v1.PersistentVolume, error) {
+	clientset, err := s.getClientset()
+	if err != nil {
+		return nil, err
+	}
+	pv, err = clientset.CoreV1().PersistentVolumes().Create(pv)
+	if err != nil {
+		return nil, err
+	}
+	return pv, nil
+}
+
+func (s *NfsService) DeletePV(name string) error {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return err
 	}
-	_, err = clientset.CoreV1().PersistentVolumes().Create(pv)
+	err = clientset.CoreV1().PersistentVolumes().Delete(name, nil)
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ import (
 	kubernetesclient "k8s.io/client-go/kubernetes"
 )
 
-type NfsService struct {
+type NFSService struct {
 	Mongo      *mongo.Service
 	Context    *mongo.Session
 	Kubernetes *kubernetes.Service
@@ -15,8 +15,8 @@ type NfsService struct {
 	namespace  string
 }
 
-func New(m *mongo.Service, k *kubernetes.Service) *NfsService {
-	return &NfsService{
+func New(m *mongo.Service, k *kubernetes.Service) *NFSService {
+	return &NFSService{
 		Mongo:      m,
 		Context:    m.NewSession(),
 		Kubernetes: k,
@@ -24,7 +24,7 @@ func New(m *mongo.Service, k *kubernetes.Service) *NfsService {
 	}
 }
 
-func (s *NfsService) getClientset() (*kubernetesclient.Clientset, error) {
+func (s *NFSService) getClientset() (*kubernetesclient.Clientset, error) {
 	if s.clientset != nil {
 		return s.clientset, nil
 	}
@@ -33,7 +33,7 @@ func (s *NfsService) getClientset() (*kubernetesclient.Clientset, error) {
 	return s.clientset, err
 }
 
-func (s *NfsService) CreatePV(pv *v1.PersistentVolume) (*v1.PersistentVolume, error) {
+func (s *NFSService) CreatePV(pv *v1.PersistentVolume) (*v1.PersistentVolume, error) {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (s *NfsService) CreatePV(pv *v1.PersistentVolume) (*v1.PersistentVolume, er
 	return pv, nil
 }
 
-func (s *NfsService) DeletePV(name string) error {
+func (s *NFSService) DeletePV(name string) error {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return err

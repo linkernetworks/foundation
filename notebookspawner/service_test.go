@@ -48,8 +48,6 @@ func TestNotebookSpawnerService(t *testing.T) {
 		Owner: userId,
 	}
 
-	// dir := cf.GetWorkspaceDir(workspace)
-
 	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})

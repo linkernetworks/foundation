@@ -6,10 +6,8 @@ import (
 	"log"
 	"net"
 	"os"
-	"path/filepath"
 	"reflect"
 
-	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 
@@ -47,22 +45,6 @@ type Config struct {
 // GetWorkspaceRootDir - Get batch process directory
 func (c *Config) GetWorkspaceRootDir() string {
 	return c.Data.WorkspaceDir
-}
-
-// Return the full path of a workspace directory
-func (c *Config) GetWorkspaceDir(w *entity.Workspace) string {
-	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
-}
-
-func (c *Config) FormatWorkspaceBasename(w *entity.Workspace) string {
-	return filepath.Join(c.Data.WorkspaceDir, w.Basename())
-}
-
-// GetWorkspaceSubpath - this is currently used by PV.  /data will be striped.
-// FIXME: the PV related path should be handled.
-// FIXME: workspace basename should be saved since we use "batch-{ID}" for all workspaces
-func (c *Config) GetWorkspacePVSubpath(w *entity.Workspace) string {
-	return filepath.Join(filepath.Base(c.Data.WorkspaceDir), w.Basename())
 }
 
 //GetArchiveDir - Get archive directory.

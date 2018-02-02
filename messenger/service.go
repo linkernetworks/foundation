@@ -12,7 +12,6 @@ import (
 
 type MessageSender interface {
 	Send() error
-	NewService()
 }
 
 type Mailgun struct {
@@ -30,7 +29,7 @@ type Twilio struct {
 	authToken  string
 }
 
-func (mg *Mailgun) NewService(mongoService *mongo.Service) *Mailgun {
+func NewMailgunService(mongoService *mongo.Service) *Mailgun {
 	// context := mongoService.NewSession()
 	// defer context.Close()
 	// TODO Read config from mongo
@@ -47,7 +46,7 @@ func (mg *Mailgun) NewService(mongoService *mongo.Service) *Mailgun {
 	}
 }
 
-func (twlo *Twilio) NewService(mongoService *mongo.Service) *Twilio {
+func NewTwilioService(mongoService *mongo.Service) *Twilio {
 	// context := mongoService.NewSession()
 	// defer context.Close()
 	// TODO Read config from mongo
@@ -62,8 +61,12 @@ func (twlo *Twilio) NewService(mongoService *mongo.Service) *Twilio {
 	}
 }
 
-func (mg *Mailgun) Send(msg Message) error {
-	message := mg.client.NewMessage(msg.From(), msg.Title(), msg.Content(), msg.To())
+func (mg *Mailgun) Send(msg *Email) error {
+	message := mg.client.NewMessage(
+		msg.GetSenderAddress(),
+		msg.GetTitle(),
+		msg.GetContent(),
+		msg.GetReceiverAddress())
 	resp, id, err := mg.client.Send(message)
 	if err != nil {
 		return err
@@ -72,22 +75,15 @@ func (mg *Mailgun) Send(msg Message) error {
 	return nil
 }
 
-func (twlo *Twilio) Send(msg Message) error {
-	message, err := twilio.NewMessage(twlo.client, msg.Title(), msg.From(), twilio.Body(msg.Content()))
+func (twlo *Twilio) Send(msg *SMS) error {
+	message, err := twilio.NewMessage(
+		twlo.client,
+		msg.GetSenderPhoneNumber(),
+		msg.GetReceiverPhoneNumber(),
+		twilio.Body(msg.GetContent()))
 	if err != nil {
 		return err
 	}
 	logger.Info("no err:", message.Status)
 	return nil
 }
-
-// func main() {
-//
-// 	e := &Email{}
-//
-// 	a := &Mailgun{}
-// 	a.NewService()
-//
-// 	a.Send(e)
-//
-// }

@@ -11,11 +11,8 @@ import (
 	"testing"
 )
 
-const (
-	testingConfigPath = "../../../config/testing.json"
-)
-
 func TestFindUserById(t *testing.T) {
+	const testingConfigPath = "../../../config/testing.json"
 	var err error
 	cf := config.MustRead(testingConfigPath)
 
@@ -51,7 +48,8 @@ func TestFindUserById(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestEmail(t *testing.T) {
+func TestNewEmail(t *testing.T) {
+	const testingConfigPath = "../../../config/testing.json"
 	cf := config.MustRead(testingConfigPath)
 
 	ms := mongo.New(cf.Mongo.Url)
@@ -78,18 +76,17 @@ func TestEmail(t *testing.T) {
 	err = context.C(entity.UserCollectionName).Find(bson.M{"first_name": "john"}).One(&result)
 	assert.NoError(t, err)
 
-	e := &Email{
-		msvc:    ms,
-		title:   "Hello world",
-		content: "This is a long content. This is a long content. This is a long content. This is a long content.",
-		to:      result.ID,
-		from:    result.ID,
-	}
+	title := "Hello world"
+	content := "This is a long content. This is a long content. This is a long content. This is a long content."
+	to := result.ID
+	from := result.ID
+
+	e := NewEmail(ms, title, content, to, from)
 	assert.NotNil(t, e)
-	assert.Equal(t, "Hello world", e.Title())
-	assert.Equal(t, "This is a long content. This is a long content. This is a long content. This is a long content.", e.Content())
-	assert.Equal(t, "hello@gmail.com", e.To())
-	assert.Equal(t, "hello@gmail.com", e.From())
+	assert.Equal(t, "Hello world", e.GetTitle())
+	assert.Equal(t, "This is a long content. This is a long content. This is a long content. This is a long content.", e.GetContent())
+	assert.Equal(t, "hello@gmail.com", e.GetReceiverAddress())
+	assert.Equal(t, "hello@gmail.com", e.GetSenderAddress())
 
 	err = context.DropCollection(entity.UserCollectionName)
 	assert.NoError(t, err)

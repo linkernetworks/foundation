@@ -24,7 +24,7 @@ func TestFindUserById(t *testing.T) {
 
 	newUser := &entity.User{
 		ID:        bson.ObjectId("123456789012"),
-		Email:     "hello@gmail.com",
+		Email:     "develop@linkernetworks.com",
 		FirstName: "john",
 		LastName:  "lin",
 		Cellphone: "0987654556",
@@ -42,7 +42,7 @@ func TestFindUserById(t *testing.T) {
 
 	found, err := FindUserById(ms, result.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, "hello@gmail.com", found.Email)
+	assert.Equal(t, "develop@linkernetworks.com", found.Email)
 
 	err = context.DropCollection(entity.UserCollectionName)
 	assert.NoError(t, err)
@@ -60,7 +60,7 @@ func TestNewEmail(t *testing.T) {
 
 	newUser := &entity.User{
 		ID:        bson.ObjectId("123456789012"),
-		Email:     "hello@gmail.com",
+		Email:     "develop@linkernetworks.com",
 		FirstName: "john",
 		LastName:  "lin",
 		Cellphone: "0987654556",
@@ -85,8 +85,8 @@ func TestNewEmail(t *testing.T) {
 	assert.NotNil(t, e)
 	assert.Equal(t, "Hello world", e.GetTitle())
 	assert.Equal(t, "This is a long content. This is a long content. This is a long content. This is a long content.", e.GetContent())
-	assert.Equal(t, "hello@gmail.com", e.GetReceiverAddress())
-	assert.Equal(t, "hello@gmail.com", e.GetSenderAddress())
+	assert.Equal(t, "develop@linkernetworks.com", e.GetReceiverAddress())
+	assert.Equal(t, "develop@linkernetworks.com", e.GetSenderAddress())
 
 	err = context.DropCollection(entity.UserCollectionName)
 	assert.NoError(t, err)
@@ -104,7 +104,7 @@ func TestNewSMS(t *testing.T) {
 
 	newUser := &entity.User{
 		ID:        bson.ObjectId("123456789012"),
-		Email:     "hello@gmail.com",
+		Email:     "develop@linkernetworks.com",
 		FirstName: "john",
 		LastName:  "lin",
 		Cellphone: "+886952301269",

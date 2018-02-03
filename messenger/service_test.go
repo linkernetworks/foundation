@@ -24,7 +24,7 @@ func TestMailgunNewService(t *testing.T) {
 
 	newUser := &entity.User{
 		ID:        bson.ObjectId("123456789012"),
-		Email:     "linton.tw@gmail.com",
+		Email:     "develop@linkernetworks.com",
 		FirstName: "john",
 		LastName:  "lin",
 		Cellphone: "0987654556",
@@ -85,7 +85,7 @@ func TestTwilioNewService(t *testing.T) {
 
 	newUser := &entity.User{
 		ID:        bson.ObjectId("123456789012"),
-		Email:     "linton.tw@gmail.com",
+		Email:     "develop@linkernetworks.com",
 		FirstName: "john",
 		LastName:  "lin",
 		Cellphone: "+886952301269",

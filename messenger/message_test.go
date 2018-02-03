@@ -91,3 +91,45 @@ func TestNewEmail(t *testing.T) {
 	err = context.DropCollection(entity.UserCollectionName)
 	assert.NoError(t, err)
 }
+
+func TestNewSMS(t *testing.T) {
+	const testingConfigPath = "../../../config/testing.json"
+	cf := config.MustRead(testingConfigPath)
+
+	ms := mongo.New(cf.Mongo.Url)
+	assert.NotNil(t, ms)
+
+	context := ms.NewSession()
+	defer context.Close()
+
+	newUser := &entity.User{
+		ID:        bson.ObjectId("123456789012"),
+		Email:     "hello@gmail.com",
+		FirstName: "john",
+		LastName:  "lin",
+		Cellphone: "+886952301269",
+		Roles:     nil,
+		Verified:  false,
+		Revoked:   false,
+	}
+
+	err := context.C(entity.UserCollectionName).Insert(newUser)
+	assert.NoError(t, err)
+
+	result := entity.User{}
+	err = context.C(entity.UserCollectionName).Find(bson.M{"first_name": "john"}).One(&result)
+	assert.NoError(t, err)
+
+	content := "This is a long content. This is a long content. This is a long content. This is a long content."
+	to := result.ID
+	from := result.ID
+
+	sms := NewSMS(ms, content, to, from)
+	assert.NotNil(t, sms)
+	assert.Equal(t, "This is a long content. This is a long content. This is a long content. This is a long content.", sms.GetContent())
+	assert.Equal(t, "+886952301269", sms.GetReceiverPhoneNumber())
+	assert.Equal(t, "+19284409015", sms.GetSenderPhoneNumber())
+
+	err = context.DropCollection(entity.UserCollectionName)
+	assert.NoError(t, err)
+}

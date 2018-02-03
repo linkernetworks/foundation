@@ -19,14 +19,9 @@ type Message interface {
 }
 
 type Notification struct {
-	Title   string
 	Content string
 	To      bson.ObjectId
 	From    bson.ObjectId
-}
-
-func (n *Notification) GetTitle() string {
-	return n.Title
 }
 
 func (n *Notification) GetContent() string {
@@ -43,8 +38,9 @@ func (n *Notification) GetFrom() bson.ObjectId {
 
 type Email struct {
 	Notification
-	toAddress   string
-	fromAddress string
+	Title       string
+	ToAddress   string
+	FromAddress string
 }
 
 func NewEmail(ms *mongo.Service, title, content string, to, from bson.ObjectId) *Email {
@@ -56,54 +52,58 @@ func NewEmail(ms *mongo.Service, title, content string, to, from bson.ObjectId) 
 
 	return &Email{
 		Notification: Notification{
-			Title:   title,
 			Content: content,
 			To:      to,
 			From:    from,
 		},
-		toAddress:   receiver,
-		fromAddress: sender,
+		Title:       title,
+		ToAddress:   receiver,
+		FromAddress: sender,
 	}
 }
 
+func (e *Email) GetTitle() string {
+	return e.Title
+}
+
 func (e *Email) GetSenderAddress() string {
-	return e.toAddress
+	return e.FromAddress
 }
 
 func (e *Email) GetReceiverAddress() string {
-	return e.fromAddress
+	return e.ToAddress
 }
 
 type SMS struct {
 	Notification
-	toNumber   string
-	fromNumber string
+	ToNumber   string
+	FromNumber string
 }
 
-func NewSMS(ms *mongo.Service, title, content string, to, from bson.ObjectId) *SMS {
-	fromNumber, _ := FindUserById(ms, from)
-	sender := fromNumber.Cellphone
+func NewSMS(ms *mongo.Service, content string, to, from bson.ObjectId) *SMS {
+	// fromNumber, _ := FindUserById(ms, from)
+	// FIXME the trial account can not use custom phone number
+	sender := "+19284409015"
 
 	toNumber, _ := FindUserById(ms, to)
 	receiver := toNumber.Cellphone
 	return &SMS{
 		Notification: Notification{
-			Title:   title,
 			Content: content,
 			To:      to,
 			From:    from,
 		},
-		toNumber:   receiver,
-		fromNumber: sender,
+		ToNumber:   receiver,
+		FromNumber: sender,
 	}
 }
 
 func (s *SMS) GetSenderPhoneNumber() string {
-	return s.toNumber
+	return s.FromNumber
 }
 
 func (s *SMS) GetReceiverPhoneNumber() string {
-	return s.fromNumber
+	return s.ToNumber
 }
 
 func FindUserById(ms *mongo.Service, uid bson.ObjectId) (*entity.User, error) {

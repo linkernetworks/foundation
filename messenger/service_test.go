@@ -40,8 +40,24 @@ func TestMailgunNewService(t *testing.T) {
 	err = context.C(entity.UserCollectionName).Find(bson.M{"first_name": "john"}).One(&result)
 	assert.NoError(t, err)
 
-	title := "Hello world"
-	content := "This is a long content. This is a long content. This is a long content. This is a long content."
+	title := "Hello from Mailgun"
+	content := `This is a long content. Lorem ipsum dolor sit amet, consectetuer adipiscing 
+elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque 
+eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo,  fringilla vel, 
+aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet  a, venenatis vitae, 
+justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus 
+elementum semper nisi. Aenean vulputate eleifend tellus. Aeneanleo ligula, porttitor eu, 
+consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, 
+tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. 
+Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam 
+rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet 
+adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, 
+lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis 
+faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed 
+fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, 
+augue velit cursus nunc,`
+
 	to := result.ID
 	from := result.ID
 
@@ -50,6 +66,51 @@ func TestMailgunNewService(t *testing.T) {
 
 	mg := NewMailgunService(ms)
 	err = mg.Send(e)
+	assert.NoError(t, err)
+
+	err = context.DropCollection(entity.UserCollectionName)
+	assert.NoError(t, err)
+}
+
+func TestTwilioNewService(t *testing.T) {
+	const testingConfigPath = "../../../config/testing.json"
+
+	cf := config.MustRead(testingConfigPath)
+
+	ms := mongo.New(cf.Mongo.Url)
+	assert.NotNil(t, ms)
+
+	context := ms.NewSession()
+	defer context.Close()
+
+	newUser := &entity.User{
+		ID:        bson.ObjectId("123456789012"),
+		Email:     "linton.tw@gmail.com",
+		FirstName: "john",
+		LastName:  "lin",
+		Cellphone: "+886952301269",
+		Roles:     nil,
+		Verified:  false,
+		Revoked:   false,
+	}
+
+	err := context.C(entity.UserCollectionName).Insert(newUser)
+	assert.NoError(t, err)
+
+	result := entity.User{}
+	err = context.C(entity.UserCollectionName).Find(bson.M{"first_name": "john"}).One(&result)
+	assert.NoError(t, err)
+
+	content := "Hello from Twillio. This is the test case message for tesing TestTwilioNewService"
+
+	to := result.ID
+	from := result.ID
+
+	sms := NewSMS(ms, content, to, from)
+	assert.NotNil(t, sms)
+
+	twlo := NewTwilioService(ms)
+	err = twlo.Send(sms)
 	assert.NoError(t, err)
 
 	err = context.DropCollection(entity.UserCollectionName)

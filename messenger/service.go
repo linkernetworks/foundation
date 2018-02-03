@@ -51,8 +51,9 @@ func NewTwilioService(mongoService *mongo.Service) *Twilio {
 	// defer context.Close()
 	// TODO Read config from mongo
 
-	accountSid := "xxxxx"
-	authToken := "ddddd"
+	// from +19284409015
+	accountSid := "ACcefaae0bfdc9accf49a7375f80217e4a"
+	authToken := "5517732c5599497bda5764880bd4a45f"
 
 	return &Twilio{
 		accountSid: accountSid,
@@ -71,7 +72,7 @@ func (mg *Mailgun) Send(msg *Email) error {
 	if err != nil {
 		return err
 	}
-	logger.Infof("ID: %s Resp: %s\n", id, resp)
+	logger.Debugf("ID: %s Resp: %s\n", id, resp)
 	return nil
 }
 
@@ -84,6 +85,6 @@ func (twlo *Twilio) Send(msg *SMS) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("no err:", message.Status)
+	logger.Debugln("no err:", message.Status)
 	return nil
 }

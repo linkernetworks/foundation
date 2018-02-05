@@ -43,21 +43,22 @@ type Email struct {
 	FromAddress string
 }
 
-func NewEmail(ms *mongo.Service, title, content string, to, from bson.ObjectId) *Email {
-	fromAddress, _ := FindUserById(ms, from)
-	sender := fromAddress.Email
+func NewEmail(title, content string, to, from *entity.User) *Email {
+	// fromAddress, _ := FindUserById(ms, from)
+	// sender := fromAddress.Email
+	sender := "noreply@linkernetworks.com"
 
-	toAddress, _ := FindUserById(ms, to)
-	receiver := toAddress.Email
+	// toAddress, _ := FindUserById(ms, to)
+	// receiver := toAddress.Email
 
 	return &Email{
 		Notification: Notification{
 			Content: content,
-			To:      to,
-			From:    from,
+			To:      to.ID,
+			From:    from.ID,
 		},
 		Title:       title,
-		ToAddress:   receiver,
+		ToAddress:   to.Email,
 		FromAddress: sender,
 	}
 }
@@ -80,20 +81,18 @@ type SMS struct {
 	FromNumber string
 }
 
-func NewSMS(ms *mongo.Service, content string, to, from bson.ObjectId) *SMS {
+func NewSMS(content string, to, from *entity.User) *SMS {
 	// fromNumber, _ := FindUserById(ms, from)
 	// FIXME the trial account can not use custom phone number
 	sender := "+19284409015"
 
-	toNumber, _ := FindUserById(ms, to)
-	receiver := toNumber.Cellphone
 	return &SMS{
 		Notification: Notification{
 			Content: content,
-			To:      to,
-			From:    from,
+			To:      to.ID,
+			From:    from.ID,
 		},
-		ToNumber:   receiver,
+		ToNumber:   to.Cellphone,
 		FromNumber: sender,
 	}
 }

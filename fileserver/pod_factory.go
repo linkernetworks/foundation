@@ -1,22 +1,21 @@
-package notebookspawner
+package fileserver
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const FileserverContainerPort = 8888
+const FileServerContainerPort = 8888
 
-type FileserverPodFactory struct {
-	Fileserver *entity.Fileserver
+type FileServerPodFactory struct {
+	FileServer *entity.FileServer
 }
 
-type FileserverPodParameters struct {
-	// Fileserver parameters
+type FileServerPodParameters struct {
+	// FileServer parameters
 	Port   int32
 	Image  string
 	Labels map[string]string
@@ -25,11 +24,11 @@ type FileserverPodParameters struct {
 	// The current src/types/containers/types' Volumes only for volumeMounts
 }
 
-func (nb *FileserverPodFactory) DeploymentID() string {
-	return nb.Fileserver.ID.Hex()
+func (nb *FileServerPodFactory) DeploymentID() string {
+	return nb.FileServer.ID.Hex()
 }
 
-func (nb *FileserverPodFactory) NewPod(podName string, params FileserverPodParameters) v1.Pod {
+func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   podName,

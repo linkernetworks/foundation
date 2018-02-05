@@ -1,73 +1,50 @@
 package messenger
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
-
-	_ "bitbucket.org/linkernetworks/aurora/src/config"
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 
 	twilio "github.com/carlosdp/twiliogo"
 	mailgun "gopkg.in/mailgun/mailgun-go.v1"
 )
 
 type MessageSender interface {
-	Send() error
+	Send(entity.Notification) error
 }
 
-type Mailgun struct {
+type MailgunClient struct {
 	client mailgun.Mailgun
-
-	domain       string
-	apiKey       string
-	publicApiKey string
 }
 
-type Twilio struct {
+type TwilioClient struct {
 	client *twilio.TwilioClient
-
-	accountSid string
-	authToken  string
 }
 
-func NewMailgunService(mongoService *mongo.Service) *Mailgun {
-	// context := mongoService.NewSession()
-	// defer context.Close()
-	// TODO Read config from mongo
-
+func NewMailgunService(ms entity.MailSettings) *MailgunClient {
+	// ms.Mailgun.ApiKey
+	// ms.Mailgun.Domain
+	// ms.Mailgun.PublicApiKey
 	domain := "sandbox86ffb85f5a8d44a6bf93f5bd29fcbb79.mailgun.org"
 	apiKey := "key-5edd1caa4140a3c11ee0cfd400c7c1b7"
 	publicApiKey := "pubkey-0c343ddc3036d36c8027cb56d0f9da7d"
-
-	return &Mailgun{
-		domain:       domain,
-		apiKey:       apiKey,
-		publicApiKey: publicApiKey,
-		client:       mailgun.NewMailgun(domain, apiKey, publicApiKey),
+	return &MailgunClient{
+		client: mailgun.NewMailgun(domain, apiKey, publicApiKey),
 	}
 }
 
-func NewTwilioService(mongoService *mongo.Service) *Twilio {
-	// context := mongoService.NewSession()
-	// defer context.Close()
-	// TODO Read config from mongo
-
+func NewTwilioService(tws entity.SMSSettings) *TwilioClient {
 	// from +19284409015
+	// tws.Twilio.AccountSid
+	// tws.Twilio.AuthToken
 	accountSid := "ACcefaae0bfdc9accf49a7375f80217e4a"
 	authToken := "5517732c5599497bda5764880bd4a45f"
-
-	return &Twilio{
-		accountSid: accountSid,
-		authToken:  authToken,
-		client:     twilio.NewClient(accountSid, authToken),
+	return &TwilioClient{
+		client: twilio.NewClient(accountSid, authToken),
 	}
 }
 
-func (mg *Mailgun) Send(msg *Email) error {
-	message := mg.client.NewMessage(
-		msg.GetSenderAddress(),
-		msg.GetTitle(),
-		msg.GetContent(),
-		msg.GetReceiverAddress())
+func (mg *MailgunClient) Send(msg entity.Notification) error {
+	message := mg.client.NewMessage(msg.GetFrom(), msg.GetTitle(), msg.GetContent(), msg.GetTo())
 	resp, id, err := mg.client.Send(message)
 	if err != nil {
 		return err
@@ -76,12 +53,8 @@ func (mg *Mailgun) Send(msg *Email) error {
 	return nil
 }
 
-func (twlo *Twilio) Send(msg *SMS) error {
-	message, err := twilio.NewMessage(
-		twlo.client,
-		msg.GetSenderPhoneNumber(),
-		msg.GetReceiverPhoneNumber(),
-		twilio.Body(msg.GetContent()))
+func (twlo *TwilioClient) Send(msg entity.Notification) error {
+	message, err := twilio.NewMessage(twlo.client, msg.GetFrom(), msg.GetTo(), twilio.Body(msg.GetContent()))
 	if err != nil {
 		return err
 	}

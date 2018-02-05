@@ -9,22 +9,22 @@ import (
 type MessageType int
 
 const (
-	EmailMessage MessageType = 1 << iota
-	SMSMessage
+	EMAIL MessageType = 1 << iota
+	SMS
 )
 
-func NewMessage(t MessageType, title, content string, to, from *entity.User) entity.Messenger {
+func NewNotificationMessage(t MessageType, title, content string, to, from *entity.User) entity.Notification {
 	switch t {
-	case EmailMessage:
+	case EMAIL:
 		return newEmail(title, content, to, from)
-	case SMSMessage:
+	case SMS:
 		return newSMS(content, to, from)
 	default:
 		return nil
 	}
 }
 
-func newEmail(title, content string, to, from *entity.User) entity.Messenger {
+func newEmail(title, content string, to, from *entity.User) entity.Notification {
 	sender := "noreply@linkernetworks.com"
 	return &entity.Email{
 		Title:       title,
@@ -34,7 +34,7 @@ func newEmail(title, content string, to, from *entity.User) entity.Messenger {
 	}
 }
 
-func newSMS(content string, to, from *entity.User) entity.Messenger {
+func newSMS(content string, to, from *entity.User) entity.Notification {
 	sender := "+19284409015"
 	return &entity.SMS{
 		Content:    content,

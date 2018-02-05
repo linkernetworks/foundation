@@ -35,7 +35,7 @@ func TestNewEmail(t *testing.T) {
 	title := "Hello world"
 	content := "This is a long content. This is a long content. This is a long content. This is a long content."
 
-	e := NewMessage(EmailMessage, title, content, toUser, fromUser)
+	e := NewNotificationMessage(EMAIL, title, content, toUser, fromUser)
 	// e := NewEmail(title, content, toUser, fromUser)
 	assert.NotNil(t, e)
 	assert.Equal(t, "Hello world", e.GetTitle())
@@ -70,7 +70,7 @@ func TestNewSMS(t *testing.T) {
 
 	content := "This is a long content. This is a long content. This is a long content. This is a long content."
 
-	sms := NewMessage(SMSMessage, "", content, toUser, fromUser)
+	sms := NewNotificationMessage(SMS, "", content, toUser, fromUser)
 	// sms := NewSMS(content, toUser, fromUser)
 	assert.NotNil(t, sms)
 	assert.Equal(t, "This is a long content. This is a long content. This is a long content. This is a long content.", sms.GetContent())

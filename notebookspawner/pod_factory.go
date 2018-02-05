@@ -12,8 +12,6 @@ import (
 // The container port of jupyter notebook
 const DefaultNotebookContainerPort = 8888
 
-// NotebookPodParameters stores the parameters that will be used for creating
-// the notebook pod.
 type NotebookPodParameters struct {
 	// Notebook parameters
 	WorkDir      string

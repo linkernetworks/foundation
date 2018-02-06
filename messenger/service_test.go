@@ -2,35 +2,18 @@ package messenger
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"gopkg.in/mgo.v2/bson"
+	// "gopkg.in/mgo.v2/bson"
 
 	"github.com/stretchr/testify/assert"
+
 	_ "log"
 	"testing"
 )
 
 func TestMailgunNewService(t *testing.T) {
-	toUser := &entity.User{
-		ID:        bson.ObjectId("123456789012"),
-		Email:     "develop@linkernetworks.com",
-		FirstName: "john",
-		LastName:  "lin",
-		Cellphone: "0987654556",
-		Roles:     nil,
-		Verified:  false,
-		Revoked:   false,
-	}
-
-	fromUser := &entity.User{
-		ID:        bson.ObjectId("123456789012"),
-		Email:     "noreply@linkernetworks.com",
-		FirstName: "john",
-		LastName:  "lin",
-		Cellphone: "0987654556",
-		Roles:     nil,
-		Verified:  false,
-		Revoked:   false,
-	}
+	toUser := "develop@linkernetworks.com"
+	toUser2 := "develop@linkernetworks.com"
+	fromUser := "noreply@linkernetworks.com"
 
 	title := "Hello from Mailgun"
 	content := `This is a long content. Lorem ipsum dolor sit amet, consectetuer adipiscing
@@ -50,11 +33,16 @@ faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Du
 fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales,
 augue velit cursus nunc,`
 
-	// e := NewEmail(title, content, toUser, fromUser)
-	e := NewNotificationMessage(EMAIL, title, content, toUser, fromUser)
+	e := NewEmail(title, content, fromUser, toUser, toUser2)
 	assert.NotNil(t, e)
 
-	mailgunSetting := entity.MailSettings{}
+	mailgunSetting := entity.MailSettings{
+		Mailgun: entity.Mailgun{
+			Domain:       "sandbox86ffb85f5a8d44a6bf93f5bd29fcbb79.mailgun.org",
+			ApiKey:       "key-5edd1caa4140a3c11ee0cfd400c7c1b7",
+			PublicApiKey: "pubkey-0c343ddc3036d36c8027cb56d0f9da7d",
+		},
+	}
 
 	mg := NewMailgunService(mailgunSetting)
 	err := mg.Send(e)
@@ -62,33 +50,21 @@ augue velit cursus nunc,`
 }
 
 func TestTwilioNewService(t *testing.T) {
-	toUser := &entity.User{
-		ID:        bson.ObjectId("123456789012"),
-		Email:     "develop@linkernetworks.com",
-		FirstName: "john",
-		LastName:  "lin",
-		Cellphone: "+886952301269",
-		Roles:     nil,
-		Verified:  false,
-		Revoked:   false,
-	}
-	fromUser := &entity.User{
-		ID:        bson.ObjectId("123456789012"),
-		Email:     "noreply@linkernetworks.com",
-		FirstName: "john",
-		LastName:  "lin",
-		Cellphone: "+19284409015",
-		Roles:     nil,
-		Verified:  false,
-		Revoked:   false,
-	}
+	toUser := "+886952301269"
+	toUser2 := "+886952301269"
+	fromUser := "+15005550006"
+
 	content := "Hello from Twillio. This is the test case message for tesing TestTwilioNewService"
 
-	sms := NewNotificationMessage(SMS, "", content, toUser, fromUser)
-	// sms := NewSMS(content, toUser, fromUser)
+	sms := NewSMS(content, fromUser, toUser, toUser2)
 	assert.NotNil(t, sms)
 
-	twilioSetting := entity.SMSSettings{}
+	twilioSetting := entity.SMSSettings{
+		Twilio: entity.Twilio{
+			AccountSid: "ACa840cade3f49c7fed9ee56ecea044a4b",
+			AuthToken:  "d9e40c67467eafab94bd7b6603bfa7b4",
+		},
+	}
 
 	twlo := NewTwilioService(twilioSetting)
 	err := twlo.Send(sms)

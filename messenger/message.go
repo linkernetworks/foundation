@@ -6,39 +6,25 @@ import (
 	_ "gopkg.in/mgo.v2/bson"
 )
 
-type MessageType int
-
-const (
-	EMAIL MessageType = 1 << iota
-	SMS
-)
-
-func NewNotificationMessage(t MessageType, title, content string, to, from *entity.User) entity.Notification {
-	switch t {
-	case EMAIL:
-		return newEmail(title, content, to, from)
-	case SMS:
-		return newSMS(content, to, from)
-	default:
-		return nil
-	}
-}
-
-func newEmail(title, content string, to, from *entity.User) entity.Notification {
+func NewEmail(title, content, from string, to ...string) entity.Notification {
+	// sender := from
 	sender := "noreply@linkernetworks.com"
 	return &entity.Email{
 		Title:       title,
 		Content:     content,
-		ToAddress:   to.Email,
+		ToAddress:   to,
 		FromAddress: sender,
 	}
 }
 
-func newSMS(content string, to, from *entity.User) entity.Notification {
-	sender := "+19284409015"
+func NewSMS(content, from string, to ...string) entity.Notification {
+	// sender := from
+	// test credentials a "From" valid number
+	// https://www.twilio.com/docs/api/rest/test-credentials
+	sender := "+15005550006"
 	return &entity.SMS{
 		Content:    content,
-		ToNumber:   to.Cellphone,
+		ToNumber:   to,
 		FromNumber: sender,
 	}
 }

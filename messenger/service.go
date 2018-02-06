@@ -10,8 +10,29 @@ import (
 	mailgun "gopkg.in/mailgun/mailgun-go.v1"
 )
 
+//MessageSender: Email, SMS, MongoDB
 type MessageSender interface {
 	Send(entity.Notification) error
+}
+
+type MessageConfig interface {
+	LoadAllReceivers() []string
+	GetAllSender() []MessageSender
+}
+
+func NotificationProcess(msg entity.Notification, cfg MessageConfig) {
+	//Check if this need notification
+	allSenders := cfg.GetAllSender()
+
+	//Get all notification target
+	allReceivers := cfg.LoadAllReceivers()
+
+	for _, sender := range allSenders {
+		for _, to := range allReceivers {
+			msg.SetTo(to)
+			sender.Send(msg)
+		}
+	}
 }
 
 type MailgunClient struct {

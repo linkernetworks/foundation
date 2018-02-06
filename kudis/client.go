@@ -30,7 +30,7 @@ func NewInsecure(serverAddr string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SubscribePodLogs(req *pb.PodLogsSubscriptionRequest) (*pb.SubscriptionResponse, error) {
+func (c *Client) SubscribePodLogs(req *pb.PodLogSubscriptionRequest) (*pb.SubscriptionResponse, error) {
 	return c.client.SubscribePodLogs(context.Background(), req)
 }
 

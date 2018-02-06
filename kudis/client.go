@@ -30,8 +30,8 @@ func NewInsecure(serverAddr string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SubscribePod(req *pb.PodContainerLogRequest) (*pb.SubscriptionResponse, error) {
-	return c.client.SubscribePod(context.Background(), req)
+func (c *Client) SubscribePodLogs(req *pb.PodContainerLogRequest) (*pb.SubscriptionResponse, error) {
+	return c.client.SubscribePodLogs(context.Background(), req)
 }
 
 // Close connection

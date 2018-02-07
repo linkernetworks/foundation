@@ -7,8 +7,10 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
 	kubernetesclient "k8s.io/client-go/kubernetes"
 
@@ -32,17 +34,19 @@ type FileServerService struct {
 	Mongo      *mongo.Service
 	Context    *mongo.Session
 	Kubernetes *kubernetes.Service
+	Redis      *redis.Service
 
 	clientset *kubernetesclient.Clientset
 	namespace string
 }
 
-func New(c config.Config, m *mongo.Service, k *kubernetes.Service) *FileServerService {
+func New(c config.Config, m *mongo.Service, k *kubernetes.Service, rds *redis.Service) *FileServerService {
 	return &FileServerService{
 		Config:     c,
 		Mongo:      m,
 		Context:    m.NewSession(),
 		Kubernetes: k,
+		Redis:      rds,
 		namespace:  "default",
 	}
 }
@@ -85,7 +89,7 @@ func (s *FileServerService) Start(fs *entity.FileServer) (tracker *podtracker.Po
 	// Start tracking first
 	_, err = s.GetPod(fs)
 	if kerrors.IsNotFound(err) {
-		// Pod not found. Start a pod for notebook in workspace(batch)
+		// Pod not found. Start a pod for fileserver in workspace(batch)
 		tracker, err = s.startTracking(podName, fs)
 		if err != nil {
 			return nil, err
@@ -149,4 +153,34 @@ func (s *FileServerService) Stop(fs *entity.FileServer) (*podtracker.PodTracker,
 		return nil, err
 	}
 	return podTracker, nil
+}
+
+func (s *FileServerService) SyncFromPod(fs *entity.FileServer, pod *v1.Pod) (err error) {
+	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "fileserver")
+	if err != nil {
+		return err
+	}
+	podInfo := entity.NewPodInfo(pod)
+
+	q := bson.M{"_id": fs.ID}
+	m := bson.M{
+		"$set": bson.M{
+			"backend": backend,
+			"pod":     podInfo,
+		},
+	}
+
+	err = s.Context.C(entity.FileServerCollectionName).Update(q, m)
+
+	go func() {
+		topic := fs.Topic()
+		s.Redis.PublishAndSetJSON(topic, fs.NewUpdateEvent(bson.M{
+			"backend.connected": pod.Status.PodIP != "",
+			"pod.phase":         pod.Status.Phase,
+			"pod.message":       pod.Status.Message,
+			"pod.reason":        pod.Status.Reason,
+			"pod.startTime":     pod.Status.StartTime,
+		}))
+	}()
+	return err
 }

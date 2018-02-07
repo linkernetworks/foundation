@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	// "bitbucket.org/linkernetworks/aurora/src/service/notebookfs/notebook"
+	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -23,7 +23,7 @@ func TestFileServerSpawnerService(t *testing.T) {
 		return
 	}
 
-	var notebookImage = "jupyter/minimal-notebook"
+	var fileserverImage = "gcr.io/linker-aurora/filerserver:develop"
 	var err error
 
 	//Get mongo service
@@ -31,9 +31,10 @@ func TestFileServerSpawnerService(t *testing.T) {
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)
-	fs := New(cf, mongoService, kubernetesService)
+	redisService := redis.NewService(cf.Redis)
+	fs := New(cf, mongoService, kubernetesService, redisService)
 
-	// proxyURL := "/v1/notebooks/proxy/"
+	// proxyURL := "/v1/fileservers/proxy/"
 	context := mongoService.NewSession()
 	defer context.Close()
 
@@ -50,22 +51,22 @@ func TestFileServerSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
-	notebookID := bson.NewObjectId()
-	notebook := entity.FileServer{
-		ID:          notebookID,
-		Image:       notebookImage,
+	fileserverID := bson.NewObjectId()
+	fileserver := entity.FileServer{
+		ID:          fileserverID,
+		Image:       fileserverImage,
 		WorkspaceID: workspace.ID,
-		Url:         cf.Jupyter.BaseUrl + "/" + notebookID.Hex(),
+		Url:         cf.Jupyter.BaseUrl + "/" + fileserverID.Hex(),
 		CreatedBy:   userId,
 	}
-	err = context.C(entity.FileServerCollectionName).Insert(notebook)
+	err = context.C(entity.FileServerCollectionName).Insert(fileserver)
 	assert.NoError(t, err)
-	defer context.C(entity.FileServerCollectionName).Remove(bson.M{"_id": notebook.ID})
+	defer context.C(entity.FileServerCollectionName).Remove(bson.M{"_id": fileserver.ID})
 
-	_, err = fs.Start(&notebook)
+	_, err = fs.Start(&fileserver)
 	assert.NoError(t, err)
 
 	assert.NoError(t, err)
-	_, err = fs.Stop(&notebook)
+	_, err = fs.Stop(&fileserver)
 	assert.NoError(t, err)
 }

@@ -31,7 +31,7 @@ func TestFileServerSpawnerService(t *testing.T) {
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)
-	redisService := redis.NewService(cf.Redis)
+	redisService := redis.New(cf.Redis)
 	fs := New(cf, mongoService, kubernetesService, redisService)
 
 	// proxyURL := "/v1/fileservers/proxy/"

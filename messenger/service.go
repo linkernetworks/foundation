@@ -15,25 +15,27 @@ type MessageSender interface {
 	Send(entity.Notification) error
 }
 
-type MessageConfig interface {
-	LoadAllReceivers() []string
-	GetAllSender() []MessageSender
+type MessageEvent interface {
 }
 
-func NotificationProcess(msg entity.Notification, cfg MessageConfig) {
+func NotificationProcess(event MessageEvent, cfg MessageConfig) {
 	//Check if this need notification
-	allSenders := cfg.GetAllSender()
+	allSenders := cfg.GetAllSender(event)
 
 	//Get all notification target
-	allReceivers := cfg.LoadAllReceivers()
+	allReceivers := cfg.LoadAllReceivers(event)
 
 	for _, sender := range allSenders {
 		for _, to := range allReceivers {
+			var msg entity.Notification
 			msg.SetTo(to)
 			sender.Send(msg)
 		}
 	}
 }
+
+// NotificationProcess(JOB.Fail, cfg)
+// NotificationProcess(JOB.Create, cfg)
 
 type MailgunClient struct {
 	client mailgun.Mailgun

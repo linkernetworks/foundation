@@ -15,10 +15,7 @@ type MessageSender interface {
 	Send(entity.Notification) error
 }
 
-type MessageEvent interface {
-}
-
-func NotificationProcess(event MessageEvent, cfg MessageConfig) {
+func NotificationProcess(event entity.NotificationEvent, cfg MessageConfig) {
 	//Check if this need notification
 	allSenders := cfg.GetAllSender(event)
 

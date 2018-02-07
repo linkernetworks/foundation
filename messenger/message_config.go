@@ -27,7 +27,7 @@ func NewConfigService(senders ...MessageSender) *ConfigService {
 
 func (c *ConfigService) GetAllSender(e entity.NotificationEvent) []MessageSender {
 
-	//FIXME: Need load setting from Mongo
+	//FIXME: Need load setting from Mongo, please refer StoreSettingsHandler
 	ms := entity.MailSettings{}
 	sms := entity.SMSSettings{}
 

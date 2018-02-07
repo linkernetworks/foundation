@@ -11,7 +11,7 @@ func TestGetAllSender(t *testing.T) {
 	n := entity.NotificationEventStruct{
 		Event: "JobCreated",
 	}
-	//FIXME: Need load setting from Mongo
+	//FIXME: Need load setting from Mongo, please refer StoreSettingsHandler
 	sms := entity.SMSSettings{}
 
 	testReciver := []string{"user1"}

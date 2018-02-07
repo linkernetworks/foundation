@@ -2,6 +2,7 @@ package fileserver
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -16,12 +17,39 @@ type FileServerPodFactory struct {
 
 type FileServerPodParameters struct {
 	// FileServer parameters
-	Port   int32
-	Image  string
-	Labels map[string]string
-	// TODO we need to user another structure for volumes
-	// That structur should including all kinds of storage (NFS,Local,GlusterFS)
-	// The current src/types/containers/types' Volumes only for volumeMounts
+	Port    int32
+	Image   string
+	Labels  map[string]string
+	Volumes []container.Volume
+}
+
+func getKubeVolume(params FileServerPodParameters) []v1.Volume {
+	kubeVolume := []v1.Volume{}
+	for _, v := range params.Volumes {
+		kubeVolume = append(kubeVolume, v1.Volume{
+			Name: v.Volume.Name,
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: v.ClaimName,
+					},
+				},
+			},
+		})
+	}
+	return kubeVolume
+}
+
+func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
+	kubeVolumeMount := []v1.VolumeMount{}
+	for _, v := range params.Volumes {
+		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
+			Name:      v.Volume.Name,
+			SubPath:   v.Volume.SubPath,
+			MountPath: v.Volume.MountPath,
+		})
+	}
+	return kubeVolumeMount
 }
 
 func (nb *FileServerPodFactory) DeploymentID() string {
@@ -29,6 +57,9 @@ func (nb *FileServerPodFactory) DeploymentID() string {
 }
 
 func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {
+	kubeVolume := getKubeVolume(params)
+	kubeVolumeMount := getKubeVolumeMount(params)
+
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   podName,
@@ -44,8 +75,7 @@ func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParam
 					Args: []string{
 						"-p " + strconv.Itoa(int(params.Port)),
 					},
-					//TODO Add mounts
-					VolumeMounts: []v1.VolumeMount{},
+					VolumeMounts: kubeVolumeMount,
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "fileserver",
@@ -55,8 +85,7 @@ func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParam
 					},
 				},
 			},
-			//TODO Add mounts
-			Volumes: []v1.Volume{},
+			Volumes: kubeVolume,
 		},
 	}
 }

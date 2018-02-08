@@ -32,6 +32,47 @@ type SpawnableDocument interface {
 	NewUpdateEvent(info bson.M) *event.RecordEvent
 }
 
+type ProxyInfoUpdater struct {
+	Redis          *redis.Service
+	Session        *mongo.Session
+	CollectionName string
+
+	// The PortName
+	PortName string
+}
+
+func (p *ProxyInfoUpdater) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
+	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, p.PortName)
+	if err != nil {
+		return err
+	}
+
+	q := bson.M{"_id": doc.GetID()}
+	m := bson.M{
+		"$set": bson.M{
+			"backend": backend,
+			"pod":     podproxy.NewPodInfo(pod),
+		},
+	}
+
+	if err = p.Session.C(p.CollectionName).Update(q, m); err != nil {
+		return err
+	}
+
+	p.emitDocEvent(doc, doc.NewUpdateEvent(bson.M{
+		"backend.connected": pod.Status.PodIP != "",
+		"pod.phase":         pod.Status.Phase,
+		"pod.message":       pod.Status.Message,
+		"pod.reason":        pod.Status.Reason,
+		"pod.startTime":     pod.Status.StartTime,
+	}))
+	return nil
+}
+
+func (p *ProxyInfoUpdater) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
+	go p.Redis.PublishAndSetJSON(doc.Topic(), e)
+}
+
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type NotebookSpawnerService struct {
@@ -114,38 +155,8 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
 func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod, portname string) (err error) {
-	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, portname)
-	if err != nil {
-		return err
-	}
-
-	podInfo := podproxy.NewPodInfo(pod)
-
-	q := bson.M{"_id": doc.GetID()}
-	m := bson.M{
-		"$set": bson.M{
-			"backend": backend,
-			"pod":     podInfo,
-		},
-	}
-
-	err = s.Context.C(collectionName).Update(q, m)
-	if err != nil {
-		return err
-	}
-
-	s.emitDocEvent(doc, doc.NewUpdateEvent(bson.M{
-		"backend.connected": pod.Status.PodIP != "",
-		"pod.phase":         pod.Status.Phase,
-		"pod.message":       pod.Status.Message,
-		"pod.reason":        pod.Status.Reason,
-		"pod.startTime":     pod.Status.StartTime,
-	}))
-	return nil
-}
-
-func (s *NotebookSpawnerService) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
-	go s.Redis.PublishAndSetJSON(doc.Topic(), e)
+	updater := ProxyInfoUpdater{s.Redis, s.Context, collectionName, portname}
+	return updater.SyncDocument(doc, pod)
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {

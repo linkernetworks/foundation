@@ -25,16 +25,6 @@ import (
 
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
-type PodLabelProvider interface {
-	PodLabels() map[string]string
-}
-
-type ProxyInfoProvider interface {
-	Host() string
-	Port() string
-	BaseURL() string
-}
-
 type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.Service
@@ -64,15 +54,6 @@ func (s *NotebookSpawnerService) getClientset() (*kubernetesclient.Clientset, er
 	var err error
 	s.clientset, err = s.Kubernetes.CreateClientset()
 	return s.clientset, err
-}
-
-func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
-	return &entity.PodInfo{
-		Phase:     pod.Status.Phase,
-		Message:   pod.Status.Message,
-		Reason:    pod.Status.Reason,
-		StartTime: pod.Status.StartTime,
-	}
 }
 
 func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {

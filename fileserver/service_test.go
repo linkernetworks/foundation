@@ -45,7 +45,7 @@ func TestFileServerServiceWakeup(t *testing.T) {
 		Type:       "general",
 		Owner:      userId,
 		FileServer: fileserver,
-		PVC: entity.PersistentVolumeClaim{
+		MainVolume: entity.PersistentVolumeClaim{
 			Name: vName,
 		},
 	}

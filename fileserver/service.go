@@ -71,9 +71,9 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 		//Create pod
 		volumes := []container.Volume{
 			{
-				ClaimName: ws.PVC.Name,
+				ClaimName: ws.MainVolume.Name,
 				Volume: container.VolumeMount{
-					Name:      ws.PVC.Name,
+					Name:      ws.MainVolume.Name,
 					MountPath: "/workspace",
 				},
 			},
@@ -84,7 +84,7 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 			//		Image:   FileServerImage + ":" + aurora.ImageTag,
 			Image:   FileServerImage + ":develop",
 			Port:    FileServerContainerPort,
-			Labels:  ws.PVC.Labels,
+			Labels:  ws.MainVolume.Labels,
 			Volumes: volumes,
 		}
 

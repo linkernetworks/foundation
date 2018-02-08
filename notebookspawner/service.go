@@ -98,11 +98,11 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 		})
 	} else {
 		// found pod
-		return s.SyncFromPod(nb, pod)
+		return s.SyncDocument(nb, pod)
 	}
 }
 
-func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (err error) {
+func (s *NotebookSpawnerService) SyncDocument(nb *entity.Notebook, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err

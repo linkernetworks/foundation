@@ -1,7 +1,6 @@
 package notebookspawner
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
 	// import global logger
@@ -10,7 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebook) (*podtracker.PodTracker, error) {
+func (s *NotebookSpawnerService) startTracking(podName string, doc SpawnableDocument) (*podtracker.PodTracker, error) {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebo
 
 		switch phase {
 		case "Pending":
-			s.SyncDocument(nb, pod)
+			s.SyncDocument(doc, pod)
 			// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
 			for _, c := range pod.Status.ContainerStatuses {
 				if c.State.Waiting != nil {
@@ -38,7 +37,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, nb *entity.Notebo
 			}
 
 		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
-			s.SyncDocument(nb, pod)
+			s.SyncDocument(doc, pod)
 			return true
 		}
 

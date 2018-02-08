@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/event"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -23,6 +24,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type SpawnableDocument interface {
+	types.DeploymentIDProvider
+	GetID() bson.ObjectId
+	Topic() string
+	NewUpdateEvent(info bson.M) *event.RecordEvent
+}
 
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
@@ -105,7 +113,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
-func (s *NotebookSpawnerService) SyncDocument(doc *entity.Notebook, pod *v1.Pod) (err error) {
+func (s *NotebookSpawnerService) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err
@@ -113,7 +121,7 @@ func (s *NotebookSpawnerService) SyncDocument(doc *entity.Notebook, pod *v1.Pod)
 
 	podInfo := podproxy.NewPodInfo(pod)
 
-	q := bson.M{"_id": doc.ID}
+	q := bson.M{"_id": doc.GetID()}
 	m := bson.M{
 		"$set": bson.M{
 			"backend": backend,
@@ -136,7 +144,7 @@ func (s *NotebookSpawnerService) SyncDocument(doc *entity.Notebook, pod *v1.Pod)
 	return nil
 }
 
-func (s *NotebookSpawnerService) emitDocEvent(doc *entity.Notebook, e *event.RecordEvent) {
+func (s *NotebookSpawnerService) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
 	go s.Redis.PublishAndSetJSON(doc.Topic(), e)
 }
 
@@ -195,12 +203,12 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	return tracker, err
 }
 
-func (s *NotebookSpawnerService) GetPod(nb *entity.Notebook) (*v1.Pod, error) {
+func (s *NotebookSpawnerService) GetPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return nil, err
 	}
-	return clientset.CoreV1().Pods(s.namespace).Get(nb.DeploymentID(), metav1.GetOptions{})
+	return clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
@@ -221,7 +229,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	}
 
 	// force sending a terminating state to document
-	q := bson.M{"_id": nb.ID}
+	q := bson.M{"_id": nb.GetID()}
 	m := bson.M{
 		"$set": bson.M{
 			"backend.connected": false,

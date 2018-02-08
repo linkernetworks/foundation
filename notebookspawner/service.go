@@ -44,7 +44,7 @@ type DocumentProxyInfoUpdater struct {
 	PortName string
 }
 
-func (u *DocumentProxyInfoUpdater) GetPod(doc SpawnableDocument) (*v1.Pod, error) {
+func (u *DocumentProxyInfoUpdater) getPod(doc SpawnableDocument) (*v1.Pod, error) {
 	return u.clientset.CoreV1().Pods(u.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
@@ -53,6 +53,7 @@ func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*podtrac
 	podName := doc.DeploymentID()
 
 	podTracker := podtracker.New(u.clientset, u.namespace, podName)
+
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
 		logger.Infof("Tracking notebook pod=%s phase=%s", podName, phase)
@@ -73,6 +74,8 @@ func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*podtrac
 				}
 			}
 
+		// Stop the tracker if the status is completion status.
+		// Terminating won't be catched
 		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
 			u.SyncWithPod(doc, pod)
 			return true
@@ -84,7 +87,7 @@ func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*podtrac
 }
 
 func (u *DocumentProxyInfoUpdater) Sync(doc SpawnableDocument) error {
-	pod, err := u.GetPod(doc)
+	pod, err := u.getPod(doc)
 
 	if err != nil && kerrors.IsNotFound(err) {
 
@@ -216,7 +219,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	})
 
 	// Start tracking first
-	_, err = s.GetPod(nb)
+	_, err = s.getPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
 		tracker, err = s.updater.TrackAndSync(nb)
@@ -240,14 +243,14 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	return tracker, err
 }
 
-func (s *NotebookSpawnerService) GetPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
+func (s *NotebookSpawnerService) getPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
 func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTracker, error) {
 	// if it's not created
-	_, err := s.GetPod(nb)
+	_, err := s.getPod(nb)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	} else if err != nil {

@@ -3,13 +3,20 @@ package config
 type JupyterConfig struct {
 	BaseURL string `json:"baseUrl"`
 
-	// default bind to "0.0.0.0"
-	Bind string `json:"bind"`
+	// the address that the jupyter notebook will bind to "0.0.0.0"
+	Address string `json:"bind"`
 
-	DefaultImage string              `json:"defaultImage"`
-	WorkingDir   string              `json:"workingDir"`
-	Cache        *JupyterCacheConfig `json:"cache"`
-	Dev          *DevProxyConfig     `json:"dev"`
+	// the default jupyternotebook docker image name
+	DefaultImage string `json:"defaultImage"`
+
+	// the working dir of the jupyter notebook process
+	WorkingDir string `json:"workingDir"`
+
+	// the cache configuration
+	Cache *JupyterCacheConfig `json:"cache"`
+
+	// proxy configuration that will be used for development mode.
+	Dev *DevProxyConfig `json:"dev"`
 }
 
 type JupyterCacheConfig struct {

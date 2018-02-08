@@ -26,5 +26,5 @@ type JupyterCacheConfig struct {
 
 type DevProxyConfig struct {
 	BaseURL     string `json:"baseUrl"`
-	HostAddress string `json:"hostUrl"`
+	HostAddress string `json:"hostAddress"`
 }

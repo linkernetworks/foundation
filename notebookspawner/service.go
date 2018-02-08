@@ -47,22 +47,28 @@ func (u *DocumentProxyInfoUpdater) GetPod(doc SpawnableDocument) (*v1.Pod, error
 	return u.clientset.CoreV1().Pods(u.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
-func (u *DocumentProxyInfoUpdater) Sync(doc SpawnableDocument) (err error) {
+func (u *DocumentProxyInfoUpdater) Sync(doc SpawnableDocument) error {
 	pod, err := u.GetPod(doc)
+
 	if err != nil && kerrors.IsNotFound(err) {
-		return u.Reset(doc)
+
+		return u.Reset(doc, nil)
+
 	} else if err != nil {
-		u.Reset(doc)
+
+		u.Reset(doc, err)
 		return err
 	}
+
 	return u.SyncWithPod(doc, pod)
 }
 
-func (u *DocumentProxyInfoUpdater) Reset(doc SpawnableDocument) (err error) {
+func (u *DocumentProxyInfoUpdater) Reset(doc SpawnableDocument, kerr error) (err error) {
 	var q = bson.M{"_id": doc.GetID()}
 	var m = bson.M{
 		"$set": bson.M{
 			"backend.connected": false,
+			"backend.error":     kerr,
 		},
 		"$unset": bson.M{
 			"backend.host": nil,
@@ -146,58 +152,6 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientse
 			PortName:       "notebook",
 		},
 	}
-}
-
-func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
-	q := bson.M{"_id": nb.ID}
-	pod, err := s.GetPod(nb)
-	if kerrors.IsNotFound(err) {
-		go func() {
-			topic := nb.Topic()
-			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
-				"backend.connected": false,
-				"pod":               nil,
-			}))
-		}()
-
-		return s.Session.C(entity.NotebookCollectionName).Update(q, bson.M{
-			"$set": bson.M{
-				"backend.connected": false,
-			},
-			"$unset": bson.M{
-				"backend.host": nil,
-				"backend.port": nil,
-				"pod":          nil,
-			},
-		})
-	} else if err != nil {
-
-		go func() {
-			topic := nb.Topic()
-			s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
-				"backend.connected": false,
-				"backend.error":     err.Error(),
-				"pod":               nil,
-			}))
-		}()
-
-		return s.Session.C(entity.NotebookCollectionName).Update(q, bson.M{
-			"$set": bson.M{
-				"backend.connected": false,
-				"backend.error":     err.Error(),
-				"pod":               nil,
-			},
-		})
-	} else {
-		// found pod
-		return s.SyncDocument(nb, pod)
-	}
-}
-
-// SyncDocument updates the given document's "backend" and "pod" field by the
-// given pod object.
-func (s *NotebookSpawnerService) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
-	return s.updater.SyncWithPod(doc, pod)
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {

@@ -3,13 +3,26 @@ package config
 import (
 	"net"
 	"strconv"
+	"time"
 )
 
+type RedisPoolConfig struct {
+	// max number of the idle connections
+	MaxIdle int `json:"maxIdle"`
+
+	// max number of the active connections
+	MaxActive int `json:"maxActive"`
+
+	// the timeout seconds for idle connections
+	IdleTimeout time.Duration `json:"idleTimeout"`
+}
+
 type RedisConfig struct {
-	Host      string       `json:"host"`
-	Port      int32        `json:"port"`
-	Interface string       `json:"interface"`
-	Public    *RedisConfig `json:"public"`
+	Host      string          `json:"host"`
+	Port      int32           `json:"port"`
+	Interface string          `json:"interface"`
+	Pool      RedisPoolConfig `json:"pool"`
+	Public    *RedisConfig    `json:"public"`
 }
 
 func (c *RedisConfig) Unresolved() bool {
@@ -43,6 +56,7 @@ func (c *RedisConfig) GetPublic() ServiceConfig {
 	return c.Public
 }
 
+// Addr implements the Address interface
 func (c *RedisConfig) Addr() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(int(c.Port)))
 }

@@ -59,7 +59,7 @@ func (p *DocumentProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, po
 		return err
 	}
 
-	p.emitDocEvent(doc, doc.NewUpdateEvent(bson.M{
+	p.emit(doc, doc.NewUpdateEvent(bson.M{
 		"backend.connected": pod.Status.PodIP != "",
 		"pod.phase":         pod.Status.Phase,
 		"pod.message":       pod.Status.Message,
@@ -69,7 +69,7 @@ func (p *DocumentProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, po
 	return nil
 }
 
-func (p *DocumentProxyInfoUpdater) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
+func (p *DocumentProxyInfoUpdater) emit(doc SpawnableDocument, e *event.RecordEvent) {
 	go p.Redis.PublishAndSetJSON(doc.Topic(), e)
 }
 

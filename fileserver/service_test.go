@@ -17,14 +17,11 @@ const (
 	testingConfigPath = "../../../config/testing.json"
 )
 
-func TestFileServerSpawnerService(t *testing.T) {
+func TestFileServerServiceWakeup(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return
 	}
-
-	var fileserverImage = "gcr.io/linker-aurora/filerserver:develop"
-	var err error
 
 	//Get mongo service
 	cf := config.MustRead(testingConfigPath)
@@ -39,34 +36,32 @@ func TestFileServerSpawnerService(t *testing.T) {
 	defer context.Close()
 
 	userId := bson.NewObjectId()
+	fileserver := entity.FileServer{}
 
+	vName := "testmount"
 	workspace := entity.Workspace{
-		ID:    bson.NewObjectId(),
-		Name:  "testing workspace",
-		Type:  "general",
-		Owner: userId,
+		ID:         bson.NewObjectId(),
+		Name:       "testing workspace",
+		Type:       "general",
+		Owner:      userId,
+		FileServer: fileserver,
+		PVC: entity.PersistentVolumeClaim{
+			Name: vName,
+		},
 	}
 
-	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
+	err := context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
-	fileserverID := bson.NewObjectId()
-	fileserver := entity.FileServer{
-		ID:          fileserverID,
-		Image:       fileserverImage,
-		WorkspaceID: workspace.ID,
-		Url:         cf.Jupyter.BaseUrl + "/" + fileserverID.Hex(),
-		CreatedBy:   userId,
-	}
-	err = context.C(entity.FileServerCollectionName).Insert(fileserver)
+	err = fs.WakeUp(&workspace)
 	assert.NoError(t, err)
-	defer context.C(entity.FileServerCollectionName).Remove(bson.M{"_id": fileserver.ID})
+	newWP := entity.Workspace{}
 
-	_, err = fs.Start(&fileserver)
-	assert.NoError(t, err)
+	//Check the PodName has been update
+	context.C(entity.WorkspaceCollectionName).Find(bson.M{"_id": workspace.ID}).One(&newWP)
+	assert.Equal(t, newWP.PodName, WorkspacePodNamePrefix+workspace.ID.Hex())
 
-	assert.NoError(t, err)
-	_, err = fs.Stop(&fileserver)
+	err = fs.Delete(&workspace)
 	assert.NoError(t, err)
 }

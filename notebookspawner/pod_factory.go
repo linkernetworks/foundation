@@ -11,11 +11,6 @@ import (
 
 const NotebookContainerPort = 8888
 
-// Object as Pod
-type PodFactory interface {
-	NewPod(podName string) v1.Pod
-}
-
 // NotebookPodParameters stores the parameters that will be used for creating
 // the notebook pod.
 type NotebookPodParameters struct {

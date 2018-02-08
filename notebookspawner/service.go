@@ -35,20 +35,6 @@ type ProxyInfoProvider interface {
 	BaseURL() string
 }
 
-type DeploymentIDProvider interface {
-	DeploymentID() string
-}
-
-type PodDeployment interface {
-	DeploymentIDProvider
-	PodFactory
-}
-
-type NotebookPodDeployment interface {
-	PodDeployment
-	ProxyInfoProvider
-}
-
 type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.Service

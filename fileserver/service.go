@@ -3,7 +3,7 @@ package fileserver
 import (
 	"errors"
 
-	"bitbucket.org/linkernetworks/aurora/src/aurora"
+	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
@@ -66,19 +66,29 @@ func (s *FileServerService) GetPod(podName string) (*v1.Pod, error) {
 }
 
 func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
+	ws.PodName = WorkspacePodNamePrefix + ws.ID.Hex()
 	_, err := s.GetPod(ws.PodName)
 	if kerrors.IsNotFound(err) {
-		ws.PodName = WorkspacePodNamePrefix + ws.ID.Hex()
-
 		//Create pod
-		volumes := []container.Volume{}
+		volumes := []container.Volume{
+			{
+				ClaimName: ws.PVC.Name,
+				Volume: container.VolumeMount{
+					Name:      ws.PVC.Name,
+					MountPath: "/workspace",
+				},
+			},
+		}
 
 		fsParameter := FileServerPodParameters{
-			Image:   FileServerImage + ":" + aurora.ImageTag,
+			//FIXME for testing, use develop
+			//		Image:   FileServerImage + ":" + aurora.ImageTag,
+			Image:   FileServerImage + ":develop",
 			Port:    FileServerContainerPort,
 			Labels:  ws.PVC.Labels,
 			Volumes: volumes,
 		}
+
 		podFactory := FileServerPodFactory{}
 		pod := podFactory.NewPod(ws.PodName, fsParameter)
 		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
@@ -86,7 +96,7 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 		if err != nil {
 			return err
 		}
-		//Update DB
+		//Update DB (podName)
 		s.Session.UpdateById(entity.WorkspaceCollectionName, ws.ID, ws)
 
 	} else if err != nil {

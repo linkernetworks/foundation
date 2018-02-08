@@ -176,12 +176,10 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 	podName := nb.DeploymentID()
 
-	podFactory := NotebookPodFactory{nb}
-
 	// volumeMounts subPath should not have a root dir. the correct one is like batches/batch-xxx
 	pvSubpath := path.GetWorkspacePVSubpath(s.Config, &workspace)
 
-	pod := podFactory.NewPod(podName, NotebookPodParameters{
+	podFactory := NewNotebookPodFactory(nb, NotebookPodParameters{
 		Image:        nb.Image,
 		WorkspaceDir: pvSubpath,
 		WorkingDir:   s.Config.Jupyter.WorkingDir,
@@ -194,6 +192,9 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 			"user":      nb.CreatedBy.Hex(),
 		},
 	})
+
+	pod := podFactory.NewPod(podName)
+
 	// Start tracking first
 	_, err = s.GetPod(nb)
 	if kerrors.IsNotFound(err) {

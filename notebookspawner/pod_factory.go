@@ -16,10 +16,8 @@ type PodFactory interface {
 	NewPod(podName string) v1.Pod
 }
 
-type NotebookPodFactory struct {
-	Notebook *entity.Notebook
-}
-
+// NotebookPodParameters stores the parameters that will be used for creating
+// the notebook pod.
 type NotebookPodParameters struct {
 	// Notebook parameters
 	WorkingDir   string
@@ -31,29 +29,42 @@ type NotebookPodParameters struct {
 	Labels       map[string]string
 }
 
-func (nb *NotebookPodFactory) DeploymentID() string {
-	return nb.Notebook.ID.Hex()
+// NotebookPodFactory handle the process of creating the jupyter notebook pod
+type NotebookPodFactory struct {
+	notebook *entity.Notebook
+	params   NotebookPodParameters
 }
 
-func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameters) v1.Pod {
+func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParameters) *NotebookPodFactory {
+	return &NotebookPodFactory{notebook, params}
+}
+
+// DeploymentID returns the name of the deployment.
+// For Kubernetes, it will be the pod name.
+func (nb *NotebookPodFactory) DeploymentID() string {
+	return nb.notebook.ID.Hex()
+}
+
+// NewPod returns the Pod object of the jupyternotebook
+func (nb *NotebookPodFactory) NewPod(podName string) v1.Pod {
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   podName,
-			Labels: params.Labels,
+			Labels: nb.params.Labels,
 		},
 		Spec: v1.PodSpec{
 			RestartPolicy: "Never",
 			Containers: []v1.Container{
 				{
-					Image:           params.Image,
+					Image:           nb.params.Image,
 					Name:            podName,
 					ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
 					Args: []string{
 						"start-notebook.sh",
-						"--notebook-dir=" + params.WorkingDir,
-						"--ip=" + params.Bind,
-						"--port=" + strconv.Itoa(int(params.Port)),
-						"--NotebookApp.base_url=" + params.BaseURL,
+						"--notebook-dir=" + nb.params.WorkingDir,
+						"--ip=" + nb.params.Bind,
+						"--port=" + strconv.Itoa(int(nb.params.Port)),
+						"--NotebookApp.base_url=" + nb.params.BaseURL,
 						"--NotebookApp.token=''",
 						"--NotebookApp.allow_origin='*'",
 						"--NotebookApp.disable_check_xsrf=True",
@@ -62,15 +73,15 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 					VolumeMounts: []v1.VolumeMount{
 						{
 							Name:      "data-volume",
-							SubPath:   params.WorkspaceDir,
-							MountPath: params.WorkingDir,
+							SubPath:   nb.params.WorkspaceDir,
+							MountPath: nb.params.WorkingDir,
 						},
 						{Name: "config-volume", MountPath: "/home/jovyan/.jupyter/custom"},
 					},
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook",
-							ContainerPort: params.Port,
+							ContainerPort: nb.params.Port,
 							Protocol:      v1.ProtocolTCP,
 						},
 					},
@@ -85,9 +96,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, params NotebookPodParameter
 						},
 					},
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
-							"cpu": resource.MustParse("1000m"),
-						},
+						Limits: v1.ResourceList{"cpu": resource.MustParse("1000m")},
 						Requests: v1.ResourceList{
 							"cpu":    resource.MustParse("50m"),
 							"memory": resource.MustParse("64Mi"),

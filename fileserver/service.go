@@ -72,7 +72,7 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 		volumes := []container.Volume{
 			{
 				ClaimName: ws.MainVolume.Name,
-				Volume: container.VolumeMount{
+				VolumeMount: container.VolumeMount{
 					Name:      ws.MainVolume.Name,
 					MountPath: "/workspace",
 				},

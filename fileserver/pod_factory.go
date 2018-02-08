@@ -27,7 +27,7 @@ func getKubeVolume(params FileServerPodParameters) []v1.Volume {
 	kubeVolume := []v1.Volume{}
 	for _, v := range params.Volumes {
 		kubeVolume = append(kubeVolume, v1.Volume{
-			Name: v.Volume.Name,
+			Name: v.VolumeMount.Name,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 					ClaimName: v.ClaimName,
@@ -42,9 +42,9 @@ func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
 	kubeVolumeMount := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
 		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
-			Name:      v.Volume.Name,
-			SubPath:   v.Volume.SubPath,
-			MountPath: v.Volume.MountPath,
+			Name:      v.VolumeMount.Name,
+			SubPath:   v.VolumeMount.SubPath,
+			MountPath: v.VolumeMount.MountPath,
 		})
 	}
 	return kubeVolumeMount

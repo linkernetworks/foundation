@@ -57,7 +57,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 		ID:          notebookID,
 		Image:       notebookImage,
 		WorkspaceID: workspace.ID,
-		Url:         cf.Jupyter.BaseUrl + "/" + notebookID.Hex(),
+		Url:         cf.Jupyter.BaseURL + "/" + notebookID.Hex(),
 		CreatedBy:   userId,
 	}
 	err = context.C(entity.NotebookCollectionName).Insert(notebook)

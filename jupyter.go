@@ -6,10 +6,10 @@ type JupyterConfig struct {
 	// default bind to "0.0.0.0"
 	Bind string `json:"bind"`
 
-	DefaultImage string       `json:"defaultImage"`
-	WorkingDir   string       `json:"workingDir"`
-	Cache        *CacheConfig `json:"cache"`
-	Dev          *DevConfig   `json:"dev"`
+	DefaultImage string          `json:"defaultImage"`
+	WorkingDir   string          `json:"workingDir"`
+	Cache        *CacheConfig    `json:"cache"`
+	Dev          *DevProxyConfig `json:"dev"`
 }
 
 type CacheConfig struct {
@@ -17,7 +17,7 @@ type CacheConfig struct {
 	Age    int    `json:"age"`
 }
 
-type DevConfig struct {
+type DevProxyConfig struct {
 	BaseUrl     string `json:"baseUrl"`
 	HostAddress string `json:"hostUrl"`
 }

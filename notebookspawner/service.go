@@ -102,7 +102,9 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 	}
 }
 
-func (s *NotebookSpawnerService) SyncDocument(nb *entity.Notebook, pod *v1.Pod) (err error) {
+// SyncDocument updates the given document's "backend" and "pod" field by the
+// given pod object.
+func (s *NotebookSpawnerService) SyncDocument(doc *entity.Notebook, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err
@@ -110,7 +112,7 @@ func (s *NotebookSpawnerService) SyncDocument(nb *entity.Notebook, pod *v1.Pod) 
 
 	podInfo := podproxy.NewPodInfo(pod)
 
-	q := bson.M{"_id": nb.ID}
+	q := bson.M{"_id": doc.ID}
 	m := bson.M{
 		"$set": bson.M{
 			"backend": backend,
@@ -121,8 +123,8 @@ func (s *NotebookSpawnerService) SyncDocument(nb *entity.Notebook, pod *v1.Pod) 
 	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
 
 	go func() {
-		topic := nb.Topic()
-		s.Redis.PublishAndSetJSON(topic, nb.NewUpdateEvent(bson.M{
+		topic := doc.Topic()
+		s.Redis.PublishAndSetJSON(topic, doc.NewUpdateEvent(bson.M{
 			"backend.connected": pod.Status.PodIP != "",
 			"pod.phase":         pod.Status.Phase,
 			"pod.message":       pod.Status.Message,

@@ -1,12 +1,11 @@
 package fileserver
 
 import (
-	"errors"
-
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
+	"errors"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -103,6 +102,23 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *FileServerService) Delete(ws *entity.Workspace) error {
+	_, err := s.GetPod(ws.PodName)
+	if err != nil {
+		return err
+		//Create pod
+	}
+	err = s.clientset.CoreV1().Pods(s.namespace).Delete(ws.PodName, &metav1.DeleteOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	ws.PodName = ""
+	s.Session.UpdateById(entity.WorkspaceCollectionName, ws.ID, ws)
 	return nil
 }
 

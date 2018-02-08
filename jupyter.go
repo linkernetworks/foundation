@@ -18,6 +18,6 @@ type CacheConfig struct {
 }
 
 type DevConfig struct {
-	BaseUrl string `json:"baseUrl"`
-	HostUrl string `json:"hostUrl"`
+	BaseUrl     string `json:"baseUrl"`
+	HostAddress string `json:"hostUrl"`
 }

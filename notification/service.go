@@ -29,7 +29,6 @@ func (ns *JobNotificationService) Succeed(job *entity.Job) {
 	if err != nil {
 		logger.Error(err)
 	}
-
 	_ = succeedNotification
 
 }

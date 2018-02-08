@@ -32,7 +32,7 @@ type SpawnableDocument interface {
 	NewUpdateEvent(info bson.M) *event.RecordEvent
 }
 
-type ProxyInfoUpdater struct {
+type DocumentProxyInfoUpdater struct {
 	Redis          *redis.Service
 	Session        *mongo.Session
 	CollectionName string
@@ -41,7 +41,7 @@ type ProxyInfoUpdater struct {
 	PortName string
 }
 
-func (p *ProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
+func (p *DocumentProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, p.PortName)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (p *ProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, pod *v1.Po
 	return nil
 }
 
-func (p *ProxyInfoUpdater) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
+func (p *DocumentProxyInfoUpdater) emitDocEvent(doc SpawnableDocument, e *event.RecordEvent) {
 	go p.Redis.PublishAndSetJSON(doc.Topic(), e)
 }
 
@@ -155,7 +155,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
 func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod, portname string) (err error) {
-	updater := ProxyInfoUpdater{s.Redis, s.Session, collectionName, portname}
+	updater := DocumentProxyInfoUpdater{s.Redis, s.Session, collectionName, portname}
 	return updater.SyncDocumentWithPod(doc, pod)
 }
 

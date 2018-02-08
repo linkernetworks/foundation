@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
@@ -45,6 +46,41 @@ type DocumentProxyInfoUpdater struct {
 
 func (u *DocumentProxyInfoUpdater) GetPod(doc SpawnableDocument) (*v1.Pod, error) {
 	return u.clientset.CoreV1().Pods(u.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
+}
+
+// TrackAndSync tracks the pod of the owner document and returns a pod tracker
+func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*podtracker.PodTracker, error) {
+	podName := doc.DeploymentID()
+
+	podTracker := podtracker.New(u.clientset, u.namespace, podName)
+	podTracker.Track(func(pod *v1.Pod) bool {
+		phase := pod.Status.Phase
+		logger.Infof("Tracking notebook pod=%s phase=%s", podName, phase)
+
+		switch phase {
+		case "Pending":
+			u.SyncWithPod(doc, pod)
+			// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
+			for _, c := range pod.Status.ContainerStatuses {
+				if c.State.Waiting != nil {
+					waitingReason := c.State.Waiting.Reason
+					if waitingReason == "ErrImagePull" || waitingReason == "ImagePullBackOff" {
+						logger.Errorf("Container is waiting. Reason %s\n", waitingReason)
+
+						// stop tracking
+						return true
+					}
+				}
+			}
+
+		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
+			u.SyncWithPod(doc, pod)
+			return true
+		}
+
+		return false
+	})
+	return podTracker, nil
 }
 
 func (u *DocumentProxyInfoUpdater) Sync(doc SpawnableDocument) error {
@@ -124,9 +160,7 @@ var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type NotebookSpawnerService struct {
 	Config  config.Config
-	Mongo   *mongo.Service
 	Session *mongo.Session
-	Redis   *redis.Service
 
 	updater *DocumentProxyInfoUpdater
 
@@ -138,9 +172,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientse
 	session := m.NewSession()
 	return &NotebookSpawnerService{
 		Config:    c,
-		Mongo:     m,
 		Session:   session,
-		Redis:     rds,
 		namespace: "default",
 		clientset: clientset,
 		updater: &DocumentProxyInfoUpdater{
@@ -187,7 +219,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	_, err = s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.startTracking(entity.NotebookCollectionName, podName, nb)
+		tracker, err = s.updater.TrackAndSync(nb)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +236,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	tracker, err = s.startTracking(entity.NotebookCollectionName, podName, nb)
+	tracker, err = s.updater.TrackAndSync(nb)
 	return tracker, err
 }
 
@@ -235,7 +267,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	s.Session.C(entity.NotebookCollectionName).Update(q, m)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	podTracker, err := s.startTracking(entity.NotebookCollectionName, podName, nb)
+	podTracker, err := s.updater.TrackAndSync(nb)
 	if err != nil {
 		return nil, err
 	}

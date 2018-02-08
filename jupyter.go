@@ -22,6 +22,7 @@ type JupyterConfig struct {
 type JupyterCacheConfig struct {
 	Prefix string `json:"prefix"`
 	Age    int    `json:"age"`
+	Expire int    `json:"expire"`
 }
 
 type DevProxyConfig struct {

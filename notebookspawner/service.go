@@ -107,14 +107,14 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 		})
 	} else {
 		// found pod
-		return s.SyncDocument(entity.NotebookCollectionName, nb, pod)
+		return s.SyncDocument(entity.NotebookCollectionName, nb, pod, "notebook")
 	}
 }
 
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
-func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod) (err error) {
-	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
+func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod, portname string) (err error) {
+	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, portname)
 	if err != nil {
 		return err
 	}

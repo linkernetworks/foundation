@@ -22,7 +22,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, collectionName st
 
 		switch phase {
 		case "Pending":
-			s.SyncDocument(collectionName, doc, pod)
+			s.SyncDocument(collectionName, doc, pod, "notebook")
 			// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
 			for _, c := range pod.Status.ContainerStatuses {
 				if c.State.Waiting != nil {
@@ -37,7 +37,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, collectionName st
 			}
 
 		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
-			s.SyncDocument(collectionName, doc, pod)
+			s.SyncDocument(collectionName, doc, pod, "notebook")
 			return true
 		}
 

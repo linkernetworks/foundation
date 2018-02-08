@@ -10,7 +10,7 @@ import (
 
 const WorkspacePodNamePrefix = "workspace-fs-"
 const FileServerContainerPort = 33333
-const FileServerImage = "gcr.io/linker-aurora/fileserver"
+const FileServerImage = "asia.gcr.io/linker-aurora/file-server"
 
 type FileServerPodFactory struct {
 }
@@ -29,10 +29,8 @@ func getKubeVolume(params FileServerPodParameters) []v1.Volume {
 		kubeVolume = append(kubeVolume, v1.Volume{
 			Name: v.Volume.Name,
 			VolumeSource: v1.VolumeSource{
-				ConfigMap: &v1.ConfigMapVolumeSource{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: v.ClaimName,
-					},
+				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+					ClaimName: v.ClaimName,
 				},
 			},
 		})

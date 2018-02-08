@@ -107,7 +107,8 @@ func (s *NotebookSpawnerService) SyncFromPod(nb *entity.Notebook, pod *v1.Pod) (
 	if err != nil {
 		return err
 	}
-	podInfo := NewPodInfo(pod)
+
+	podInfo := podproxy.NewPodInfo(pod)
 
 	q := bson.M{"_id": nb.ID}
 	m := bson.M{

@@ -107,13 +107,13 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 		})
 	} else {
 		// found pod
-		return s.SyncDocument(nb, pod)
+		return s.SyncDocument(entity.NotebookCollectionName, nb, pod)
 	}
 }
 
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
-func (s *NotebookSpawnerService) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
+func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, "notebook")
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (s *NotebookSpawnerService) SyncDocument(doc SpawnableDocument, pod *v1.Pod
 		},
 	}
 
-	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
+	err = s.Context.C(collectionName).Update(q, m)
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	_, err = s.GetPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.startTracking(podName, nb)
+		tracker, err = s.startTracking(entity.NotebookCollectionName, podName, nb)
 		if err != nil {
 			return nil, err
 		}
@@ -199,7 +199,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	tracker, err = s.startTracking(podName, nb)
+	tracker, err = s.startTracking(entity.NotebookCollectionName, podName, nb)
 	return tracker, err
 }
 
@@ -239,7 +239,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	s.Context.C(entity.NotebookCollectionName).Update(q, m)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	podTracker, err := s.startTracking(podName, nb)
+	podTracker, err := s.startTracking(entity.NotebookCollectionName, podName, nb)
 	if err != nil {
 		return nil, err
 	}

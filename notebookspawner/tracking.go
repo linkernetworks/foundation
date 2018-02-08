@@ -9,7 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func (s *NotebookSpawnerService) startTracking(podName string, doc SpawnableDocument) (*podtracker.PodTracker, error) {
+func (s *NotebookSpawnerService) startTracking(podName string, collectionName string, doc SpawnableDocument) (*podtracker.PodTracker, error) {
 	clientset, err := s.getClientset()
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, doc SpawnableDocu
 
 		switch phase {
 		case "Pending":
-			s.SyncDocument(doc, pod)
+			s.SyncDocument(collectionName, doc, pod)
 			// Check all containers status in a pod. can't be ErrImagePull or ImagePullBackOff
 			for _, c := range pod.Status.ContainerStatuses {
 				if c.State.Waiting != nil {
@@ -37,7 +37,7 @@ func (s *NotebookSpawnerService) startTracking(podName string, doc SpawnableDocu
 			}
 
 		case "Running", "Failed", "Succeeded", "Unknown", "Terminating":
-			s.SyncDocument(doc, pod)
+			s.SyncDocument(collectionName, doc, pod)
 			return true
 		}
 

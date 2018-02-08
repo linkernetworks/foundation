@@ -2,20 +2,20 @@ package notebookspawner
 
 import (
 	"errors"
+	"fmt"
 
 	"bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/event"
-	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
-	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/tracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
-	kubernetesclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -25,6 +25,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type ProxyInfoProvider interface {
+	Host() string
+	Port() string
+	BaseURL() string
+}
+
+func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
+	return &entity.PodInfo{
+		Phase:     pod.Status.Phase,
+		Message:   pod.Status.Message,
+		Reason:    pod.Status.Reason,
+		StartTime: pod.Status.StartTime,
+	}
+}
+
 type SpawnableDocument interface {
 	types.DeploymentIDProvider
 	GetID() bson.ObjectId
@@ -33,26 +48,28 @@ type SpawnableDocument interface {
 }
 
 type DocumentProxyInfoUpdater struct {
-	clientset *kubernetesclient.Clientset
-	namespace string
+	Clientset *kubernetes.Clientset
+	Namespace string
 
-	Redis          *redis.Service
-	Session        *mongo.Session
+	Redis   *redis.Service
+	Session *mongo.Session
+
+	// Which mongo collection to update
 	CollectionName string
 
-	// The PortName
+	// The PortName of the Pod
 	PortName string
 }
 
 func (u *DocumentProxyInfoUpdater) getPod(doc SpawnableDocument) (*v1.Pod, error) {
-	return u.clientset.CoreV1().Pods(u.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
+	return u.Clientset.CoreV1().Pods(u.Namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
 // TrackAndSync tracks the pod of the owner document and returns a pod tracker
-func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*podtracker.PodTracker, error) {
+func (u *DocumentProxyInfoUpdater) TrackAndSync(doc SpawnableDocument) (*tracker.PodTracker, error) {
 	podName := doc.DeploymentID()
 
-	podTracker := podtracker.New(u.clientset, u.namespace, podName)
+	podTracker := tracker.New(u.Clientset, u.Namespace, podName)
 
 	podTracker.Track(func(pod *v1.Pod) bool {
 		phase := pod.Status.Phase
@@ -128,7 +145,7 @@ func (u *DocumentProxyInfoUpdater) Reset(doc SpawnableDocument, kerr error) (err
 // SyncWith updates the given document's "backend" and "pod" field by the given
 // pod object.
 func (p *DocumentProxyInfoUpdater) SyncWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
-	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, p.PortName)
+	backend, err := NewProxyBackendFromPodStatus(pod, p.PortName)
 	if err != nil {
 		return err
 	}
@@ -137,7 +154,7 @@ func (p *DocumentProxyInfoUpdater) SyncWithPod(doc SpawnableDocument, pod *v1.Po
 	m := bson.M{
 		"$set": bson.M{
 			"backend": backend,
-			"pod":     podproxy.NewPodInfo(pod),
+			"pod":     NewPodInfo(pod),
 		},
 	}
 
@@ -167,11 +184,11 @@ type NotebookSpawnerService struct {
 
 	updater *DocumentProxyInfoUpdater
 
-	clientset *kubernetesclient.Clientset
+	clientset *kubernetes.Clientset
 	namespace string
 }
 
-func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientset, rds *redis.Service) *NotebookSpawnerService {
+func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
 	session := m.NewSession()
 	return &NotebookSpawnerService{
 		Config:    c,
@@ -179,8 +196,8 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientse
 		namespace: "default",
 		clientset: clientset,
 		updater: &DocumentProxyInfoUpdater{
-			clientset:      clientset,
-			namespace:      "default",
+			Clientset:      clientset,
+			Namespace:      "default",
 			Redis:          rds,
 			Session:        session,
 			CollectionName: entity.NotebookCollectionName,
@@ -189,7 +206,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientse
 	}
 }
 
-func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
+func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *tracker.PodTracker, err error) {
 	workspace := entity.Workspace{}
 	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
 	if err != nil {
@@ -243,12 +260,17 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	return tracker, err
 }
 
+// Sync will be deprecated
+func (s *NotebookSpawnerService) Sync(doc SpawnableDocument) error {
+	return s.updater.Sync(doc)
+}
+
 func (s *NotebookSpawnerService) getPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
-func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTracker, error) {
+func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*tracker.PodTracker, error) {
 	// if it's not created
 	_, err := s.getPod(nb)
 	if kerrors.IsNotFound(err) {
@@ -284,4 +306,34 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 	return podTracker, nil
+}
+
+// SelectPodContainerPort selects the container port from the given port by the port name
+// This method is called by NewProxyBackendFromPodStatus
+// TODO: can be moved to kubernetes/pod/util
+func SelectPodContainerPort(pod *v1.Pod, portname string) (containerPort int32, found bool) {
+	for _, container := range pod.Spec.Containers {
+		for _, port := range container.Ports {
+			if port.Name == portname {
+				containerPort = port.ContainerPort
+				found = true
+				return
+			}
+		}
+	}
+	return containerPort, found
+}
+
+// TODO: can be moved to kubernetes/pod/util
+// NewProxyBackendFromPodStatus creates the proxy backend struct from the pod object.
+func NewProxyBackendFromPodStatus(pod *v1.Pod, portname string) (*entity.ProxyBackend, error) {
+	port, ok := SelectPodContainerPort(pod, portname)
+	if !ok {
+		return nil, fmt.Errorf("portname %s not found", portname)
+	}
+	return &entity.ProxyBackend{
+		IP:        pod.Status.PodIP,
+		Port:      int(port),
+		Connected: pod.Status.PodIP != "",
+	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/event"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 
@@ -121,18 +122,22 @@ func (s *NotebookSpawnerService) SyncDocument(doc *entity.Notebook, pod *v1.Pod)
 	}
 
 	err = s.Context.C(entity.NotebookCollectionName).Update(q, m)
+	if err != nil {
+		return err
+	}
 
-	go func() {
-		topic := doc.Topic()
-		s.Redis.PublishAndSetJSON(topic, doc.NewUpdateEvent(bson.M{
-			"backend.connected": pod.Status.PodIP != "",
-			"pod.phase":         pod.Status.Phase,
-			"pod.message":       pod.Status.Message,
-			"pod.reason":        pod.Status.Reason,
-			"pod.startTime":     pod.Status.StartTime,
-		}))
-	}()
-	return err
+	s.emitDocEvent(doc, doc.NewUpdateEvent(bson.M{
+		"backend.connected": pod.Status.PodIP != "",
+		"pod.phase":         pod.Status.Phase,
+		"pod.message":       pod.Status.Message,
+		"pod.reason":        pod.Status.Reason,
+		"pod.startTime":     pod.Status.StartTime,
+	}))
+	return nil
+}
+
+func (s *NotebookSpawnerService) emitDocEvent(doc *entity.Notebook, e *event.RecordEvent) {
+	go s.Redis.PublishAndSetJSON(doc.Topic(), e)
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {

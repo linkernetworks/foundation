@@ -74,11 +74,9 @@ func (s *FileServerService) WakeUp(ws *entity.Workspace) error {
 		volumes := []container.Volume{}
 
 		fsParameter := FileServerPodParameters{
-			Image: FileServerImage + ":" + aurora.ImageTag,
-			Port:  FileServerContainerPort,
-			Labels: map[string]string{
-				"kind": "workspace",
-			},
+			Image:   FileServerImage + ":" + aurora.ImageTag,
+			Port:    FileServerContainerPort,
+			Labels:  ws.PVC.Labels,
 			Volumes: volumes,
 		}
 		podFactory := FileServerPodFactory{}

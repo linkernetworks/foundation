@@ -11,7 +11,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 
-	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
@@ -33,6 +32,9 @@ type SpawnableDocument interface {
 }
 
 type DocumentProxyInfoUpdater struct {
+	clientset *kubernetesclient.Clientset
+	namespace string
+
 	Redis          *redis.Service
 	Session        *mongo.Session
 	CollectionName string
@@ -41,7 +43,46 @@ type DocumentProxyInfoUpdater struct {
 	PortName string
 }
 
-func (p *DocumentProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
+func (u *DocumentProxyInfoUpdater) GetPod(doc SpawnableDocument) (*v1.Pod, error) {
+	return u.clientset.CoreV1().Pods(u.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
+}
+
+func (u *DocumentProxyInfoUpdater) Sync(doc SpawnableDocument) (err error) {
+	pod, err := u.GetPod(doc)
+	if err != nil && kerrors.IsNotFound(err) {
+		return u.Reset(doc)
+	} else if err != nil {
+		u.Reset(doc)
+		return err
+	}
+	return u.SyncWithPod(doc, pod)
+}
+
+func (u *DocumentProxyInfoUpdater) Reset(doc SpawnableDocument) (err error) {
+	var q = bson.M{"_id": doc.GetID()}
+	var m = bson.M{
+		"$set": bson.M{
+			"backend.connected": false,
+		},
+		"$unset": bson.M{
+			"backend.host": nil,
+			"backend.port": nil,
+			"pod":          nil,
+		},
+	}
+	err = u.Session.C(u.CollectionName).Update(q, m)
+	u.emit(doc, doc.NewUpdateEvent(bson.M{
+		"backend.connected": false,
+		"backend.host":      nil,
+		"backend.port":      nil,
+		"pod":               nil,
+	}))
+	return err
+}
+
+// SyncWith updates the given document's "backend" and "pod" field by the given
+// pod object.
+func (p *DocumentProxyInfoUpdater) SyncWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, p.PortName)
 	if err != nil {
 		return err
@@ -76,34 +117,35 @@ func (p *DocumentProxyInfoUpdater) emit(doc SpawnableDocument, e *event.RecordEv
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type NotebookSpawnerService struct {
-	Config     config.Config
-	Mongo      *mongo.Service
-	Session    *mongo.Session
-	Kubernetes *kubernetes.Service
-	Redis      *redis.Service
+	Config  config.Config
+	Mongo   *mongo.Service
+	Session *mongo.Session
+	Redis   *redis.Service
+
+	updater *DocumentProxyInfoUpdater
 
 	clientset *kubernetesclient.Clientset
 	namespace string
 }
 
-func New(c config.Config, m *mongo.Service, k *kubernetes.Service, rds *redis.Service) *NotebookSpawnerService {
+func New(c config.Config, m *mongo.Service, clientset *kubernetesclient.Clientset, rds *redis.Service) *NotebookSpawnerService {
+	session := m.NewSession()
 	return &NotebookSpawnerService{
-		Config:     c,
-		Mongo:      m,
-		Session:    m.NewSession(),
-		Kubernetes: k,
-		Redis:      rds,
-		namespace:  "default",
+		Config:    c,
+		Mongo:     m,
+		Session:   session,
+		Redis:     rds,
+		namespace: "default",
+		clientset: clientset,
+		updater: &DocumentProxyInfoUpdater{
+			clientset:      clientset,
+			namespace:      "default",
+			Redis:          rds,
+			Session:        session,
+			CollectionName: entity.NotebookCollectionName,
+			PortName:       "notebook",
+		},
 	}
-}
-
-func (s *NotebookSpawnerService) getClientset() (*kubernetesclient.Clientset, error) {
-	if s.clientset != nil {
-		return s.clientset, nil
-	}
-	var err error
-	s.clientset, err = s.Kubernetes.CreateClientset()
-	return s.clientset, err
 }
 
 func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
@@ -148,15 +190,14 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 		})
 	} else {
 		// found pod
-		return s.SyncDocument(entity.NotebookCollectionName, nb, pod, "notebook")
+		return s.SyncDocument(nb, pod)
 	}
 }
 
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
-func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod, portname string) (err error) {
-	updater := DocumentProxyInfoUpdater{s.Redis, s.Session, collectionName, portname}
-	return updater.SyncDocumentWithPod(doc, pod)
+func (s *NotebookSpawnerService) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
+	return s.updater.SyncWithPod(doc, pod)
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
@@ -215,11 +256,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 }
 
 func (s *NotebookSpawnerService) GetPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
-	clientset, err := s.getClientset()
-	if err != nil {
-		return nil, err
-	}
-	return clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
+	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
@@ -233,11 +270,6 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	}
 
 	podName := nb.DeploymentID()
-
-	clientset, err := s.getClientset()
-	if err != nil {
-		return nil, err
-	}
 
 	// force sending a terminating state to document
 	q := bson.M{"_id": nb.GetID()}
@@ -255,7 +287,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
-	err = clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
+	err = s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		podTracker.Stop()
 		return nil, ErrAlreadyStopped

@@ -33,7 +33,11 @@ func TestNotebookSpawnerService(t *testing.T) {
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.New(cf.Redis)
-	spawner := New(cf, mongoService, kubernetesService, redisService)
+
+	clientset, err := kubernetesService.CreateClientset()
+	assert.NoError(t, err)
+
+	spawner := New(cf, mongoService, clientset, redisService)
 
 	// proxyURL := "/v1/notebooks/proxy/"
 	context := mongoService.NewSession()

@@ -121,3 +121,7 @@ func (s *FileServerService) Delete(ws *entity.Workspace) error {
 	s.Session.UpdateById(entity.WorkspaceCollectionName, ws.ID, ws)
 	return nil
 }
+
+func (s *FileServerService) Restart(ws *entity.Workspace) error {
+	return nil
+}

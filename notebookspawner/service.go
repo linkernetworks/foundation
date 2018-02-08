@@ -185,7 +185,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		Image:        nb.Image,
 		WorkspaceDir: pvSubpath,
 		WorkingDir:   s.Config.Jupyter.WorkingDir,
-		Bind:         s.Config.Jupyter.Bind,
+		Bind:         s.Config.Jupyter.Address,
 		Port:         NotebookContainerPort,
 		BaseURL:      nb.Url,
 		Labels: map[string]string{

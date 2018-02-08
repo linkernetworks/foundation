@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const FileServerContainerPort = 8888
+const FileServerContainerPort = 33333
 
 type FileServerPodFactory struct {
 	FileServer *entity.FileServer
@@ -50,10 +50,6 @@ func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
 		})
 	}
 	return kubeVolumeMount
-}
-
-func (nb *FileServerPodFactory) DeploymentID() string {
-	return nb.FileServer.ID.Hex()
 }
 
 func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {

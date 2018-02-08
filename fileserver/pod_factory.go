@@ -1,7 +1,6 @@
 package fileserver
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"strconv"
 
@@ -9,10 +8,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const WorkspacePodNamePrefix = "workspace-fs-"
 const FileServerContainerPort = 33333
+const FileServerImage = "gcr.io/linker-aurora/fileserver"
 
 type FileServerPodFactory struct {
-	FileServer *entity.FileServer
 }
 
 type FileServerPodParameters struct {
@@ -52,7 +52,7 @@ func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
 	return kubeVolumeMount
 }
 
-func (nb *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {
+func (fs *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {
 	kubeVolume := getKubeVolume(params)
 	kubeVolumeMount := getKubeVolumeMount(params)
 

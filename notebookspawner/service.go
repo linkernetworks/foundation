@@ -41,7 +41,7 @@ type ProxyInfoUpdater struct {
 	PortName string
 }
 
-func (p *ProxyInfoUpdater) SyncDocument(doc SpawnableDocument, pod *v1.Pod) (err error) {
+func (p *ProxyInfoUpdater) SyncDocumentWithPod(doc SpawnableDocument, pod *v1.Pod) (err error) {
 	backend, err := podproxy.NewProxyBackendFromPodStatus(pod, p.PortName)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 type NotebookSpawnerService struct {
 	Config     config.Config
 	Mongo      *mongo.Service
-	Context    *mongo.Session
+	Session    *mongo.Session
 	Kubernetes *kubernetes.Service
 	Redis      *redis.Service
 
@@ -90,7 +90,7 @@ func New(c config.Config, m *mongo.Service, k *kubernetes.Service, rds *redis.Se
 	return &NotebookSpawnerService{
 		Config:     c,
 		Mongo:      m,
-		Context:    m.NewSession(),
+		Session:    m.NewSession(),
 		Kubernetes: k,
 		Redis:      rds,
 		namespace:  "default",
@@ -118,7 +118,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 			}))
 		}()
 
-		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
+		return s.Session.C(entity.NotebookCollectionName).Update(q, bson.M{
 			"$set": bson.M{
 				"backend.connected": false,
 			},
@@ -139,7 +139,7 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 			}))
 		}()
 
-		return s.Context.C(entity.NotebookCollectionName).Update(q, bson.M{
+		return s.Session.C(entity.NotebookCollectionName).Update(q, bson.M{
 			"$set": bson.M{
 				"backend.connected": false,
 				"backend.error":     err.Error(),
@@ -155,13 +155,13 @@ func (s *NotebookSpawnerService) Sync(nb *entity.Notebook) error {
 // SyncDocument updates the given document's "backend" and "pod" field by the
 // given pod object.
 func (s *NotebookSpawnerService) SyncDocument(collectionName string, doc SpawnableDocument, pod *v1.Pod, portname string) (err error) {
-	updater := ProxyInfoUpdater{s.Redis, s.Context, collectionName, portname}
-	return updater.SyncDocument(doc, pod)
+	updater := ProxyInfoUpdater{s.Redis, s.Session, collectionName, portname}
+	return updater.SyncDocumentWithPod(doc, pod)
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
 	workspace := entity.Workspace{}
-	err = s.Context.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
+	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 			"pod.phase":         "Terminating",
 		},
 	}
-	s.Context.C(entity.NotebookCollectionName).Update(q, m)
+	s.Session.C(entity.NotebookCollectionName).Update(q, m)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
 	podTracker, err := s.startTracking(entity.NotebookCollectionName, podName, nb)

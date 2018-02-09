@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/event"
-	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/tracker"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 

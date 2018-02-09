@@ -1,6 +1,7 @@
-package fileserver
+package workspace
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"strconv"
 
@@ -9,21 +10,31 @@ import (
 )
 
 const WorkspacePodNamePrefix = "workspace-fs-"
-const FileServerContainerPort = 33333
-const FileServerImage = "asia.gcr.io/linker-aurora/file-server"
+const WorkspaceContainerPort = 33333
+const WorkspaceImage = "asia.gcr.io/linker-aurora/file-server"
 
-type FileServerPodFactory struct {
-}
-
-type FileServerPodParameters struct {
-	// FileServer parameters
+type WorkspacePodParameters struct {
+	// Workspace parameters
 	Port    int32
 	Image   string
 	Labels  map[string]string
 	Volumes []container.Volume
 }
 
-func getKubeVolume(params FileServerPodParameters) []v1.Volume {
+type WorkspacePodFactory struct {
+	workspace *entity.Workspace
+	params    WorkspacePodParameters
+}
+
+func NewWorkspacePodFactory(workspace *entity.Workspace, params WorkspacePodParameters) *WorkspacePodFactory {
+	return &WorkspacePodFactory{workspace, params}
+}
+
+func (fs *WorkspacePodFactory) DeploymentID() string {
+	return fs.workspace.ID
+}
+
+func getKubeVolume(params WorkspacePodParameters) []v1.Volume {
 	kubeVolume := []v1.Volume{}
 	for _, v := range params.Volumes {
 		kubeVolume = append(kubeVolume, v1.Volume{
@@ -38,7 +49,7 @@ func getKubeVolume(params FileServerPodParameters) []v1.Volume {
 	return kubeVolume
 }
 
-func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
+func getKubeVolumeMount(params WorkspacePodParameters) []v1.VolumeMount {
 	kubeVolumeMount := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
 		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
@@ -50,7 +61,7 @@ func getKubeVolumeMount(params FileServerPodParameters) []v1.VolumeMount {
 	return kubeVolumeMount
 }
 
-func (fs *FileServerPodFactory) NewPod(podName string, params FileServerPodParameters) v1.Pod {
+func (fs *WorkspacePodFactory) NewPod(podName string, params WorkspacePodParameters) v1.Pod {
 	kubeVolume := getKubeVolume(params)
 	kubeVolumeMount := getKubeVolumeMount(params)
 
@@ -72,7 +83,7 @@ func (fs *FileServerPodFactory) NewPod(podName string, params FileServerPodParam
 					VolumeMounts: kubeVolumeMount,
 					Ports: []v1.ContainerPort{
 						{
-							Name:          "fileserver",
+							Name:          "workspace-fs",
 							ContainerPort: params.Port,
 							Protocol:      v1.ProtocolTCP,
 						},

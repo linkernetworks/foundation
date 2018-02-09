@@ -1,4 +1,4 @@
-package workspace
+package workspacefs
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
@@ -9,15 +9,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const WorkspacePodNamePrefix = "workspace-fs-"
 const WorkspaceContainerPort = 33333
 const WorkspaceImage = "asia.gcr.io/linker-aurora/file-server"
+const WorkspaceFSPortName = "workspace-fs"
+const WorkspaceMainVolumeMountPoint = "/workspace"
 
 type WorkspacePodParameters struct {
 	// Workspace parameters
 	Port    int32
 	Image   string
-	Labels  map[string]string
 	Volumes []container.Volume
 }
 
@@ -28,10 +28,6 @@ type WorkspacePodFactory struct {
 
 func NewWorkspacePodFactory(workspace *entity.Workspace, params WorkspacePodParameters) *WorkspacePodFactory {
 	return &WorkspacePodFactory{workspace, params}
-}
-
-func (fs *WorkspacePodFactory) DeploymentID() string {
-	return fs.workspace.ID
 }
 
 func getKubeVolume(params WorkspacePodParameters) []v1.Volume {
@@ -61,14 +57,15 @@ func getKubeVolumeMount(params WorkspacePodParameters) []v1.VolumeMount {
 	return kubeVolumeMount
 }
 
-func (fs *WorkspacePodFactory) NewPod(podName string, params WorkspacePodParameters) v1.Pod {
+func (ws *WorkspacePodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
+	params := ws.params
 	kubeVolume := getKubeVolume(params)
 	kubeVolumeMount := getKubeVolumeMount(params)
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   podName,
-			Labels: params.Labels,
+			Labels: labels,
 		},
 		Spec: v1.PodSpec{
 			RestartPolicy: "Always",
@@ -83,7 +80,7 @@ func (fs *WorkspacePodFactory) NewPod(podName string, params WorkspacePodParamet
 					VolumeMounts: kubeVolumeMount,
 					Ports: []v1.ContainerPort{
 						{
-							Name:          "workspace-fs",
+							Name:          WorkspaceFSPortName,
 							ContainerPort: params.Port,
 							Protocol:      v1.ProtocolTCP,
 						},

@@ -1,4 +1,4 @@
-package fileserver
+package workspacefs
 
 import (
 	"os"
@@ -17,7 +17,7 @@ const (
 	testingConfigPath = "../../../config/testing.json"
 )
 
-func TestFileServerServiceWakeup(t *testing.T) {
+func TestWorkspaceServiceWakeup(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return
@@ -31,20 +31,16 @@ func TestFileServerServiceWakeup(t *testing.T) {
 	redisService := redis.New(cf.Redis)
 	fs := New(cf, mongoService, kubernetesService, redisService)
 
-	// proxyURL := "/v1/fileservers/proxy/"
+	// proxyURL := "/v1/workspaces/proxy/"
 	context := mongoService.NewSession()
 	defer context.Close()
 
-	userId := bson.NewObjectId()
-	fileserver := entity.FileServer{}
-
 	vName := "testmount"
 	workspace := entity.Workspace{
-		ID:         bson.NewObjectId(),
-		Name:       "testing workspace",
-		Type:       "general",
-		Owner:      userId,
-		FileServer: fileserver,
+		ID:    bson.NewObjectId(),
+		Name:  "testing workspace",
+		Type:  "general",
+		Owner: bson.NewObjectId(),
 		MainVolume: entity.PersistentVolumeClaim{
 			Name: vName,
 		},

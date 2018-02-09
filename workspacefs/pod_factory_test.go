@@ -1,19 +1,28 @@
-package fileserver
+package workspacefs
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestingNewFSPod(t *testing.T) {
-	fpd := FileServerPodFactory{}
-	image := "gcr.io/linker-aurora/fileserver:develop"
-
+	image := "gcr.io/linker-aurora/workspace:develop"
 	vName := "testVolume"
 	mountPath := "/workspace"
-	fpp := FileServerPodParameters{
-		Port:  FileServerContainerPort,
+
+	ws := entity.Workspace{
+		ID:   bson.NewObjectId(),
+		Name: "testing workspace",
+		Type: "general",
+		MainVolume: entity.PersistentVolumeClaim{
+			Name: vName,
+		},
+	}
+
+	wsPodParameter := WorkspacePodParameters{
+		Port:  WorkspaceContainerPort,
 		Image: image,
 		Volumes: []container.Volume{
 			{
@@ -26,13 +35,14 @@ func TestingNewFSPod(t *testing.T) {
 		},
 	}
 
-	name := "TestForFS"
-	pod := fpd.NewPod(name, fpp)
+	podFactory := WorkspacePodFactory{ws, wsPodParameter}
+
+	pod := fpd.NewPod(ws.DeploymentID(), map[string]string{})
 
 	assert.Equal(t, pod.Spec.Containers[0].Image, image)
-	assert.Equal(t, pod.Spec.Containers[0].Name, name)
+	assert.Equal(t, pod.Spec.Containers[0].Name, ws.DeploymentID())
 	assert.Equal(t, pod.Spec.Containers[0].ImagePullPolicy, "IfNotPresent")
-	assert.Equal(t, pod.Spec.Containers[0].Ports[0].ContainerPort, FileServerContainerPort)
+	assert.Equal(t, pod.Spec.Containers[0].Ports[0].ContainerPort, WorkspaceContainerPort)
 	assert.Equal(t, pod.Spec.Containers[0].VolumeMounts[0].Name, vName)
 	assert.Equal(t, pod.Spec.Containers[0].VolumeMounts[0].MountPath, mountPath)
 	assert.Equal(t, pod.Spec.Volumes[0].Name, vName)

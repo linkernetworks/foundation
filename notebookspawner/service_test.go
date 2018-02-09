@@ -71,13 +71,13 @@ func TestNotebookSpawnerService(t *testing.T) {
 	_, err = spawner.Start(&notebook)
 	assert.NoError(t, err)
 
-	err = spawner.updater.Sync(&notebook)
+	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)
 
 	_, err = spawner.Stop(&notebook)
 	assert.NoError(t, err)
 
-	err = spawner.updater.Sync(&notebook)
+	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)
 
 }

@@ -45,8 +45,8 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 			RestartPolicy: "Never",
 			Containers: []v1.Container{
 				{
+					Name:            "notebook",
 					Image:           nb.params.Image,
-					Name:            podName,
 					ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
 					Args: []string{
 						"start-notebook.sh",

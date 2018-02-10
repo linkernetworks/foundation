@@ -70,7 +70,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	podFactory := NewNotebookPodFactory(nb, NotebookPodParameters{
 		Image:        nb.Image,
 		WorkspaceDir: pvSubpath,
-		WorkingDir:   s.Config.Jupyter.WorkingDir,
+		WorkDir:      s.Config.Jupyter.WorkingDir,
 		Bind:         s.Config.Jupyter.Address,
 		Port:         DefaultNotebookContainerPort,
 		BaseURL:      nb.Url,

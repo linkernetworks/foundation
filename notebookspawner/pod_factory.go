@@ -16,7 +16,7 @@ const DefaultNotebookContainerPort = 8888
 // the notebook pod.
 type NotebookPodParameters struct {
 	// Notebook parameters
-	WorkingDir   string
+	WorkDir      string
 	WorkspaceDir string
 	Image        string
 	BaseURL      string
@@ -50,7 +50,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 					ImagePullPolicy: v1.PullIfNotPresent,
 					Args: []string{
 						"start-notebook.sh",
-						"--notebook-dir=" + nb.params.WorkingDir,
+						"--notebook-dir=" + nb.params.WorkDir,
 						"--ip=" + nb.params.Bind,
 						"--port=" + strconv.Itoa(int(nb.params.Port)),
 						"--NotebookApp.base_url=" + nb.params.BaseURL,
@@ -63,7 +63,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 						{
 							Name:      "data-volume",
 							SubPath:   nb.params.WorkspaceDir,
-							MountPath: nb.params.WorkingDir,
+							MountPath: nb.params.WorkDir,
 						},
 						{Name: "config-volume", MountPath: "/home/jovyan/.jupyter/custom"},
 					},

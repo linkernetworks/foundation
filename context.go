@@ -6,7 +6,7 @@ import (
 )
 
 type Session struct {
-	Session *mgo.Session
+	*mgo.Session
 }
 
 func (c *Session) NewDataStore(collection string) *DataStore {
@@ -14,12 +14,12 @@ func (c *Session) NewDataStore(collection string) *DataStore {
 }
 
 func (c *Session) Close() {
-	c.Session.Close()
+	c.Close()
 }
 
 func (c *Session) C(collection string) *mgo.Collection {
 	// DB returns a value representing the named database. If name is empty, the database name provided in the dialed URL is used instead.
-	return c.Session.DB("").C(collection)
+	return c.DB("").C(collection)
 }
 
 func (c *Session) FindOne(collection string, query bson.M, r Record) error {

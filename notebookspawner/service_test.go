@@ -40,8 +40,8 @@ func TestNotebookSpawnerService(t *testing.T) {
 	spawner := New(cf, mongoService, clientset, redisService)
 
 	// proxyURL := "/v1/notebooks/proxy/"
-	context := mongoService.NewSession()
-	defer context.Close()
+	session := mongoService.NewSession()
+	defer session.Close()
 
 	userId := bson.NewObjectId()
 
@@ -52,9 +52,9 @@ func TestNotebookSpawnerService(t *testing.T) {
 		Owner: userId,
 	}
 
-	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
+	err = session.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
-	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
+	defer session.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
 	notebookID := bson.NewObjectId()
 	notebook := entity.Notebook{
@@ -64,9 +64,9 @@ func TestNotebookSpawnerService(t *testing.T) {
 		Url:         cf.Jupyter.BaseURL + "/" + notebookID.Hex(),
 		CreatedBy:   userId,
 	}
-	err = context.C(entity.NotebookCollectionName).Insert(notebook)
+	err = session.C(entity.NotebookCollectionName).Insert(notebook)
 	assert.NoError(t, err)
-	defer context.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
+	defer session.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
 	_, err = spawner.Start(&notebook)
 	assert.NoError(t, err)

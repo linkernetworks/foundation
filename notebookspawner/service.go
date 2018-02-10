@@ -121,8 +121,6 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
-	podName := nb.DeploymentID()
-
 	// force sending a terminating state to document
 	q := bson.M{"_id": nb.GetID()}
 	m := bson.M{
@@ -139,6 +137,7 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 		return nil, err
 	}
 
+	podName := nb.DeploymentID()
 	err = s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		podTracker.Stop()

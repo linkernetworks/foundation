@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+
 	// "bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"

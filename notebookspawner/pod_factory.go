@@ -42,7 +42,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 			Labels: labels,
 		},
 		Spec: v1.PodSpec{
-			RestartPolicy: "Never",
+			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:            "notebook",

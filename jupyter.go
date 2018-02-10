@@ -22,16 +22,15 @@ type JupyterConfig struct {
 func (c *JupyterConfig) LoadDefaults() {
 	if c.Cache != nil {
 		if c.Cache.Expire == 0 {
-			// default to 10 minutes
-			c.Cache.Expire = 30
+			// 60 seconds
+			c.Cache.Expire = 10 * 60
 		}
 	}
 }
 
 type JupyterCacheConfig struct {
-	Prefix string `json:"prefix"`
-	Age    int    `json:"age"`
-	Expire int    `json:"expire"`
+	Age    int `json:"age"`
+	Expire int `json:"expire"`
 }
 
 type DevProxyConfig struct {

@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// The container port of jupyter notebook
 const NotebookContainerPort = 8888
 
 // NotebookPodParameters stores the parameters that will be used for creating
@@ -31,12 +32,6 @@ type NotebookPodFactory struct {
 
 func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParameters) *NotebookPodFactory {
 	return &NotebookPodFactory{notebook, params}
-}
-
-// DeploymentID returns the name of the deployment.
-// For Kubernetes, it will be the pod name.
-func (nb *NotebookPodFactory) DeploymentID() string {
-	return nb.notebook.ID.Hex()
 }
 
 // NewPod returns the Pod object of the jupyternotebook

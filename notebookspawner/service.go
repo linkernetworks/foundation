@@ -72,7 +72,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		WorkspaceDir: pvSubpath,
 		WorkingDir:   s.Config.Jupyter.WorkingDir,
 		Bind:         s.Config.Jupyter.Address,
-		Port:         NotebookContainerPort,
+		Port:         DefaultNotebookContainerPort,
 		BaseURL:      nb.Url,
 	})
 

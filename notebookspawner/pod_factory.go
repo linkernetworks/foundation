@@ -10,7 +10,7 @@ import (
 )
 
 // The container port of jupyter notebook
-const NotebookContainerPort = 8888
+const DefaultNotebookContainerPort = 8888
 
 // NotebookPodParameters stores the parameters that will be used for creating
 // the notebook pod.

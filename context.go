@@ -13,10 +13,6 @@ func (c *Session) NewDataStore(collection string) *DataStore {
 	return NewDataStore(c, collection)
 }
 
-func (c *Session) Close() {
-	c.Close()
-}
-
 func (c *Session) C(collection string) *mgo.Collection {
 	// DB returns a value representing the named database. If name is empty, the database name provided in the dialed URL is used instead.
 	return c.DB("").C(collection)

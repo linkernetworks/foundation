@@ -47,7 +47,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 				{
 					Name:            "notebook",
 					Image:           nb.params.Image,
-					ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
+					ImagePullPolicy: v1.PullIfNotPresent,
 					Args: []string{
 						"start-notebook.sh",
 						"--notebook-dir=" + nb.params.WorkingDir,

@@ -19,6 +19,15 @@ type JupyterConfig struct {
 	Dev *DevProxyConfig `json:"dev"`
 }
 
+func (c *JupyterConfig) LoadDefaults() {
+	if c.Cache != nil {
+		if c.Cache.Expire == 0 {
+			// default to 10 minutes
+			c.Cache.Expire = 60 * 10
+		}
+	}
+}
+
 type JupyterCacheConfig struct {
 	Prefix string `json:"prefix"`
 	Age    int    `json:"age"`

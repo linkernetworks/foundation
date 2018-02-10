@@ -126,7 +126,11 @@ func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTrack
 	m := bson.M{
 		"$set": bson.M{
 			"backend.connected": false,
-			"pod.phase":         "Terminating",
+		},
+		"$unset": bson.M{
+			"backend.host": nil,
+			"backend.port": nil,
+			"pod":          nil,
 		},
 	}
 	s.Session.C(entity.NotebookCollectionName).Update(q, m)

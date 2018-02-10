@@ -1,6 +1,8 @@
 package mongo
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/config"
+
 	"gopkg.in/mgo.v2"
 )
 
@@ -20,8 +22,10 @@ func New(url string) *Service {
 	}
 }
 
+func NewFromConfig(cf *config.MongoConfig) *Service {
+	return New(cf.Url)
+}
+
 func (s *Service) NewSession() *Session {
-	return &Session{
-		Session: s.globalSession.Copy(),
-	}
+	return &Session{s.globalSession.Copy()}
 }

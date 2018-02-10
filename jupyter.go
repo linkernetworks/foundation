@@ -23,7 +23,7 @@ func (c *JupyterConfig) LoadDefaults() {
 	if c.Cache != nil {
 		if c.Cache.Expire == 0 {
 			// default to 10 minutes
-			c.Cache.Expire = 60 * 10
+			c.Cache.Expire = 30
 		}
 	}
 }

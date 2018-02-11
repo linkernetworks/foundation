@@ -18,11 +18,11 @@ type RedisPoolConfig struct {
 }
 
 type RedisConfig struct {
-	Host      string          `json:"host"`
-	Port      int32           `json:"port"`
-	Interface string          `json:"interface"`
-	Pool      RedisPoolConfig `json:"pool"`
-	Public    *RedisConfig    `json:"public"`
+	Host      string           `json:"host"`
+	Port      int32            `json:"port"`
+	Interface string           `json:"interface"`
+	Pool      *RedisPoolConfig `json:"pool"`
+	Public    *RedisConfig     `json:"public"`
 }
 
 func (c *RedisConfig) Unresolved() bool {

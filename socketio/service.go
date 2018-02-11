@@ -156,7 +156,7 @@ func (s *Service) CleanUp() (lasterr error) {
 			client.closed = true
 
 		} else if client.closed {
-			logger.Debugf("socketio: closing client=%s. Active clients: %v", token, len(s.clients))
+			logger.Debugf("socketio: closing client=%s. active clients: %v", token, len(s.clients))
 			client.Stop()
 			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error(err)

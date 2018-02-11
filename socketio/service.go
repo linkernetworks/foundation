@@ -5,8 +5,9 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"fmt"
-	redis "github.com/garyburd/redigo/redis"
+	redigo "github.com/garyburd/redigo/redis"
 	socketio "github.com/googollee/go-socket.io"
+	"io"
 	"time"
 )
 
@@ -44,13 +45,13 @@ type client struct {
 	stopPipe   chan bool
 	stopEmit   chan bool
 	expiredAt  int64
-	pubSubConn *redis.PubSubConn
+	pubSubConn *redigo.PubSubConn
 	toEvent    string
 	closed     bool
 }
 
 // Create client with a given token. Front-End can recover client with ths same token
-func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redis.PubSubConn, toEvent string) {
+func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redigo.PubSubConn, toEvent string) {
 	// try find existed client with token, generate new client if not found
 
 	existedClient, ok := s.clients[token]
@@ -69,7 +70,7 @@ func (s *Service) NewClientSubscription(token string, socket socketio.Socket, ps
 		}
 		s.clients[token] = client
 
-		go client.pipe() // from redis to chan
+		go client.pipe() // from redigo to chan
 		go client.emit() // to socket event
 
 	} else {
@@ -97,7 +98,7 @@ func (s *Service) UnSubscribe(token string, topic string) error {
 	return client.pubSubConn.Unsubscribe(topic)
 }
 
-// pipe from redis pubsubconn to chan
+// pipe from redigo pubsubconn to chan
 func (c *client) pipe() error {
 Pipe:
 	for {
@@ -107,10 +108,10 @@ Pipe:
 			break Pipe
 		default:
 			switch v := c.pubSubConn.Receive().(type) {
-			case redis.Message:
+			case redigo.Message:
 				c.channel <- string(v.Data)
 				logger.Debugf("redis: received message channel: %s message: %s", v.Channel, v.Data)
-			case redis.Subscription:
+			case redigo.Subscription:
 				// v.Kind could be "subscribe", "unsubscribe" ...
 				logger.Debugf("redis: subscription channel:%s kind:%s count:%d", v.Channel, v.Kind, v.Count)
 				if v.Count == 0 {
@@ -118,8 +119,9 @@ Pipe:
 				}
 			// when the connection is closed, redigo returns an error "connection closed" here
 			case error:
-				logger.Error("redis: ", v)
-				//	return v
+				if v != io.EOF {
+					logger.Errorf("redis: error=%v", v)
+				}
 				break Pipe
 			}
 		}

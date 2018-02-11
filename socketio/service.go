@@ -8,10 +8,12 @@ import (
 	redigo "github.com/garyburd/redigo/redis"
 	socketio "github.com/googollee/go-socket.io"
 	"io"
+	"sync"
 	"time"
 )
 
 type Service struct {
+	*sync.Mutex
 	Server            *socketio.Server
 	clients           map[string]*client
 	connectionTimeout time.Duration
@@ -33,26 +35,19 @@ func New(cf *config.SocketioConfig) *Service {
 		io.SetMaxConnection(cf.MaxConnection)
 	}
 	return &Service{
+		Mutex:             &sync.Mutex{},
 		Server:            io,
 		clients:           map[string]*client{},
 		connectionTimeout: 5 * time.Minute,
 	}
 }
 
-type client struct {
-	socket     socketio.Socket
-	channel    chan string
-	stopPipe   chan bool
-	stopEmit   chan bool
-	expiredAt  int64
-	pubSubConn *redigo.PubSubConn
-	toEvent    string
-	closed     bool
-}
-
 // Create client with a given token. Front-End can recover client with ths same token
 func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redigo.PubSubConn, toEvent string) {
 	// try find existed client with token, generate new client if not found
+
+	s.Lock()
+	defer s.Unlock()
 
 	existedClient, ok := s.clients[token]
 	if !ok || existedClient.closed {
@@ -96,6 +91,62 @@ func (s *Service) UnSubscribe(token string, topic string) error {
 		return errors.New(msg)
 	}
 	return client.pubSubConn.Unsubscribe(topic)
+}
+
+func (s *Service) CleanUp() (lasterr error) {
+	now := time.Now().Unix()
+
+	s.Lock()
+	defer s.Unlock()
+	for token, client := range s.clients {
+		// send close to client channel
+		if client.closed == false && client.expiredAt < now {
+			logger.Debugf("socketio: marking client=%s as closed. Active clients: %v", token, len(s.clients))
+			client.closed = true
+
+		} else if client.closed {
+			logger.Debugf("socketio: closing client=%s. active clients: %v", token, len(s.clients))
+			client.Stop()
+			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
+				logger.Error(err)
+				lasterr = err
+			}
+			client.socket.Disconnect()
+			delete(s.clients, token)
+		}
+	}
+	return lasterr
+}
+
+func (s *Service) Refresh(clientId string) error {
+	if len(clientId) == 0 {
+		return errors.New("Token provided by front-end is empty. Can't refresh.")
+	}
+
+	s.Lock()
+	defer s.Unlock()
+
+	if client, ok := s.clients[clientId]; ok {
+		client.expiredAt = time.Now().Add(s.connectionTimeout).Unix()
+		return nil
+	}
+	return fmt.Errorf("Client: %s not found and can't refresh.", clientId)
+}
+
+// Count returns the current number of connected clients in session
+func (s *Service) Count() int {
+	return s.Server.Count()
+}
+
+type client struct {
+	socket     socketio.Socket
+	channel    chan string
+	stopPipe   chan bool
+	stopEmit   chan bool
+	expiredAt  int64
+	pubSubConn *redigo.PubSubConn
+	toEvent    string
+	closed     bool
 }
 
 // pipe from redigo pubsubconn to chan
@@ -147,47 +198,9 @@ Emit:
 		}
 	}
 }
-func (s *Service) CleanUp() (lasterr error) {
-	now := time.Now().Unix()
-	for token, client := range s.clients {
-		// send close to client channel
-		if client.closed == false && client.expiredAt < now {
-			logger.Debugf("socketio: marking client=%s as closed. Active clients: %v", token, len(s.clients))
-			client.closed = true
-
-		} else if client.closed {
-			logger.Debugf("socketio: closing client=%s. active clients: %v", token, len(s.clients))
-			client.Stop()
-			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
-				logger.Error(err)
-				lasterr = err
-			}
-			client.socket.Disconnect()
-			delete(s.clients, token)
-		}
-	}
-	return lasterr
-}
-
 func (c *client) Stop() {
 	c.stopPipe <- true
 	<-c.stopPipe
 	c.stopEmit <- true
 	<-c.stopEmit
-}
-
-func (s *Service) Refresh(clientId string) error {
-	if len(clientId) == 0 {
-		return errors.New("Token provided by front-end is empty. Can't refresh.")
-	}
-	if client, ok := s.clients[clientId]; ok {
-		client.expiredAt = time.Now().Add(s.connectionTimeout).Unix()
-		return nil
-	}
-	return fmt.Errorf("Client: %s not found and can't refresh.", clientId)
-}
-
-// Count returns the current number of connected clients in session
-func (s *Service) Count() int {
-	return s.Server.Count()
 }

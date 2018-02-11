@@ -35,8 +35,7 @@ type NotebookSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
-	session := m.NewSession()
+func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{
 		Config:    c,
 		Session:   session,
@@ -112,43 +111,31 @@ func (s *NotebookSpawnerService) getPod(doc types.DeploymentIDProvider) (*v1.Pod
 }
 
 // Stop returns nil if it's already stopped
-func (s *NotebookSpawnerService) Stop(nb *entity.Notebook) (*podtracker.PodTracker, error) {
+func (s *NotebookSpawnerService) Stop(notebook *entity.Notebook) (*podtracker.PodTracker, error) {
 	// if it's not created
-	_, err := s.getPod(nb)
+	_, err := s.getPod(notebook)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		return nil, err
 	}
 
-	// force sending a terminating state to document
-	q := bson.M{"_id": nb.GetID()}
-	m := bson.M{
-		"$set": bson.M{
-			"backend.connected": false,
-		},
-		"$unset": bson.M{
-			"backend.host": nil,
-			"backend.port": nil,
-			"pod":          nil,
-		},
-	}
-	s.Session.C(entity.NotebookCollectionName).Update(q, m)
+	s.Updater.Reset(notebook)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	podTracker, err := s.Updater.TrackAndSync(nb)
+	tracker, err := s.Updater.TrackAndSync(notebook)
 	if err != nil {
 		return nil, err
 	}
 
-	podName := nb.DeploymentID()
+	podName := notebook.DeploymentID()
 	err = s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
-	if kerrors.IsNotFound(err) {
-		podTracker.Stop()
-		return nil, ErrAlreadyStopped
-	} else if err != nil {
-		podTracker.Stop()
+	if err != nil {
+		defer tracker.Stop()
+		if kerrors.IsNotFound(err) {
+			return nil, ErrAlreadyStopped
+		}
 		return nil, err
 	}
-	return podTracker, nil
+	return tracker, nil
 }

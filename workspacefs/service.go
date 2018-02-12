@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
+	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
 
@@ -57,7 +58,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 			Redis:          rds,
 			Session:        session,
 			CollectionName: entity.WorkspaceCollectionName,
-			PortName:       WorkspaceFSPortName,
+			PortName:       workspace.FileServerPortName,
 		},
 	}
 }
@@ -75,18 +76,18 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 				ClaimName: ws.MainVolume.Name,
 				VolumeMount: container.VolumeMount{
 					Name:      ws.MainVolume.Name,
-					MountPath: WorkspaceMainVolumeMountPoint,
+					MountPath: workspace.MainVolumeMountPoint,
 				},
 			},
 		}
 
 		volumes = append(volumes, ws.SubVolumes...)
 
-		podFactory := NewWorkspacePodFactory(ws, WorkspacePodParameters{
+		podFactory := workspace.NewPodFactory(ws, workspace.PodParameters{
 			//FIXME for testing, use develop
 			//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
-			Image:   WorkspaceImage + ":develop",
-			Port:    WorkspaceContainerPort,
+			Image:   workspace.Image + ":develop",
+			Port:    workspace.ContainerPort,
 			Volumes: volumes,
 		})
 
@@ -218,7 +219,7 @@ func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volume
 		ClaimName: ws.MainVolume.Name,
 		VolumeMount: container.VolumeMount{
 			Name:      ws.MainVolume.Name,
-			MountPath: WorkspaceMainVolumeMountPoint,
+			MountPath: workspace.MainVolumeMountPoint,
 		},
 	})
 

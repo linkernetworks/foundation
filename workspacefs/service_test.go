@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
+	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/mgo.v2/bson"
@@ -87,7 +88,7 @@ func (suite *WorkspaceServiceSuite) TestGetVolume() {
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), volumes[0].ClaimName, vName)
 	assert.Equal(suite.T(), volumes[0].VolumeMount.Name, vName)
-	assert.Equal(suite.T(), volumes[0].VolumeMount.MountPath, WorkspaceMainVolumeMountPoint)
+	assert.Equal(suite.T(), volumes[0].VolumeMount.MountPath, workspace.MainVolumeMountPoint)
 }
 
 func (suite *WorkspaceServiceSuite) TestRestart() {

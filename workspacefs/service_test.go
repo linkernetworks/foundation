@@ -56,6 +56,7 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 	}
 
 	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)
+	defer suite.Session.C(entity.WorkspaceCollectionName).Remove((bson.M{"_id": ws.ID}))
 	assert.NoError(suite.T(), err)
 
 	_, err = suite.WsService.WakeUp(ws)
@@ -103,6 +104,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 	}
 
 	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)
+	defer suite.Session.C(entity.WorkspaceCollectionName).Remove((bson.M{"_id": ws.ID}))
 	assert.NoError(suite.T(), err)
 
 	_, err = suite.WsService.WakeUp(ws)
@@ -134,6 +136,9 @@ func TestWorkspaceServiceSuite(t *testing.T) {
 		t.SkipNow()
 		return
 	}
-
 	suite.Run(t, new(WorkspaceServiceSuite))
+}
+
+func (suite *WorkspaceServiceSuite) TearDownTest() {
+	suite.Session.Close()
 }

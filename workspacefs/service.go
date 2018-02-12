@@ -35,7 +35,7 @@ type WorkspacePodDeployment interface {
 	entity.ProxyInfoProvider
 }
 
-type WorkspaceService struct {
+type WorkspaceFileServerSpawner struct {
 	Config  config.Config
 	Session *mongo.Session
 
@@ -44,9 +44,9 @@ type WorkspaceService struct {
 	namespace string
 }
 
-func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *WorkspaceService {
+func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *WorkspaceFileServerSpawner {
 	session := m.NewSession()
-	return &WorkspaceService{
+	return &WorkspaceFileServerSpawner{
 		Config:    c,
 		Session:   session,
 		namespace: "default",
@@ -62,11 +62,11 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 	}
 }
 
-func (s *WorkspaceService) getPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
+func (s *WorkspaceFileServerSpawner) getPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
-func (s *WorkspaceService) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
 		//Create pod
@@ -115,7 +115,7 @@ func (s *WorkspaceService) WakeUp(ws *entity.Workspace) (tracker *podtracker.Pod
 	return tracker, err
 }
 
-func (s *WorkspaceService) Delete(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) Delete(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrDoesNotExist
@@ -149,7 +149,7 @@ func (s *WorkspaceService) Delete(ws *entity.Workspace) (tracker *podtracker.Pod
 	return tracker, nil
 }
 
-func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	//Stop the current worksapce-fs pod
 	_, err = s.getPod(ws)
 	if err != nil && err != ErrDoesNotExist {
@@ -213,7 +213,7 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 	return tracker, nil
 }
 
-func (s *WorkspaceService) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
+func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
 	volumes = append(volumes, container.Volume{
 		ClaimName: ws.MainVolume.Name,
 		VolumeMount: container.VolumeMount{

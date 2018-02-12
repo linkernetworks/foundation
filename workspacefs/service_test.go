@@ -23,7 +23,7 @@ const (
 
 type WorkspaceServiceSuite struct {
 	suite.Suite
-	WsService *WorkspaceService
+	WsService *WorkspaceFileServerSpawner
 	Session   *mongo.Session
 }
 

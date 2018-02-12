@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/mgo.v2/bson"
 	"testing"
 )
 
@@ -27,7 +28,7 @@ func TestingNewFSPod(t *testing.T) {
 		Volumes: []container.Volume{
 			{
 				ClaimName: vName,
-				Volume: container.VolumeMount{
+				VolumeMount: container.VolumeMount{
 					Name:      vName,
 					MountPath: mountPath,
 				},
@@ -35,9 +36,9 @@ func TestingNewFSPod(t *testing.T) {
 		},
 	}
 
-	podFactory := WorkspacePodFactory{ws, wsPodParameter}
+	podFactory := WorkspacePodFactory{&ws, wsPodParameter}
 
-	pod := fpd.NewPod(ws.DeploymentID(), map[string]string{})
+	pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{})
 
 	assert.Equal(t, pod.Spec.Containers[0].Image, image)
 	assert.Equal(t, pod.Spec.Containers[0].Name, ws.DeploymentID())

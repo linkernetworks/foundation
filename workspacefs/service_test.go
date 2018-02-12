@@ -29,7 +29,9 @@ func TestWorkspaceServiceWakeup(t *testing.T) {
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.New(cf.Redis)
-	fs := New(cf, mongoService, kubernetesService, redisService)
+	clientset, err := kubernetesService.CreateClientset()
+	assert.NoError(t, err)
+	fs := New(cf, mongoService, clientset, redisService)
 
 	// proxyURL := "/v1/workspaces/proxy/"
 	context := mongoService.NewSession()
@@ -46,18 +48,24 @@ func TestWorkspaceServiceWakeup(t *testing.T) {
 		},
 	}
 
-	err := context.C(entity.WorkspaceCollectionName).Insert(workspace)
+	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
 	assert.NoError(t, err)
 	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
-	err = fs.WakeUp(&workspace)
+	_, err = fs.WakeUp(&workspace)
 	assert.NoError(t, err)
 	newWP := entity.Workspace{}
 
 	//Check the PodName has been update
 	context.C(entity.WorkspaceCollectionName).Find(bson.M{"_id": workspace.ID}).One(&newWP)
-	assert.Equal(t, newWP.PodName, WorkspacePodNamePrefix+workspace.ID.Hex())
+	assert.Equal(t, newWP.DeploymentID(), entity.WorkspacePodNamePrefix+workspace.ID.Hex())
 
-	err = fs.Delete(&workspace)
+	_, err = fs.Delete(&workspace)
 	assert.NoError(t, err)
+
+	volumes, err := fs.GetKubeVolume(&workspace)
+	assert.NoError(t, err)
+	assert.Equal(t, volumes[0].ClaimName, vName)
+	assert.Equal(t, volumes[0].VolumeMount.Name, vName)
+	assert.Equal(t, volumes[0].VolumeMount.MountPath, WorkspaceMainVolumeMountPoint)
 }

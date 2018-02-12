@@ -145,3 +145,17 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 
 	return nil, nil
 }
+
+func (s *WorkspaceService) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
+	volumes = append(volumes, container.Volume{
+		ClaimName: ws.MainVolume.Name,
+		VolumeMount: container.VolumeMount{
+			Name:      ws.MainVolume.Name,
+			MountPath: WorkspaceMainVolumeMountPoint,
+		},
+	})
+
+	volumes = append(volumes, ws.SubVolume...)
+
+	return volumes, nil
+}

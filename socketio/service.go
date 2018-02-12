@@ -13,7 +13,7 @@ import (
 )
 
 type Service struct {
-	*sync.Mutex
+	sync.Mutex
 	Server            *socketio.Server
 	clients           map[string]*client
 	connectionTimeout time.Duration
@@ -35,7 +35,6 @@ func New(cf *config.SocketioConfig) *Service {
 		io.SetMaxConnection(cf.MaxConnection)
 	}
 	return &Service{
-		Mutex:             &sync.Mutex{},
 		Server:            io,
 		clients:           map[string]*client{},
 		connectionTimeout: 5 * time.Minute,

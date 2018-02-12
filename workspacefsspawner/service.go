@@ -1,4 +1,4 @@
-package workspacefs
+package workspacefsspawner
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
-	"bitbucket.org/linkernetworks/aurora/src/workspace"
+	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
 
@@ -58,7 +58,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 			Redis:          rds,
 			Session:        session,
 			CollectionName: entity.WorkspaceCollectionName,
-			PortName:       workspace.FileServerPortName,
+			PortName:       fileserver.FileServerPortName,
 		},
 	}
 }
@@ -73,21 +73,21 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 		//Create pod
 		volumes := []container.Volume{
 			{
-				ClaimName: ws.MainVolume.Name,
+				ClaimName: ws.PrimaryVolume.Name,
 				VolumeMount: container.VolumeMount{
-					Name:      ws.MainVolume.Name,
-					MountPath: workspace.MainVolumeMountPoint,
+					Name:      ws.PrimaryVolume.Name,
+					MountPath: fileserver.MainVolumeMountPoint,
 				},
 			},
 		}
 
 		volumes = append(volumes, ws.SubVolumes...)
 
-		podFactory := workspace.NewPodFactory(ws, workspace.PodParameters{
+		podFactory := fileserver.NewPodFactory(ws, fileserver.PodParameters{
 			//FIXME for testing, use develop
 			//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
-			Image:   workspace.Image + ":develop",
-			Port:    workspace.ContainerPort,
+			Image:   fileserver.Image + ":develop",
+			Port:    fileserver.ContainerPort,
 			Volumes: volumes,
 		})
 
@@ -197,7 +197,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 		logger.Infof("pod=%s has beend deleted", ws.DeploymentID())
 	}
 
-	//Start the new workspace-fs with new config
+	//Start the new fileserver.fs with new config
 	logger.Info("Start the pod=%s", ws.DeploymentID())
 	tracker, err = s.WakeUp(ws)
 	if err != nil {
@@ -216,10 +216,10 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
 	volumes = append(volumes, container.Volume{
-		ClaimName: ws.MainVolume.Name,
+		ClaimName: ws.PrimaryVolume.Name,
 		VolumeMount: container.VolumeMount{
-			Name:      ws.MainVolume.Name,
-			MountPath: workspace.MainVolumeMountPoint,
+			Name:      ws.PrimaryVolume.Name,
+			MountPath: fileserver.MainVolumeMountPoint,
 		},
 	})
 

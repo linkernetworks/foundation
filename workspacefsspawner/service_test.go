@@ -1,4 +1,4 @@
-package workspacefs
+package workspacefsspawner
 
 import (
 	"os"
@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
-	"bitbucket.org/linkernetworks/aurora/src/workspace"
+	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/mgo.v2/bson"
@@ -51,7 +51,7 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		MainVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolume: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}
@@ -78,7 +78,7 @@ func (suite *WorkspaceServiceSuite) TestGetVolume() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		MainVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolume: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}
@@ -88,7 +88,7 @@ func (suite *WorkspaceServiceSuite) TestGetVolume() {
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), volumes[0].ClaimName, vName)
 	assert.Equal(suite.T(), volumes[0].VolumeMount.Name, vName)
-	assert.Equal(suite.T(), volumes[0].VolumeMount.MountPath, workspace.MainVolumeMountPoint)
+	assert.Equal(suite.T(), volumes[0].VolumeMount.MountPath, fileserver.MainVolumeMountPoint)
 }
 
 func (suite *WorkspaceServiceSuite) TestRestart() {
@@ -99,7 +99,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		MainVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolume: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}

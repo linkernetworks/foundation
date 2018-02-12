@@ -9,19 +9,25 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"gopkg.in/mgo.v2/bson"
+
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 const (
 	testingConfigPath = "../../../config/testing.json"
 )
 
-func TestWorkspaceServiceWakeup(t *testing.T) {
-	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
-		t.SkipNow()
-		return
-	}
+type WorkspaceServiceSuite struct {
+	suite.Suite
+	WsService *WorkspaceService
+	Session   *mongo.Session
+}
+
+func (suite *WorkspaceServiceSuite) SetupTest() {
 
 	//Get mongo service
 	cf := config.MustRead(testingConfigPath)
@@ -30,15 +36,16 @@ func TestWorkspaceServiceWakeup(t *testing.T) {
 	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.New(cf.Redis)
 	clientset, err := kubernetesService.CreateClientset()
-	assert.NoError(t, err)
-	fs := New(cf, mongoService, clientset, redisService)
+	assert.NoError(suite.T(), err)
+	suite.WsService = New(cf, mongoService, clientset, redisService)
 
-	// proxyURL := "/v1/workspaces/proxy/"
-	context := mongoService.NewSession()
-	defer context.Close()
+	suite.Session = mongoService.NewSession()
+}
 
-	vName := "testmount"
-	workspace := entity.Workspace{
+func (suite *WorkspaceServiceSuite) TestCRUD() {
+	vName := bson.NewObjectId().Hex()
+	//Setup the workspace
+	ws := &entity.Workspace{
 		ID:    bson.NewObjectId(),
 		Name:  "testing workspace",
 		Type:  "general",
@@ -48,24 +55,85 @@ func TestWorkspaceServiceWakeup(t *testing.T) {
 		},
 	}
 
-	err = context.C(entity.WorkspaceCollectionName).Insert(workspace)
-	assert.NoError(t, err)
-	defer context.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
+	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)
+	assert.NoError(suite.T(), err)
 
-	_, err = fs.WakeUp(&workspace)
-	assert.NoError(t, err)
-	newWP := entity.Workspace{}
+	_, err = suite.WsService.WakeUp(ws)
+	assert.NoError(suite.T(), err)
 
-	//Check the PodName has been update
-	context.C(entity.WorkspaceCollectionName).Find(bson.M{"_id": workspace.ID}).One(&newWP)
-	assert.Equal(t, newWP.DeploymentID(), entity.WorkspacePodNamePrefix+workspace.ID.Hex())
+	_, err = suite.WsService.getPod(ws)
+	assert.NoError(suite.T(), err)
+	assert.False(suite.T(), kerrors.IsNotFound(err))
 
-	_, err = fs.Delete(&workspace)
-	assert.NoError(t, err)
+	_, err = suite.WsService.Delete(ws)
+	assert.NoError(suite.T(), err)
+}
 
-	volumes, err := fs.GetKubeVolume(&workspace)
-	assert.NoError(t, err)
-	assert.Equal(t, volumes[0].ClaimName, vName)
-	assert.Equal(t, volumes[0].VolumeMount.Name, vName)
-	assert.Equal(t, volumes[0].VolumeMount.MountPath, WorkspaceMainVolumeMountPoint)
+func (suite *WorkspaceServiceSuite) TestGetVolume() {
+	vName := bson.NewObjectId().Hex()
+	ws := &entity.Workspace{
+		ID:    bson.NewObjectId(),
+		Name:  "testing workspace",
+		Type:  "general",
+		Owner: bson.NewObjectId(),
+		MainVolume: entity.PersistentVolumeClaim{
+			Name: vName,
+		},
+	}
+
+	volumes, err := suite.WsService.GetKubeVolume(ws)
+
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), volumes[0].ClaimName, vName)
+	assert.Equal(suite.T(), volumes[0].VolumeMount.Name, vName)
+	assert.Equal(suite.T(), volumes[0].VolumeMount.MountPath, WorkspaceMainVolumeMountPoint)
+}
+
+func (suite *WorkspaceServiceSuite) TestRestart() {
+	vName := bson.NewObjectId().Hex()
+	//Setup the workspace
+	ws := &entity.Workspace{
+		ID:    bson.NewObjectId(),
+		Name:  "testing workspace",
+		Type:  "general",
+		Owner: bson.NewObjectId(),
+		MainVolume: entity.PersistentVolumeClaim{
+			Name: vName,
+		},
+	}
+
+	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)
+	assert.NoError(suite.T(), err)
+
+	_, err = suite.WsService.WakeUp(ws)
+	assert.NoError(suite.T(), err)
+
+	ws.SubVolumes = []container.Volume{
+		{
+			ClaimName: "testname",
+			VolumeMount: container.VolumeMount{
+				Name:      "testname2",
+				MountPath: "randompath",
+			},
+		},
+	}
+
+	_, err = suite.WsService.getPod(ws)
+	assert.NoError(suite.T(), err)
+	assert.False(suite.T(), kerrors.IsNotFound(err))
+
+	_, err = suite.WsService.Restart(ws)
+	assert.NoError(suite.T(), err)
+
+	_, err = suite.WsService.Delete(ws)
+	assert.NoError(suite.T(), err)
+}
+
+func TestWorkspaceServiceSuite(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
+	suite.Run(t, new(WorkspaceServiceSuite))
 }

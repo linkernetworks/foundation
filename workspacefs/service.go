@@ -151,13 +151,13 @@ func (s *WorkspaceService) Delete(ws *entity.Workspace) (tracker *podtracker.Pod
 
 func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	//Stop the current worksapce-fs pod
-	tracker, err = s.Delete(ws)
+	_, err = s.getPod(ws)
 	if err != nil && err != ErrDoesNotExist {
-		tracker.Stop()
 		return nil, err
 	}
 
 	if err != ErrDoesNotExist {
+
 		//Wait the terminatrion event
 		//We should wait the delete event by ourself now.
 		//sync := tracker.WaitFor(v1.PodSucceeded)
@@ -182,16 +182,21 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 
 		c.L.Lock()
 		go controller.Run(stop)
-		logger.Info("Wait for pod=%s", ws.DeploymentID())
+		tracker, err = s.Delete(ws)
+		if err != nil && err != ErrDoesNotExist {
+			c.Signal()
+			return nil, err
+		}
+
+		logger.Info("Wait for pod=", ws.DeploymentID())
 		c.Wait()
-		logger.Info("pod=%s has beend deleted", ws.DeploymentID())
+		logger.Infof("pod=%s has beend deleted", ws.DeploymentID())
 	}
 
 	//Start the new workspace-fs with new config
 	logger.Info("Start the pod=%s", ws.DeploymentID())
 	tracker, err = s.WakeUp(ws)
 	if err != nil {
-		tracker.Stop()
 		return nil, err
 	}
 

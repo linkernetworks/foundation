@@ -5,8 +5,8 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"fmt"
+	socketio "github.com/c9s/go-socket.io"
 	redigo "github.com/garyburd/redigo/redis"
-	socketio "github.com/googollee/go-socket.io"
 	"io"
 	"sync"
 	"time"
@@ -26,10 +26,10 @@ func New(cf *config.SocketioConfig) *Service {
 	}
 
 	if cf.Ping.Interval != 0 {
-		io.SetPingInterval(time.Duration(cf.Ping.Interval) * time.Second)
+		io.SetPingInterval(cf.Ping.Interval * time.Second)
 	}
 	if cf.Ping.Timeout != 0 {
-		io.SetPingTimeout(time.Duration(cf.Ping.Timeout) * time.Second)
+		io.SetPingTimeout(cf.Ping.Timeout * time.Second)
 	}
 	if cf.MaxConnection != 0 {
 		io.SetMaxConnection(cf.MaxConnection)

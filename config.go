@@ -35,6 +35,8 @@ type Config struct {
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
 	Data          *DataConfig       `json:"data"`
 
+	Socketio *SocketioConfig `json:"socketio"`
+
 	// the version settings of the current application
 	Version string `json:"version"`
 

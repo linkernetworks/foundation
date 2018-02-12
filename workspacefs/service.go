@@ -1,14 +1,20 @@
 package workspacefs
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"errors"
+	"sync"
+
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
-	"errors"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/client-go/tools/cache"
 
 	//FIXME, wait PR#444
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -142,8 +148,52 @@ func (s *WorkspaceService) Delete(ws *entity.Workspace) (tracker *podtracker.Pod
 }
 
 func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+	//Stop the current worksapce-fs pod
+	tracker, err = s.Delete(ws)
+	if err != nil && err != ErrDoesNotExist {
+		tracker.Stop()
+		return nil, err
+	}
 
-	return nil, nil
+	if err != ErrDoesNotExist {
+		//Wait the terminatrion event
+		//We should wait the delete event by ourself now.
+		//sync := tracker.WaitFor(v1.PodSucceeded)
+		//sync.Wait()
+		m := sync.Mutex{}
+		c := sync.NewCond(&m)
+		var stop chan struct{}
+		_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+			DeleteFunc: func(obj interface{}) {
+				pod, ok := obj.(*v1.Pod)
+				if !ok {
+					return
+				}
+
+				if pod.ObjectMeta.Name != ws.DeploymentID() {
+					return
+				}
+
+				c.Signal()
+			},
+		})
+
+		c.L.Lock()
+		go controller.Run(stop)
+		logger.Info("Wait for pod=%s", ws.DeploymentID())
+		c.Wait()
+		logger.Info("pod=%s has beend deleted", ws.DeploymentID())
+	}
+
+	//Start the new workspace-fs with new config
+	logger.Info("Start the pod=%s", ws.DeploymentID())
+	tracker, err = s.WakeUp(ws)
+	if err != nil {
+		tracker.Stop()
+		return nil, err
+	}
+
+	return tracker, nil
 }
 
 func (s *WorkspaceService) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
@@ -156,6 +206,5 @@ func (s *WorkspaceService) GetKubeVolume(ws *entity.Workspace) (volumes []contai
 	})
 
 	volumes = append(volumes, ws.SubVolume...)
-
 	return volumes, nil
 }

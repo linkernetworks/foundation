@@ -80,6 +80,8 @@ func (s *WorkspaceService) WakeUp(ws *entity.Workspace) (tracker *podtracker.Pod
 			},
 		}
 
+		volumes = append(volumes, ws.SubVolumes...)
+
 		podFactory := NewWorkspacePodFactory(ws, WorkspacePodParameters{
 			//FIXME for testing, use develop
 			//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
@@ -193,6 +195,13 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 		return nil, err
 	}
 
+	q := bson.M{"_id": ws.GetID()}
+	m := bson.M{
+		"$set": bson.M{
+			"subVolumes": ws.SubVolumes,
+		},
+	}
+	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
 }
 
@@ -205,6 +214,6 @@ func (s *WorkspaceService) GetKubeVolume(ws *entity.Workspace) (volumes []contai
 		},
 	})
 
-	volumes = append(volumes, ws.SubVolume...)
+	volumes = append(volumes, ws.SubVolumes...)
 	return volumes, nil
 }

@@ -17,7 +17,7 @@ func TestingNewFSPod(t *testing.T) {
 		ID:   bson.NewObjectId(),
 		Name: "testing workspace",
 		Type: "general",
-		MainVolume: entity.PersistentVolumeClaim{
+		MainVolume: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}

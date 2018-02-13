@@ -24,4 +24,10 @@ func TestJobControllerConfig(t *testing.T) {
 	}`
 	err := json.Unmarshal([]byte(jsontext), &cf)
 	assert.NoError(t, err)
+
+	assert.Equal(t, cf.Addr(), "localhost:50051")
+
+	cf.Port = 0
+	cf.LoadDefaults()
+	assert.Equal(t, cf.Port, int32(50051))
 }

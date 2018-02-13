@@ -36,3 +36,16 @@ func TestReadTestingHdfsConfig(t *testing.T) {
 		assert.Equal(t, "root", cf.Hdfs.Username)
 	}
 }
+
+func TestReadDataConifg(t *testing.T) {
+	configPath := "../../config/testing.json"
+	cf := MustRead(configPath)
+	if cf.Data != nil {
+		assert.Equal(t, "./data/batches", cf.GetWorkspaceRootDir())
+		assert.Equal(t, "./data/batches/archives", cf.GetArchiveDir())
+		assert.Equal(t, "./data/images", cf.GetImageDir())
+		assert.Equal(t, "./data/thumbnails", cf.GetThumbnailDir())
+		assert.Equal(t, "./data/models", cf.GetModelDir())
+		assert.Equal(t, "./data/models/archives", cf.GetModelArchiveDir())
+	}
+}

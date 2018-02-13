@@ -70,26 +70,7 @@ func (s *WorkspaceFileServerSpawner) getPod(doc types.DeploymentIDProvider) (*v1
 func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
-		//Create pod
-		volumes := []container.Volume{
-			{
-				ClaimName: ws.PrimaryVolume.Name,
-				VolumeMount: container.VolumeMount{
-					Name:      ws.PrimaryVolume.Name,
-					MountPath: fileserver.MainVolumeMountPoint,
-				},
-			},
-		}
-
-		volumes = append(volumes, ws.SecondaryVolumes...)
-
-		podFactory := fileserver.NewPodFactory(ws, fileserver.PodParameters{
-			//FIXME for testing, use develop
-			//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
-			Image:   fileserver.Image + ":develop",
-			Port:    fileserver.ContainerPort,
-			Volumes: volumes,
-		})
+		podFactory := fileserver.NewPodFactory(ws)
 
 		pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
 			"service": "workspce-fs",
@@ -117,26 +98,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 }
 
 func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
-	//Create pod
-	volumes := []container.Volume{
-		{
-			ClaimName: ws.PrimaryVolume.Name,
-			VolumeMount: container.VolumeMount{
-				Name:      ws.PrimaryVolume.Name,
-				MountPath: fileserver.MainVolumeMountPoint,
-			},
-		},
-	}
-
-	volumes = append(volumes, ws.SecondaryVolumes...)
-
-	podFactory := fileserver.NewPodFactory(ws, fileserver.PodParameters{
-		//FIXME for testing, use develop
-		//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
-		Image:   fileserver.Image + ":develop",
-		Port:    fileserver.ContainerPort,
-		Volumes: volumes,
-	})
+	podFactory := fileserver.NewPodFactory(ws)
 
 	pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
 		"service": "workspce-fs",

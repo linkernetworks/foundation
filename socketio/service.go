@@ -15,8 +15,8 @@ import (
 type Service struct {
 	sync.Mutex
 	Server            *socketio.Server
-	clients           map[string]*client
-	connectionTimeout time.Duration
+	Clients           map[string]*Client
+	ConnectionTimeout time.Duration
 }
 
 func New(cf *config.SocketioConfig) *Service {
@@ -36,82 +36,76 @@ func New(cf *config.SocketioConfig) *Service {
 	}
 	return &Service{
 		Server:            io,
-		clients:           map[string]*client{},
-		connectionTimeout: 5 * time.Minute,
+		Clients:           map[string]*Client{},
+		ConnectionTimeout: 5 * time.Minute,
 	}
+}
+
+func (s *Service) GetClient(token string) (c *Client, ok bool) {
+	s.Lock()
+	c, ok = s.Clients[token]
+	s.Unlock()
+	return c, ok
 }
 
 // Create client with a given token. Front-End can recover client with ths same token
-func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redigo.PubSubConn, toEvent string) {
-	// try find existed client with token, generate new client if not found
-
-	s.Lock()
-	defer s.Unlock()
-
-	existedClient, ok := s.clients[token]
-	if !ok || existedClient.closed {
-		// Create new client
-		logger.Infof("socketio: a new client connected with new token: id=%s token=%s.", socket.Id(), token)
-		client := &client{
-			socket:     socket,
-			expiredAt:  time.Now().Unix() + 5*60,
-			pubSubConn: psc,
-			toEvent:    toEvent,
-			closed:     false,
-			channel:    make(chan string, 100),
-			stopEmit:   make(chan bool, 1),
-			stopPipe:   make(chan bool, 1),
-		}
-		s.clients[token] = client
-
-		go client.pipe() // from redigo to chan
-		go client.emit() // to socket event
-
-	} else {
-		// if token already exist and client still valid, replace disconnected socket with new socket
-		logger.Infof("socketio: a client reconnected with token id=%s token=%s.", socket.Id(), token)
-		existedClient.socket = socket
+func (s *Service) NewClientSubscription(token string, socket socketio.Socket, psc *redigo.PubSubConn, toEvent string) *Client {
+	// Create new client
+	logger.Infof("socketio: a new client connected with new token: id=%s token=%s.", socket.Id(), token)
+	client := &Client{
+		PubSubConn: psc,
+		socket:     socket,
+		expiredAt:  time.Now().Add(10 * time.Minute),
+		toEvent:    toEvent,
+		channel:    make(chan string, 100),
+		stopEmit:   make(chan bool, 1),
+		stopPipe:   make(chan bool, 1),
 	}
+
+	// critical section
+	s.Lock()
+	s.Clients[token] = client
+	s.Unlock()
+
+	go client.pipe() // from redigo to chan
+	go client.emit() // to socket event
+
+	return client
 }
 
 func (s *Service) Subscribe(token string, topic string) error {
-	client, ok := s.clients[token]
+	client, ok := s.Clients[token]
 	if !ok {
 		msg := fmt.Sprintf("Client token: %s not found and can't subscribe.", token)
 		return errors.New(msg)
 	}
-	return client.pubSubConn.Subscribe(topic)
+	return client.Subscribe(topic)
 }
 
-func (s *Service) UnSubscribe(token string, topic string) error {
-	client, ok := s.clients[token]
+func (s *Service) Unsubscribe(token string, topic string) error {
+	client, ok := s.Clients[token]
 	if !ok {
 		msg := fmt.Sprintf("Client token: %s not found and can't unsubscribe.", token)
 		return errors.New(msg)
 	}
-	return client.pubSubConn.Unsubscribe(topic)
+	return client.Unsubscribe(topic)
 }
 
 func (s *Service) CleanUp() (lasterr error) {
-	now := time.Now().Unix()
+	now := time.Now()
 
 	s.Lock()
 	defer s.Unlock()
-	for token, client := range s.clients {
+	for token, client := range s.Clients {
 		// send close to client channel
-		if client.closed == false && client.expiredAt < now {
-			logger.Debugf("socketio: marking client=%s as closed. Active clients: %v", token, len(s.clients))
-			client.closed = true
-
-		} else if client.closed {
-			logger.Debugf("socketio: closing client=%s. active clients: %v", token, len(s.clients))
+		if client.expiredAt.Before(now) {
 			client.Stop()
-			if err := client.pubSubConn.Unsubscribe(); err != nil { // Unsubscribe all
+			if err := client.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error(err)
 				lasterr = err
 			}
 			client.socket.Disconnect()
-			delete(s.clients, token)
+			delete(s.Clients, token)
 		}
 	}
 	return lasterr
@@ -125,8 +119,8 @@ func (s *Service) Refresh(clientId string) error {
 	s.Lock()
 	defer s.Unlock()
 
-	if client, ok := s.clients[clientId]; ok {
-		client.expiredAt = time.Now().Add(s.connectionTimeout).Unix()
+	if client, ok := s.Clients[clientId]; ok {
+		client.KeepAlive(s.ConnectionTimeout)
 		return nil
 	}
 	return fmt.Errorf("Client: %s not found and can't refresh.", clientId)
@@ -137,19 +131,26 @@ func (s *Service) Count() int {
 	return s.Server.Count()
 }
 
-type client struct {
-	socket     socketio.Socket
-	channel    chan string
-	stopPipe   chan bool
-	stopEmit   chan bool
-	expiredAt  int64
-	pubSubConn *redigo.PubSubConn
-	toEvent    string
-	closed     bool
+type Client struct {
+	*redigo.PubSubConn
+	socket    socketio.Socket
+	channel   chan string
+	stopPipe  chan bool
+	stopEmit  chan bool
+	expiredAt time.Time
+	toEvent   string
+}
+
+func (c *Client) SetSocket(socket socketio.Socket) {
+	c.socket = socket
+}
+
+func (c *Client) KeepAlive(timeout time.Duration) {
+	c.expiredAt = time.Now().Add(timeout)
 }
 
 // pipe from redigo pubsubconn to chan
-func (c *client) pipe() error {
+func (c *Client) pipe() error {
 Pipe:
 	for {
 		select {
@@ -157,7 +158,7 @@ Pipe:
 			c.stopPipe <- true
 			break Pipe
 		default:
-			switch v := c.pubSubConn.Receive().(type) {
+			switch v := c.Receive().(type) {
 			case redigo.Message:
 				c.channel <- string(v.Data)
 				logger.Debugf("redis: received message channel: %s message: %s", v.Channel, v.Data)
@@ -181,7 +182,7 @@ Pipe:
 }
 
 // emit chan message to socket event
-func (c *client) emit() {
+func (c *Client) emit() {
 Emit:
 	for {
 		select {
@@ -197,7 +198,7 @@ Emit:
 		}
 	}
 }
-func (c *client) Stop() {
+func (c *Client) Stop() {
 	c.stopPipe <- true
 	<-c.stopPipe
 	c.stopEmit <- true

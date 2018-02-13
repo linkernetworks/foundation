@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var ErrDoesNotExist = errors.New("WorkspaceFileServer isn't exist ")
+var ErrAlreadyStopped = errors.New("WorkspaceFileServer is already stopped")
 
 type WorkspacePodDeployment interface {
 	entity.PodDeployment
@@ -40,7 +40,7 @@ type WorkspaceFileServerSpawner struct {
 	Config  config.Config
 	Session *mongo.Session
 
-	updater   *podproxy.DocumentProxyInfoUpdater
+	Updater   *podproxy.DocumentProxyInfoUpdater
 	clientset *kubernetes.Clientset
 	namespace string
 }
@@ -52,7 +52,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 		Session:   session,
 		namespace: "default",
 		clientset: clientset,
-		updater: &podproxy.DocumentProxyInfoUpdater{
+		Updater: &podproxy.DocumentProxyInfoUpdater{
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
@@ -77,7 +77,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 			"user":    ws.Owner.Hex(),
 		})
 
-		tracker, err = s.updater.TrackAndSync(ws)
+		tracker, err = s.Updater.TrackAndSync(ws)
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 		"user":    ws.Owner.Hex(),
 	})
 
-	tracker, err = s.updater.TrackAndSync(ws)
+	tracker, err = s.Updater.TrackAndSync(ws)
 	if err != nil {
 		return nil, err
 	}
@@ -120,23 +120,18 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 }
 
 func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+	// if it's not created
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
-		return nil, ErrDoesNotExist
+		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		return nil, err
 	}
 
-	q := bson.M{"_id": ws.GetID()}
-	m := bson.M{
-		"$set": bson.M{
-			"backend.connected": false,
-			"pod.phase":         "Terminating",
-		},
-	}
+	s.Updater.Reset(ws)
 
-	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)
-	tracker, err = s.updater.TrackAndSync(ws)
+	// We found the pod, let's start a tracker first, and then delete the pod
+	tracker, err = s.Updater.TrackAndSync(ws)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +139,7 @@ func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtra
 	err = s.clientset.CoreV1().Pods(s.namespace).Delete(ws.DeploymentID(), &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		tracker.Stop()
-		return nil, ErrDoesNotExist
+		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		tracker.Stop()
 		return nil, err
@@ -157,7 +152,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	//Stop the current worksapce-fs pod
 	_, err = s.getPod(ws)
 	if err != nil && !kerrors.IsNotFound(err) {
-		return nil, ErrDoesNotExist
+		return nil, ErrAlreadyStopped
 	}
 
 	//If pod exist
@@ -189,7 +184,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 		c.L.Lock()
 		go controller.Run(stop)
 		tracker, err = s.Stop(ws)
-		if err != nil && err != ErrDoesNotExist {
+		if err != nil && err != ErrAlreadyStopped {
 			c.Signal()
 			return nil, err
 		}

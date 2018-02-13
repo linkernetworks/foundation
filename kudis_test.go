@@ -9,13 +9,13 @@ import (
 func TestKudisConfig(t *testing.T) {
 
 	host := "imhost"
-	addr := "imhost:52000"
+	addr := "imhost:52087"
 	cf := KudisConfig{
 		Host: host,
 	}
 
 	cf.LoadDefaults()
-	assert.Equal(t, cf.Port, int32(52000))
+	assert.Equal(t, cf.Port, int32(52087))
 
 	assert.Equal(t, cf.Addr(), addr)
 

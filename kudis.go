@@ -13,7 +13,7 @@ type KudisConfig struct {
 
 func (c *KudisConfig) LoadDefaults() error {
 	if c.Port == 0 {
-		c.Port = 52000
+		c.Port = 52087
 	}
 	return nil
 }

@@ -156,12 +156,12 @@ func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtra
 func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	//Stop the current worksapce-fs pod
 	_, err = s.getPod(ws)
-	if err != nil && err != ErrDoesNotExist {
-		return nil, err
+	if err != nil && !kerrors.IsNotFound(err) {
+		return nil, ErrDoesNotExist
 	}
 
-	if err != ErrDoesNotExist {
-
+	//If pod exist
+	if err == nil {
 		//Wait the terminatrion event
 		//We should wait the delete event by ourself now.
 		//sync := tracker.WaitFor(v1.PodSucceeded)

@@ -73,8 +73,9 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 		podFactory := fileserver.NewPodFactory(ws)
 
 		pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
-			"service": "workspce-fs",
-			"user":    ws.Owner.Hex(),
+			"service":   "workspace",
+			"user":      ws.Owner.Hex(),
+			"workspace": ws.ID.Hex(),
 		})
 
 		tracker, err = s.Updater.TrackAndSync(ws)

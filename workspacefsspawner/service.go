@@ -116,7 +116,48 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 	return tracker, err
 }
 
-func (s *WorkspaceFileServerSpawner) Delete(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+	//Create pod
+	volumes := []container.Volume{
+		{
+			ClaimName: ws.PrimaryVolume.Name,
+			VolumeMount: container.VolumeMount{
+				Name:      ws.PrimaryVolume.Name,
+				MountPath: fileserver.MainVolumeMountPoint,
+			},
+		},
+	}
+
+	volumes = append(volumes, ws.SecondaryVolumes...)
+
+	podFactory := fileserver.NewPodFactory(ws, fileserver.PodParameters{
+		//FIXME for testing, use develop
+		//		Image:   WorkspaceImage + ":" + aurora.ImageTag,
+		Image:   fileserver.Image + ":develop",
+		Port:    fileserver.ContainerPort,
+		Volumes: volumes,
+	})
+
+	pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
+		"service": "workspce-fs",
+		"user":    ws.Owner.Hex(),
+	})
+
+	tracker, err = s.updater.TrackAndSync(ws)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+	if err != nil {
+		tracker.Stop()
+		return nil, err
+	}
+
+	return tracker, nil
+}
+
+func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrDoesNotExist
@@ -185,7 +226,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 		c.L.Lock()
 		go controller.Run(stop)
-		tracker, err = s.Delete(ws)
+		tracker, err = s.Stop(ws)
 		if err != nil && err != ErrDoesNotExist {
 			c.Signal()
 			return nil, err
@@ -199,7 +240,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 	//Start the new fileserver.fs with new config
 	logger.Info("Start the pod=%s", ws.DeploymentID())
-	tracker, err = s.WakeUp(ws)
+	tracker, err = s.Start(ws)
 	if err != nil {
 		return nil, err
 	}

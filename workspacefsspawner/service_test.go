@@ -67,7 +67,7 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 	assert.NoError(suite.T(), err)
 	assert.False(suite.T(), kerrors.IsNotFound(err))
 
-	_, err = suite.WsService.Delete(ws)
+	_, err = suite.WsService.Stop(ws)
 	assert.NoError(suite.T(), err)
 }
 
@@ -128,7 +128,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 	_, err = suite.WsService.Restart(ws)
 	assert.NoError(suite.T(), err)
 
-	_, err = suite.WsService.Delete(ws)
+	_, err = suite.WsService.Stop(ws)
 	assert.NoError(suite.T(), err)
 }
 

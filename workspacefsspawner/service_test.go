@@ -111,7 +111,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 	_, err = suite.WsService.WakeUp(ws)
 	assert.NoError(suite.T(), err)
 
-	ws.SubVolumes = []container.Volume{
+	ws.SecondaryVolumes = []container.Volume{
 		{
 			ClaimName: "testname",
 			VolumeMount: container.VolumeMount{

@@ -81,7 +81,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 			},
 		}
 
-		volumes = append(volumes, ws.SubVolumes...)
+		volumes = append(volumes, ws.SecondaryVolumes...)
 
 		podFactory := fileserver.NewPodFactory(ws, fileserver.PodParameters{
 			//FIXME for testing, use develop
@@ -207,7 +207,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	q := bson.M{"_id": ws.GetID()}
 	m := bson.M{
 		"$set": bson.M{
-			"subVolumes": ws.SubVolumes,
+			"subVolumes": ws.SecondaryVolumes,
 		},
 	}
 	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)
@@ -223,6 +223,6 @@ func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volume
 		},
 	})
 
-	volumes = append(volumes, ws.SubVolumes...)
+	volumes = append(volumes, ws.SecondaryVolumes...)
 	return volumes, nil
 }

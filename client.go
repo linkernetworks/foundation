@@ -45,7 +45,6 @@ PIPE:
 			break PIPE
 		}
 	}
-	logger.Info("Closing channel")
 	close(c.C)
 	c.done <- true
 }

@@ -53,12 +53,10 @@ func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.Pu
 	logger.Infof("socketio: a new client connected with new token: id=%s token=%s.", socket.Id(), token)
 	client := &Client{
 		PubSubConn: psc,
-		socket:     socket,
-		expiredAt:  time.Now().Add(10 * time.Minute),
+		Socket:     socket,
+		BufSize:    100,
+		ExpiredAt:  time.Now().Add(10 * time.Minute),
 		toEvent:    toEvent,
-		channel:    make(chan string, 100),
-		stopEmit:   make(chan bool, 1),
-		stopPipe:   make(chan bool, 1),
 	}
 
 	// critical section
@@ -66,8 +64,7 @@ func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.Pu
 	s.Clients[token] = client
 	s.Unlock()
 
-	go client.pipe() // from redigo to chan
-	go client.emit() // to socket event
+	client.Start()
 
 	return client
 }
@@ -79,13 +76,13 @@ func (s *Service) CleanUp() (lasterr error) {
 	defer s.Unlock()
 	for token, client := range s.Clients {
 		// send close to client channel
-		if client.expiredAt.Before(now) {
+		if client.ExpiredAt.Before(now) {
 			client.Stop()
 			if err := client.Unsubscribe(); err != nil { // Unsubscribe all
 				logger.Error("client failed to unsubscribe: %v", err)
 				lasterr = err
 			}
-			client.socket.Disconnect()
+			client.Socket.Disconnect()
 			delete(s.Clients, token)
 		}
 	}

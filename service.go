@@ -72,20 +72,24 @@ func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.Pu
 func (s *Service) CleanUp() (lasterr error) {
 	now := time.Now()
 
+	var expiredTokens []string
 	s.Lock()
-	defer s.Unlock()
 	for token, client := range s.Clients {
 		// send close to client channel
 		if client.ExpiredAt.Before(now) {
-			client.Stop()
-			if err := client.Unsubscribe(); err != nil { // Unsubscribe all
-				logger.Error("client failed to unsubscribe: %v", err)
-				lasterr = err
-			}
-			client.Socket.Disconnect()
-			delete(s.Clients, token)
+			expiredTokens = append(expiredTokens, token)
 		}
 	}
+
+	for _, token := range expiredTokens {
+		client := s.Clients[token]
+		client.Stop()
+		client.Socket.Disconnect()
+		delete(s.Clients, token)
+	}
+
+	s.Unlock()
+
 	return lasterr
 }
 

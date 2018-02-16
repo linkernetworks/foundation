@@ -70,8 +70,7 @@ func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.Pu
 }
 
 func (s *Service) CleanUp() (lasterr error) {
-	now := time.Now()
-
+	var now = time.Now()
 	var expiredTokens []string
 	s.Lock()
 	for token, client := range s.Clients {

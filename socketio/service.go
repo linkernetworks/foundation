@@ -72,7 +72,6 @@ func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.Pu
 func (s *Service) CleanUp() (lasterr error) {
 	var now = time.Now()
 	var expiredTokens []string
-	s.Lock()
 	for token, client := range s.Clients {
 		// send close to client channel
 		if client.ExpiredAt.Before(now) {
@@ -80,13 +79,13 @@ func (s *Service) CleanUp() (lasterr error) {
 		}
 	}
 
+	s.Lock()
 	for _, token := range expiredTokens {
 		client := s.Clients[token]
 		client.Stop()
 		client.Socket.Disconnect()
 		delete(s.Clients, token)
 	}
-
 	s.Unlock()
 
 	return lasterr

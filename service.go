@@ -19,22 +19,22 @@ type Service struct {
 }
 
 func New(cf *config.SocketioConfig) *Service {
-	io, err := socketio.NewServer(nil)
+	server, err := socketio.NewServer(nil)
 	if err != nil {
 		panic(err)
 	}
 
 	if cf.Ping.Interval != 0 {
-		io.SetPingInterval(cf.Ping.Interval * time.Second)
+		server.SetPingInterval(cf.Ping.Interval * time.Second)
 	}
 	if cf.Ping.Timeout != 0 {
-		io.SetPingTimeout(cf.Ping.Timeout * time.Second)
+		server.SetPingTimeout(cf.Ping.Timeout * time.Second)
 	}
 	if cf.MaxConnection != 0 {
-		io.SetMaxConnection(cf.MaxConnection)
+		server.SetMaxConnection(cf.MaxConnection)
 	}
 	return &Service{
-		Server:            io,
+		Server:            server,
 		Clients:           map[string]*Client{},
 		ConnectionTimeout: 5 * time.Minute,
 	}

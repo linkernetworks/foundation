@@ -176,7 +176,9 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 					return
 				}
 
+				c.L.Lock()
 				c.Signal()
+				c.L.Unlock()
 			},
 		})
 
@@ -190,6 +192,7 @@ func (s *WorkspaceService) Restart(ws *entity.Workspace) (tracker *podtracker.Po
 
 		logger.Info("Wait for pod=", ws.DeploymentID())
 		c.Wait()
+		c.L.Unlock()
 		logger.Infof("pod=%s has beend deleted", ws.DeploymentID())
 	}
 

@@ -81,10 +81,11 @@ func (s *Service) CleanUp() (lasterr error) {
 
 	s.Lock()
 	for _, token := range expiredTokens {
-		client := s.Clients[token]
-		client.Stop()
-		client.Socket.Disconnect()
-		delete(s.Clients, token)
+		if client, ok := s.Clients[token]; ok {
+			client.Stop()
+			client.Socket.Disconnect()
+			delete(s.Clients, token)
+		}
 	}
 	s.Unlock()
 

@@ -62,6 +62,10 @@ func (c *Client) Start() {
 	c.C = make(chan string, c.BufSize)
 	c.done = make(chan bool)
 
+	// subscribe to system:events by default so the connectxion keeps at least
+	// one subscription to prevent the read loop exits.
+	c.Subscribe("system:events")
+
 	go c.write() // to socket event
 	go c.read()  // from redigo to chan
 }

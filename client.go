@@ -72,6 +72,6 @@ func (c *Client) Start() {
 
 func (c *Client) Stop() {
 	// unsubscribe all channels
-	c.Unsubscribe()
+	c.PubSubConn.Unsubscribe()
 	<-c.done
 }

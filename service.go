@@ -26,6 +26,10 @@ func NewFromConfig(cf *config.GearmanConfig) *Service {
 	return &Service{Bind: cf.Addr()}
 }
 
+func New(bind string) *Service {
+	return &Service{Bind: bind}
+}
+
 func (g *Service) NewClient() (*Client, error) {
 	c, err := client.New(client.Network, g.Bind)
 	if err != nil {

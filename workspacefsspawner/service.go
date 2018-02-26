@@ -206,7 +206,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	q := bson.M{"_id": ws.GetID()}
 	m := bson.M{
 		"$set": bson.M{
-			"subVolumes": ws.SecondaryVolumes,
+			"secondaryVolumes": ws.SecondaryVolumes,
 		},
 	}
 	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)

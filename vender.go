@@ -12,6 +12,17 @@ type VenderDatabase struct {
 			} `json:"water" bson:"water"`
 		} `json:"category" bson:"category"`
 	} `json:"influxdb" bson:"influxdb"`
+	Mongodb struct {
+		Url      string `json:"url" bson:"url"`
+		Category struct {
+			Air struct {
+				Database string `json:"database" bson:"database"`
+			} `json:"air" bson:"air"`
+			Water struct {
+				Database string `json:"database" bson:"database"`
+			} `json:"water" bson:"water"`
+		} `json:"category" bson:"category"`
+	} `json:"mongodb" bson:"mongodb"`
 }
 
 type Lassnet struct {

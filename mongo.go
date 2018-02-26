@@ -2,6 +2,8 @@ package config
 
 type MongoConfig struct {
 	Url       string       `json:"url"`
+	Database  string       `json:"database" bson:"database"`
+	Document  string       `json:"document" bson:"document"`
 	Interface string       `json:"interface"`
 	Public    *MongoConfig `json:"public"`
 }

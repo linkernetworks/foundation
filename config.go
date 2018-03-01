@@ -43,6 +43,8 @@ type Config struct {
 	// config for kubernetes service, container application instances like
 	// jupyter notebook will be created via this service.
 	Kubernetes *KubernetesConfig `json:"kubernetes"`
+
+	Notification *NotificationConfig `json:"notification"`
 }
 
 // GetWorkspaceRootDir - Get batch process directory

@@ -71,8 +71,8 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		pvSubpath := path.GetWorkspacePVSubpath(s.Config, &workspace)
 		volumes = []container.Volume{
 			{
-				Name: "data-storage",
-				VolumeMount: &container.VolumeMount{
+				ClaimName: "data-storage",
+				VolumeMount: container.VolumeMount{
 					Name:      "data-volume",
 					SubPath:   pvSubpath,
 					MountPath: s.Config.Jupyter.WorkingDir,

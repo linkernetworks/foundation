@@ -73,6 +73,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		Bind:         s.Config.Jupyter.Address,
 		Port:         DefaultNotebookContainerPort,
 		BaseURL:      nb.Url,
+		Volumes:      workspace.SecondaryVolumes,
 	})
 
 	pod := podFactory.NewPod(podName, map[string]string{

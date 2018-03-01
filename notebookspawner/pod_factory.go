@@ -20,6 +20,7 @@ type NotebookPodParameters struct {
 	BaseURL      string
 	Bind         string
 	Port         int32
+	Volumes      []container.Volume
 }
 
 // NotebookPodFactory handle the process of creating the jupyter notebook pod
@@ -32,8 +33,55 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 	return &NotebookPodFactory{notebook, params}
 }
 
+func NewVolume(params PodParameters) []v1.Volume {
+	kubeVolume := []v1.Volume{}
+	for _, v := range params.Volumes {
+		kubeVolume = append(kubeVolume, v1.Volume{
+			Name: v.VolumeMount.Name,
+			VolumeSource: v1.VolumeSource{
+				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+					ClaimName: v.ClaimName,
+				},
+			},
+		})
+	}
+	kubeVolume = append(kubeVolume, v1.Volime{
+		Name: "config-volume",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "jupyter-notebook-config",
+				},
+			},
+		},
+	})
+
+	return kubeVolume
+}
+
+func NewVolumeMount(params PodParameters) []v1.VolumeMount {
+	kubeVolumeMount := []v1.VolumeMount{}
+	for _, v := range params.Volumes {
+		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
+			Name:      v.VolumeMount.Name,
+			SubPath:   v.VolumeMount.SubPath,
+			MountPath: v.VolumeMount.MountPath,
+		})
+	}
+
+	kubeVoumeMount = append(kubeVolumeMount, v1.VolumeMount{
+		Name:      "config-volume",
+		MountPath: "/home/jovyan/.jupyter/custom",
+	})
+	return kubeVolumeMount
+}
+
 // NewPod returns the Pod object of the jupyternotebook
 func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
+	params := nb.params
+	kubeVolume := NewVolume(params)
+	kubeVolumeMount := NewVolumeMount(params)
+
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   podName,
@@ -57,14 +105,8 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 						"--NotebookApp.disable_check_xsrf=True",
 						"--Session.debug=True",
 					},
-					VolumeMounts: []v1.VolumeMount{
-						{
-							Name:      "data-volume",
-							SubPath:   nb.params.WorkspaceDir,
-							MountPath: nb.params.WorkDir,
-						},
-						{Name: "config-volume", MountPath: "/home/jovyan/.jupyter/custom"},
-					},
+					//FIXME we should also mount the PrimaryVolume.
+					VolumeMounts: kubeVolumeMount,
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook",
@@ -91,26 +133,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 					},
 				},
 			},
-			Volumes: []v1.Volume{
-				{
-					Name: "data-volume",
-					VolumeSource: v1.VolumeSource{
-						PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-							ClaimName: "data-storage",
-						},
-					},
-				},
-				{
-					Name: "config-volume",
-					VolumeSource: v1.VolumeSource{
-						ConfigMap: &v1.ConfigMapVolumeSource{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "jupyter-notebook-config",
-							},
-						},
-					},
-				},
-			},
+			Volumes: kubeVolume,
 		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
@@ -63,17 +64,29 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 	podName := nb.DeploymentID()
 
-	// volumeMounts subPath should not have a root dir. the correct one is like batches/batch-xxx
-	pvSubpath := path.GetWorkspacePVSubpath(s.Config, &workspace)
-
+	// FIXME: we should also mount the PrimaryVolumes
+	volumes := workspace.SecondaryVolumes
+	// backward compatibility,
+	if 0 == len(volumes) {
+		pvSubpath := path.GetWorkspacePVSubpath(s.Config, &workspace)
+		volumes = []container.Volume{
+			{
+				Name: "data-storage",
+				VolumeMount: &container.VolumeMount{
+					Name:      "data-volume",
+					SubPath:   pvSubpath,
+					MountPath: s.Config.Jupyter.WorkingDir,
+				},
+			},
+		}
+	}
 	podFactory := NewNotebookPodFactory(nb, NotebookPodParameters{
-		Image:        nb.Image,
-		WorkspaceDir: pvSubpath,
-		WorkDir:      s.Config.Jupyter.WorkingDir,
-		Bind:         s.Config.Jupyter.Address,
-		Port:         DefaultNotebookContainerPort,
-		BaseURL:      nb.Url,
-		Volumes:      workspace.SecondaryVolumes,
+		Image:   nb.Image,
+		WorkDir: s.Config.Jupyter.WorkingDir,
+		Bind:    s.Config.Jupyter.Address,
+		Port:    DefaultNotebookContainerPort,
+		BaseURL: nb.Url,
+		Volumes: workspace.SecondaryVolumes,
 	})
 
 	pod := podFactory.NewPod(podName, map[string]string{

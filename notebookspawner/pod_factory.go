@@ -2,6 +2,7 @@ package notebookspawner
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -14,13 +15,12 @@ const DefaultNotebookContainerPort = 8888
 
 type NotebookPodParameters struct {
 	// Notebook parameters
-	WorkDir      string
-	WorkspaceDir string
-	Image        string
-	BaseURL      string
-	Bind         string
-	Port         int32
-	Volumes      []container.Volume
+	WorkDir string
+	Image   string
+	BaseURL string
+	Bind    string
+	Port    int32
+	Volumes []container.Volume
 }
 
 // NotebookPodFactory handle the process of creating the jupyter notebook pod
@@ -33,7 +33,7 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 	return &NotebookPodFactory{notebook, params}
 }
 
-func NewVolume(params PodParameters) []v1.Volume {
+func NewVolume(params NotebookPodParameters) []v1.Volume {
 	kubeVolume := []v1.Volume{}
 	for _, v := range params.Volumes {
 		kubeVolume = append(kubeVolume, v1.Volume{
@@ -45,7 +45,7 @@ func NewVolume(params PodParameters) []v1.Volume {
 			},
 		})
 	}
-	kubeVolume = append(kubeVolume, v1.Volime{
+	kubeVolume = append(kubeVolume, v1.Volume{
 		Name: "config-volume",
 		VolumeSource: v1.VolumeSource{
 			ConfigMap: &v1.ConfigMapVolumeSource{
@@ -59,7 +59,7 @@ func NewVolume(params PodParameters) []v1.Volume {
 	return kubeVolume
 }
 
-func NewVolumeMount(params PodParameters) []v1.VolumeMount {
+func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
 	kubeVolumeMount := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
 		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
@@ -69,7 +69,7 @@ func NewVolumeMount(params PodParameters) []v1.VolumeMount {
 		})
 	}
 
-	kubeVoumeMount = append(kubeVolumeMount, v1.VolumeMount{
+	kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
 		Name:      "config-volume",
 		MountPath: "/home/jovyan/.jupyter/custom",
 	})

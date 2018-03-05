@@ -10,6 +10,8 @@ import (
 func TestNotificationConfig(t *testing.T) {
 	cf := NotificationConfig{}
 	jsontext := `{
+		"enable_sms": false,
+		"enable_email": true,
         "on_job_start": true,
         "on_job_success": true,
 		"on_job_fail": true,
@@ -19,6 +21,8 @@ func TestNotificationConfig(t *testing.T) {
 	err := json.Unmarshal([]byte(jsontext), &cf)
 	assert.NoError(t, err)
 
+	assert.False(t, cf.EnableSMS)
+	assert.True(t, cf.EnableEmail)
 	assert.True(t, cf.OnJobStart)
 	assert.True(t, cf.OnJobSuccess)
 	assert.True(t, cf.OnJobFail)

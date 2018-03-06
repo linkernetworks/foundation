@@ -49,15 +49,3 @@ func TestReadDataConifg(t *testing.T) {
 		assert.Equal(t, "./data/models/archives", cf.GetModelArchiveDir())
 	}
 }
-
-func TestReadNotificationConifg(t *testing.T) {
-	configPath := "../../config/testing.json"
-	cf := MustRead(configPath)
-	if cf.Notification != nil {
-		assert.True(t, cf.Notification.OnJobStart)
-		assert.True(t, cf.Notification.OnJobSuccess)
-		assert.True(t, cf.Notification.OnJobFail)
-		assert.True(t, cf.Notification.OnJobStop)
-		assert.True(t, cf.Notification.OnJobDelete)
-	}
-}

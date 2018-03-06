@@ -2,7 +2,7 @@ package config
 
 type AppConfig struct {
 	Logger   LoggerConfig    `json:"logger"`
-	Brand    BrandConfig     `json:"brandIdentifier"`
+	Brand    BrandConfig     `json:"brand"`
 	Session  *SessionConfig  `json:"session"`
 	Socketio *SocketioConfig `json:"socketio"`
 	BaseURL  string          `json:"baseURL"`

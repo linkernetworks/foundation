@@ -15,3 +15,7 @@ type AppConfig struct {
 	DbVersion          string `json:"dbVersion"`
 	Version            string `json:"version"`
 }
+
+func (a *AppConfig) GetJobSetailURL(jobID string) string {
+	return a.BaseURL + "/#/jobs/view/" + jobID
+}

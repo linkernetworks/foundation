@@ -15,15 +15,15 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/client-go/tools/cache"
 
 	//FIXME, wait PR#444
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	"gopkg.in/mgo.v2/bson"
 	v1 "k8s.io/api/core/v1"
@@ -222,4 +222,21 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	defer session.Close()
 	session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
+}
+
+func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
+	//Deploy a Check POD
+	pod := NewAvaliablePod(id, volume)
+	_, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+	if err == nil {
+		return err
+	}
+	//Wait the POD
+	if err := WaitAvaliablePod(s.clientset, s.namespace, pod.ObjectMeta.Name, timeout); err != nil {
+		return err
+	}
+
+	s.clientset.CoreV1().Pods(s.namespace).Delete(pod.ObjectMeta.Name, &metav1.DeleteOptions{})
+	//Delete a CheckPOD
+	return nil
 }

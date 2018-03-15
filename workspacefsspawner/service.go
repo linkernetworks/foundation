@@ -234,7 +234,7 @@ func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []conta
 
 	defer s.clientset.CoreV1().Pods(s.namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
 	//Wait the POD
-	logger.Info(newPod.ObjectMeta.Name)
+	logger.Info("Try to wait the POD", newPod.ObjectMeta.Name)
 	if err := WaitAvailiablePod(s.clientset, s.namespace, newPod.ObjectMeta.Name, timeout); err != nil {
 		return err
 	}

@@ -13,9 +13,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-const PrefixPodName = "fsavaliablitycheck-"
+const PrefixPodName = "fs-check-"
 
-var ErrMountUnAvailable = errors.New("Volume UnAvaliable")
+var ErrMountUnAvailable = errors.New("Volume Unavailable")
 
 func NewVolume(volume []container.Volume) []v1.Volume {
 	kubeVolume := []v1.Volume{}
@@ -44,13 +44,13 @@ func NewVolumeMount(volume []container.Volume) []v1.VolumeMount {
 	return kubeVolumeMount
 }
 
-func NewAvaliablePod(id string, volume []container.Volume) v1.Pod {
+func NewAvailablePod(id string, volume []container.Volume) v1.Pod {
 	kubeVolume := NewVolume(volume)
 	kubeVolumeMount := NewVolumeMount(volume)
 	name := PrefixPodName + id
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			GenerateName: name + "-",
 		},
 		Spec: v1.PodSpec{
 			RestartPolicy: "Always",
@@ -67,7 +67,7 @@ func NewAvaliablePod(id string, volume []container.Volume) v1.Pod {
 	}
 }
 
-func WaitAvaliablePod(clientset *kubernetes.Clientset, namespace string, podName string, timeout int) error {
+func WaitAvailiablePod(clientset *kubernetes.Clientset, namespace string, podName string, timeout int) error {
 	//We return nil iff the POD's status is running within timeout seconds.
 	find := false
 	stop := make(chan struct{})

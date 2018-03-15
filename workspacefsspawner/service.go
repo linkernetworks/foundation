@@ -226,17 +226,18 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
 	//Deploy a Check POD
-	pod := NewAvaliablePod(id, volume)
-	_, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
-	if err == nil {
-		return err
-	}
-	//Wait the POD
-	if err := WaitAvaliablePod(s.clientset, s.namespace, pod.ObjectMeta.Name, timeout); err != nil {
+	pod := NewAvailablePod(id, volume)
+	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+	if err != nil {
 		return err
 	}
 
-	s.clientset.CoreV1().Pods(s.namespace).Delete(pod.ObjectMeta.Name, &metav1.DeleteOptions{})
-	//Delete a CheckPOD
+	defer s.clientset.CoreV1().Pods(s.namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
+	//Wait the POD
+	logger.Info(newPod.ObjectMeta.Name)
+	if err := WaitAvailiablePod(s.clientset, s.namespace, newPod.ObjectMeta.Name, timeout); err != nil {
+		return err
+	}
+
 	return nil
 }

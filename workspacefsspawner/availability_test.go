@@ -30,16 +30,16 @@ func TestMountSuccess(t *testing.T) {
 	id := bson.NewObjectId().Hex()
 	volume := []container.Volume{}
 	//Deploy a Check POD
-	pod := NewAvaliablePod(id, volume)
+	pod := NewAvailablePod(id, volume)
 	assert.NotNil(t, pod)
 
-	_, err = clientset.CoreV1().Pods(namespace).Create(&pod)
+	newPod, err := clientset.CoreV1().Pods(namespace).Create(&pod)
 	assert.NoError(t, err)
 	//Wait the POD
-	err = WaitAvaliablePod(clientset, namespace, pod.ObjectMeta.Name, 10)
+	err = WaitAvailiablePod(clientset, namespace, newPod.ObjectMeta.Name, 10)
 	assert.NoError(t, err)
 
-	clientset.CoreV1().Pods(namespace).Delete(pod.ObjectMeta.Name, &metav1.DeleteOptions{})
+	clientset.CoreV1().Pods(namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
 }
 
 func TestMountFail(t *testing.T) {
@@ -63,15 +63,15 @@ func TestMountFail(t *testing.T) {
 		},
 	}
 	//Deploy a Check POD
-	pod := NewAvaliablePod(id, volume)
+	pod := NewAvailablePod(id, volume)
 	assert.NotNil(t, pod)
 
-	_, err = clientset.CoreV1().Pods(namespace).Create(&pod)
+	newPod, err := clientset.CoreV1().Pods(namespace).Create(&pod)
 	assert.NoError(t, err)
 	//Wait the POD
-	err = WaitAvaliablePod(clientset, namespace, pod.ObjectMeta.Name, 4)
+	err = WaitAvailiablePod(clientset, namespace, newPod.ObjectMeta.Name, 4)
 
 	assert.Error(t, err)
 	assert.Equal(t, err, ErrMountUnAvailable)
-	clientset.CoreV1().Pods(namespace).Delete(pod.ObjectMeta.Name, &metav1.DeleteOptions{})
+	clientset.CoreV1().Pods(namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
 }

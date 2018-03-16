@@ -17,10 +17,10 @@ const PrefixPodName = "fs-check-"
 
 var ErrMountUnAvailable = errors.New("Volume Unavailable")
 
-func NewVolume(volume []container.Volume) []v1.Volume {
-	kubeVolume := []v1.Volume{}
-	for _, v := range volume {
-		kubeVolume = append(kubeVolume, v1.Volume{
+func NewVolume(containerVolumes []container.Volume) []v1.Volume {
+	volumes := []v1.Volume{}
+	for _, v := range containerVolumes {
+		volumes = append(volumes, v1.Volume{
 			Name: v.VolumeMount.Name,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -29,40 +29,40 @@ func NewVolume(volume []container.Volume) []v1.Volume {
 			},
 		})
 	}
-	return kubeVolume
+	return volumes
 }
 
-func NewVolumeMount(volume []container.Volume) []v1.VolumeMount {
-	kubeVolumeMount := []v1.VolumeMount{}
-	for _, v := range volume {
-		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
+func NewVolumeMount(containerVolumes []container.Volume) []v1.VolumeMount {
+	mounts := []v1.VolumeMount{}
+	for _, v := range containerVolumes {
+		mounts = append(mounts, v1.VolumeMount{
 			Name:      v.VolumeMount.Name,
 			MountPath: v.VolumeMount.MountPath,
 			SubPath:   v.VolumeMount.SubPath,
 		})
 	}
-	return kubeVolumeMount
+	return mounts
 }
 
 func NewAvailablePod(id string, volume []container.Volume) v1.Pod {
-	kubeVolume := NewVolume(volume)
-	kubeVolumeMount := NewVolumeMount(volume)
+	volumes := NewVolume(volume)
+	volumeMounts := NewVolumeMount(volume)
 	name := PrefixPodName + id
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name + "-",
 		},
 		Spec: v1.PodSpec{
-			RestartPolicy: "Always",
+			RestartPolicy: "Never",
 			Containers: []v1.Container{{
 				Image:           "busybox:latest",
 				Name:            name,
 				ImagePullPolicy: v1.PullPolicy("IfNotPresent"),
-				VolumeMounts:    kubeVolumeMount,
-				Command:         []string{"sleep", "3600"},
+				VolumeMounts:    volumeMounts,
+				Command:         []string{"sleep", "100"},
 			},
 			},
-			Volumes: kubeVolume,
+			Volumes: volumes,
 		},
 	}
 }

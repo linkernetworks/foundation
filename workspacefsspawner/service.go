@@ -13,6 +13,8 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/volumechecker"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 
@@ -226,7 +228,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
 	//Deploy a Check POD
-	pod := NewAvailablePod(id, volume)
+	pod := volumechecker.NewAvailablePod(id, volume)
 	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
 	if err != nil {
 		return err
@@ -234,8 +236,21 @@ func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []conta
 
 	defer s.clientset.CoreV1().Pods(s.namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
 	//Wait the POD
+	o := make(chan *v1.Pod)
+	stop := make(chan struct{})
+	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod, ok := newObj.(*v1.Pod)
+			if !ok {
+				return
+			}
+			o <- pod
+		},
+	})
+	go controller.Run(stop)
+
 	logger.Info("Try to wait the POD", newPod.ObjectMeta.Name)
-	if err := WaitAvailiablePod(s.clientset, s.namespace, newPod.ObjectMeta.Name, timeout); err != nil {
+	if err := volumechecker.WaitAvailiablePod(o, newPod.ObjectMeta.Name, timeout); err != nil {
 		return err
 	}
 

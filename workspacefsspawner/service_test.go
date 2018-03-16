@@ -119,6 +119,23 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 	assert.NoError(suite.T(), err)
 }
 
+func (suite *WorkspaceServiceSuite) TestCheckAvailability() {
+	id := bson.NewObjectId().Hex()
+	err := suite.WsService.CheckAvailability(id, []container.Volume{}, 15)
+	assert.NoError(suite.T(), err)
+
+	err = suite.WsService.CheckAvailability(id, []container.Volume{
+		{
+			ClaimName: "unexist",
+			VolumeMount: container.VolumeMount{
+				Name:      "unexist",
+				MountPath: "Fake",
+			},
+		},
+	}, 10)
+	assert.Error(suite.T(), err)
+}
+
 func TestWorkspaceServiceSuite(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()

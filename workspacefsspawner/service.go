@@ -228,7 +228,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
 	//Deploy a Check POD
-	pod := volumechecker.NewAvailablePod(id, volume)
+	pod := volumechecker.NewVolumeCheckPod(id, volume)
 	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
 	if err != nil {
 		return err
@@ -250,7 +250,7 @@ func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []conta
 	go controller.Run(stop)
 
 	logger.Info("Try to wait the POD", newPod.ObjectMeta.Name)
-	if err := volumechecker.WaitAvailiablePod(o, newPod.ObjectMeta.Name, timeout); err != nil {
+	if err := volumechecker.Check(o, newPod.ObjectMeta.Name, timeout); err != nil {
 		return err
 	}
 

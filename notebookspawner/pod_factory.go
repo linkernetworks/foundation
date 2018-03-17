@@ -45,6 +45,26 @@ func NewVolumes(volumeDefs []container.Volume) (volumes []v1.Volume) {
 			},
 		})
 	}
+	return volumes
+}
+
+// NewVolumeMounts creates the mount definition, it uses the defined volumes
+func NewVolumeMounts(volumeDefs []container.Volume) (mounts []v1.VolumeMount) {
+	for _, v := range volumeDefs {
+		mounts = append(mounts, v1.VolumeMount{
+			Name:      v.VolumeMount.Name,
+			SubPath:   v.VolumeMount.SubPath,
+			MountPath: v.VolumeMount.MountPath,
+		})
+	}
+
+	return mounts
+}
+
+// NewPod returns the Pod object of the jupyternotebook
+func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
+	params := nb.params
+	volumes := NewVolumes(params.Volumes)
 	volumes = append(volumes, v1.Volume{
 		Name: "config-volume",
 		VolumeSource: v1.VolumeSource{
@@ -55,31 +75,12 @@ func NewVolumes(volumeDefs []container.Volume) (volumes []v1.Volume) {
 			},
 		},
 	})
-	return volumes
-}
 
-// NewVolumeMounts creates the mount definition, it uses the defined volumes
-func NewVolumeMounts(volumeDefs []container.Volume) (volumeMounts []v1.VolumeMount) {
-	for _, v := range volumeDefs {
-		volumeMounts = append(volumeMounts, v1.VolumeMount{
-			Name:      v.VolumeMount.Name,
-			SubPath:   v.VolumeMount.SubPath,
-			MountPath: v.VolumeMount.MountPath,
-		})
-	}
-
-	volumeMounts = append(volumeMounts, v1.VolumeMount{
+	mounts := NewVolumeMounts(params.Volumes)
+	mounts = append(mounts, v1.VolumeMount{
 		Name:      "config-volume",
 		MountPath: "/home/jovyan/.jupyter/custom",
 	})
-	return volumeMounts
-}
-
-// NewPod returns the Pod object of the jupyternotebook
-func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
-	params := nb.params
-	volumes := NewVolumes(params.Volumes)
-	volumeMounts := NewVolumeMounts(params.Volumes)
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -105,7 +106,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 						"--Session.debug=True",
 					},
 					//FIXME we should also mount the PrimaryVolume.
-					VolumeMounts: volumeMounts,
+					VolumeMounts: mounts,
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook",

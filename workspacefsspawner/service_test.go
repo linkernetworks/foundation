@@ -51,7 +51,7 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		PrimaryVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolumeParams: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}
@@ -78,7 +78,7 @@ func (suite *WorkspaceServiceSuite) TestGetVolume() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		PrimaryVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolumeParams: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}
@@ -99,7 +99,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: bson.NewObjectId(),
-		PrimaryVolume: entity.PersistentVolumeClaimParameter{
+		PrimaryVolumeParams: entity.PersistentVolumeClaimParameter{
 			Name: vName,
 		},
 	}

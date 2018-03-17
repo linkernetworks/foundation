@@ -215,9 +215,9 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
 	volumes = append(volumes, container.Volume{
-		ClaimName: ws.PrimaryVolume.Name,
+		ClaimName: ws.PrimaryVolumeParams.Name,
 		VolumeMount: container.VolumeMount{
-			Name:      ws.PrimaryVolume.Name,
+			Name:      ws.PrimaryVolumeParams.Name,
 			MountPath: fileserver.MainVolumeMountPoint,
 		},
 	})

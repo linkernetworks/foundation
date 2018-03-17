@@ -34,9 +34,9 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 }
 
 func NewVolume(params NotebookPodParameters) []v1.Volume {
-	kubeVolume := []v1.Volume{}
+	volumes := []v1.Volume{}
 	for _, v := range params.Volumes {
-		kubeVolume = append(kubeVolume, v1.Volume{
+		volumes = append(volumes, v1.Volume{
 			Name: v.VolumeMount.Name,
 			VolumeSource: v1.VolumeSource{
 				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -45,7 +45,7 @@ func NewVolume(params NotebookPodParameters) []v1.Volume {
 			},
 		})
 	}
-	kubeVolume = append(kubeVolume, v1.Volume{
+	volumes = append(volumes, v1.Volume{
 		Name: "config-volume",
 		VolumeSource: v1.VolumeSource{
 			ConfigMap: &v1.ConfigMapVolumeSource{
@@ -56,24 +56,24 @@ func NewVolume(params NotebookPodParameters) []v1.Volume {
 		},
 	})
 
-	return kubeVolume
+	return volumes
 }
 
 func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
-	kubeVolumeMount := []v1.VolumeMount{}
+	volumeMounts := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
-		kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
+		volumeMounts = append(volumeMounts, v1.VolumeMount{
 			Name:      v.VolumeMount.Name,
 			SubPath:   v.VolumeMount.SubPath,
 			MountPath: v.VolumeMount.MountPath,
 		})
 	}
 
-	kubeVolumeMount = append(kubeVolumeMount, v1.VolumeMount{
+	volumeMounts = append(volumeMounts, v1.VolumeMount{
 		Name:      "config-volume",
 		MountPath: "/home/jovyan/.jupyter/custom",
 	})
-	return kubeVolumeMount
+	return volumeMounts
 }
 
 // NewPod returns the Pod object of the jupyternotebook

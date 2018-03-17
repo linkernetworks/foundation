@@ -1,13 +1,16 @@
 package notebookspawner
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"strconv"
 
+	"bitbucket.org/linkernetworks/aurora/src/entity"
+	kubevolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volumes"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
+
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // The container port of jupyter notebook
@@ -33,7 +36,7 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 	return &NotebookPodFactory{notebook, params}
 }
 
-// NewVolumes creates the volume definition used by the pod spec.
+// NewVolumes creates the kubernetes volume definition used by the pod spec.
 func NewVolumes(volumeDefs []container.Volume) (volumes []v1.Volume) {
 	for _, v := range volumeDefs {
 		volumes = append(volumes, v1.Volume{
@@ -48,7 +51,7 @@ func NewVolumes(volumeDefs []container.Volume) (volumes []v1.Volume) {
 	return volumes
 }
 
-// NewVolumeMounts creates the mount definition, it uses the defined volumes
+// NewVolumeMounts creates the kubernetes volume mount definition, it uses the defined volumes
 func NewVolumeMounts(volumeDefs []container.Volume) (mounts []v1.VolumeMount) {
 	for _, v := range volumeDefs {
 		mounts = append(mounts, v1.VolumeMount{
@@ -64,7 +67,7 @@ func NewVolumeMounts(volumeDefs []container.Volume) (mounts []v1.VolumeMount) {
 // NewPod returns the Pod object of the jupyternotebook
 func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
 	params := nb.params
-	volumes := NewVolumes(params.Volumes)
+	volumes := kubevolume.NewVolumes(params.Volumes)
 	volumes = append(volumes, v1.Volume{
 		Name: "config-volume",
 		VolumeSource: v1.VolumeSource{
@@ -76,7 +79,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 		},
 	})
 
-	mounts := NewVolumeMounts(params.Volumes)
+	mounts := kubevolume.NewVolumeMounts(params.Volumes)
 	mounts = append(mounts, v1.VolumeMount{
 		Name:      "config-volume",
 		MountPath: "/home/jovyan/.jupyter/custom",

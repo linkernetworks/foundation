@@ -33,6 +33,7 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 	return &NotebookPodFactory{notebook, params}
 }
 
+// NewVolume creates the volume definition used by the pod spec.
 func NewVolume(params NotebookPodParameters) []v1.Volume {
 	volumes := []v1.Volume{}
 	for _, v := range params.Volumes {
@@ -55,10 +56,10 @@ func NewVolume(params NotebookPodParameters) []v1.Volume {
 			},
 		},
 	})
-
 	return volumes
 }
 
+// NewVolumeMount creates the mount definition, it uses the defined volumes
 func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
 	volumeMounts := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
@@ -79,8 +80,8 @@ func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
 // NewPod returns the Pod object of the jupyternotebook
 func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
 	params := nb.params
-	kubeVolume := NewVolume(params)
-	kubeVolumeMount := NewVolumeMount(params)
+	volumes := NewVolume(params)
+	volumeMounts := NewVolumeMount(params)
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -106,7 +107,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 						"--Session.debug=True",
 					},
 					//FIXME we should also mount the PrimaryVolume.
-					VolumeMounts: kubeVolumeMount,
+					VolumeMounts: volumeMounts,
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook",
@@ -133,7 +134,7 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 					},
 				},
 			},
-			Volumes: kubeVolume,
+			Volumes: volumes,
 		},
 	}
 }

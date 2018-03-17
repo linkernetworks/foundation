@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	kubevolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volumes"
+	kubevolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 
 	v1 "k8s.io/api/core/v1"
@@ -34,34 +34,6 @@ type NotebookPodFactory struct {
 
 func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParameters) *NotebookPodFactory {
 	return &NotebookPodFactory{notebook, params}
-}
-
-// NewVolumes creates the kubernetes volume definition used by the pod spec.
-func NewVolumes(volumeDefs []container.Volume) (volumes []v1.Volume) {
-	for _, v := range volumeDefs {
-		volumes = append(volumes, v1.Volume{
-			Name: v.VolumeMount.Name,
-			VolumeSource: v1.VolumeSource{
-				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-					ClaimName: v.ClaimName,
-				},
-			},
-		})
-	}
-	return volumes
-}
-
-// NewVolumeMounts creates the kubernetes volume mount definition, it uses the defined volumes
-func NewVolumeMounts(volumeDefs []container.Volume) (mounts []v1.VolumeMount) {
-	for _, v := range volumeDefs {
-		mounts = append(mounts, v1.VolumeMount{
-			Name:      v.VolumeMount.Name,
-			SubPath:   v.VolumeMount.SubPath,
-			MountPath: v.VolumeMount.MountPath,
-		})
-	}
-
-	return mounts
 }
 
 // NewPod returns the Pod object of the jupyternotebook

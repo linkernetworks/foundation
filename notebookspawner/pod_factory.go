@@ -59,8 +59,8 @@ func NewVolume(params NotebookPodParameters) []v1.Volume {
 	return volumes
 }
 
-// NewVolumeMount creates the mount definition, it uses the defined volumes
-func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
+// NewVolumeMounts creates the mount definition, it uses the defined volumes
+func NewVolumeMounts(params NotebookPodParameters) []v1.VolumeMount {
 	volumeMounts := []v1.VolumeMount{}
 	for _, v := range params.Volumes {
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
@@ -81,7 +81,7 @@ func NewVolumeMount(params NotebookPodParameters) []v1.VolumeMount {
 func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
 	params := nb.params
 	volumes := NewVolume(params)
-	volumeMounts := NewVolumeMount(params)
+	volumeMounts := NewVolumeMounts(params)
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

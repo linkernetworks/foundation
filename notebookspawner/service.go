@@ -3,13 +3,15 @@ package notebookspawner
 import (
 	"errors"
 
-	"bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
+	// "bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
-	"bitbucket.org/linkernetworks/aurora/src/types/container"
+	// "bitbucket.org/linkernetworks/aurora/src/types/container"
+
+	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
@@ -25,6 +27,30 @@ import (
 )
 
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
+
+// Attach the workspace volumes
+func AttachWorkspaceVolumes(pod v1.Pod, workspace *entity.Workspace) v1.Pod {
+	var volumes = []v1.Volume{}
+	var mounts = []v1.VolumeMount{}
+
+	if workspace.PrimaryVolume != nil {
+		volumes = append(volumes, kvolume.NewVolume(*workspace.PrimaryVolume))
+		mounts = append(mounts, kvolume.NewVolumeMount(*workspace.PrimaryVolume))
+	}
+
+	var secondaryVolumes = kvolume.NewVolumes(workspace.SecondaryVolumes)
+	volumes = append(volumes, secondaryVolumes...)
+
+	secondaryMounts := kvolume.NewVolumeMounts(workspace.SecondaryVolumes)
+	mounts = append(mounts, secondaryMounts...)
+
+	pod.Spec.Volumes = append(pod.Spec.Volumes, volumes...)
+	for _, container := range pod.Spec.Containers {
+		container.VolumeMounts = append(container.VolumeMounts, mounts...)
+	}
+
+	return pod
+}
 
 type NotebookSpawnerService struct {
 	Config  config.Config
@@ -64,22 +90,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 	podName := nb.DeploymentID()
 
-	// FIXME: we should also mount the PrimaryVolumes
-	volumes := workspace.SecondaryVolumes
-	// backward compatibility,
-	if 0 == len(volumes) {
-		pvSubpath := path.GetWorkspacePVSubpath(s.Config, &workspace)
-		volumes = []container.Volume{
-			{
-				ClaimName: "data-storage",
-				VolumeMount: container.VolumeMount{
-					Name:      "data-volume",
-					SubPath:   pvSubpath,
-					MountPath: s.Config.Jupyter.WorkingDir,
-				},
-			},
-		}
-	}
 	factory := NewNotebookPodFactory(nb, NotebookPodParameters{
 		Image:   nb.Image,
 		WorkDir: s.Config.Jupyter.WorkingDir,
@@ -94,6 +104,8 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		"workspace": nb.WorkspaceID.Hex(),
 		"user":      nb.CreatedBy.Hex(),
 	})
+
+	pod = AttachWorkspaceVolumes(pod, &workspace)
 
 	// Start tracking first
 	_, err = s.getPod(nb)

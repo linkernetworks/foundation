@@ -39,9 +39,5 @@ func (s *Service) CreateClientset() (*kubernetes.Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return clientset, nil
+	return kubernetes.NewForConfig(config)
 }

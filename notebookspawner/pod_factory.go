@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
-	"bitbucket.org/linkernetworks/aurora/src/types/container"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +21,6 @@ type NotebookPodParameters struct {
 	BaseURL string
 	Bind    string
 	Port    int32
-	Volumes []container.Volume
 }
 
 // NotebookPodFactory handle the process of creating the jupyter notebook pod
@@ -38,24 +35,25 @@ func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParamete
 
 // NewPod returns the Pod object of the jupyternotebook
 func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
-	params := nb.params
-	volumes := kvolume.NewVolumes(params.Volumes)
-	volumes = append(volumes, v1.Volume{
-		Name: "config-volume",
-		VolumeSource: v1.VolumeSource{
-			ConfigMap: &v1.ConfigMapVolumeSource{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: "jupyter-notebook-config",
+	volumes := []v1.Volume{
+		{
+			Name: "config-volume",
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "jupyter-notebook-config",
+					},
 				},
 			},
 		},
-	})
+	}
 
-	mounts := kvolume.NewVolumeMounts(params.Volumes)
-	mounts = append(mounts, v1.VolumeMount{
-		Name:      "config-volume",
-		MountPath: "/home/jovyan/.jupyter/custom",
-	})
+	mounts := []v1.VolumeMount{
+		{
+			Name:      "config-volume",
+			MountPath: "/home/jovyan/.jupyter/custom",
+		},
+	}
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

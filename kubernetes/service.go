@@ -34,7 +34,7 @@ func (s *Service) LoadConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func (s *Service) CreateClientset() (*kubernetes.Clientset, error) {
+func (s *Service) NewClientset() (*kubernetes.Clientset, error) {
 	config, err := s.LoadConfig()
 	if err != nil {
 		return nil, err

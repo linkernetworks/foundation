@@ -35,7 +35,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.New(cf.Redis)
 
-	clientset, err := kubernetesService.CreateClientset()
+	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
 
 	spawner := New(cf, mongoService.NewSession(), clientset, redisService)

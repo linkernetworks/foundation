@@ -36,7 +36,7 @@ func (suite *WorkspaceServiceSuite) SetupTest() {
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
 	mongoService := mongo.New(cf.Mongo.Url)
 	redisService := redis.New(cf.Redis)
-	clientset, err := kubernetesService.CreateClientset()
+	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(suite.T(), err)
 	suite.WsService = New(cf, mongoService, clientset, redisService)
 

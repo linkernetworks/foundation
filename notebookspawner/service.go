@@ -89,7 +89,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	_, err = s.getPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.Updater.TrackAndSync(nb)
+		tracker, err = s.Updater.TrackAndSyncAdd(nb)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	tracker, err = s.Updater.TrackAndSync(nb)
+	tracker, err = s.Updater.TrackAndSyncAdd(nb)
 	return tracker, err
 }
 
@@ -127,7 +127,7 @@ func (s *NotebookSpawnerService) Stop(notebook *entity.Notebook) (*podtracker.Po
 	s.Updater.Reset(notebook)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	tracker, err := s.Updater.TrackAndSync(notebook)
+	tracker, err := s.Updater.TrackAndSyncDelete(notebook)
 	if err != nil {
 		return nil, err
 	}

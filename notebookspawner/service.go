@@ -70,7 +70,9 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	})
 
 	pod := factory.NewPod(nb)
-	workspace.AttachVolumesToPod(&ws, &pod)
+	if err := workspace.AttachVolumesToPod(&ws, &pod); err != nil {
+		return nil, err
+	}
 
 	// Start tracking first
 	_, err = s.getPod(nb)

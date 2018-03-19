@@ -27,7 +27,7 @@ var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type NotebookSpawnerService struct {
 	Config  config.Config
-	Session *mongo.Session
+	Mongo   *mongo.Service
 	Factory *NotebookPodFactory
 
 	Updater *podproxy.DocumentProxyInfoUpdater
@@ -36,7 +36,7 @@ type NotebookSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
+func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{
 		Factory: NewNotebookPodFactory(NotebookPodParameters{
 			WorkDir: c.Jupyter.WorkingDir,
@@ -44,14 +44,14 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 			Port:    DefaultNotebookContainerPort,
 		}),
 		Config:    c,
-		Session:   session,
+		Mongo:     service,
 		namespace: "default",
 		clientset: clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
-			Session:        session,
+			Mongo:          service,
 			CollectionName: entity.NotebookCollectionName,
 			PortName:       "notebook",
 		},
@@ -59,10 +59,13 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 }
 
 func (s *NotebookSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
+	session := s.Mongo.NewSession()
+	defer session.Close()
+
 	pod := s.Factory.NewPod(nb)
 
 	// load the workspace from the mongodb
-	ws, err := workspace.Load(s.Session, nb.WorkspaceID)
+	ws, err := workspace.Load(session, nb.WorkspaceID)
 	if err != nil {
 		return pod, err
 	}

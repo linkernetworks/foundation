@@ -42,7 +42,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
 
-	spawner := New(cf, mongoService.NewSession(), clientset, redisService)
+	spawner := New(cf, mongoService, clientset, redisService)
 
 	// proxyURL := "/v1/notebooks/proxy/"
 	session := mongoService.NewSession()

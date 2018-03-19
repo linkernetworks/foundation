@@ -88,10 +88,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	// TODO: load workspace to ensure the workspace exists
-	// workspace := filepath.Join(s.Config.Data.BatchDir, "batch-"+nb.WorkspaceID.Hex())
 	podName := nb.DeploymentID()
-
 	factory := NewNotebookPodFactory(nb, NotebookPodParameters{
 		Image:   nb.Image,
 		WorkDir: s.Config.Jupyter.WorkingDir,

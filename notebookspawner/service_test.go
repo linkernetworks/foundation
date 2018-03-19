@@ -10,6 +10,10 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
+	"bitbucket.org/linkernetworks/aurora/src/workspace/volumemanager"
+
+	v1 "k8s.io/api/core/v1"
+
 	// "bitbucket.org/linkernetworks/aurora/src/service/notebookspawner/notebook"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
@@ -57,6 +61,12 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	defer session.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
 
+	// ensure that the primary volume is created
+	vm := volumemanager.New(clientset, session, "default")
+	err = vm.CreatePrimaryVolume(&workspace)
+	assert.NoError(t, err)
+	assert.NotNil(t, workspace.PrimaryVolume)
+
 	notebookID := bson.NewObjectId()
 	notebook := entity.Notebook{
 		ID:          notebookID,
@@ -69,8 +79,9 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	defer session.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
-	_, err = spawner.Start(&notebook)
+	tracker, err := spawner.Start(&notebook)
 	assert.NoError(t, err)
+	tracker.WaitFor(v1.PodPhase("Running"))
 
 	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)

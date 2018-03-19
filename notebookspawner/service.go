@@ -2,7 +2,6 @@ package notebookspawner
 
 import (
 	"errors"
-	"fmt"
 
 	// "bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
@@ -10,7 +9,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
-	"bitbucket.org/linkernetworks/aurora/src/workspace/volumemanager"
 	// "bitbucket.org/linkernetworks/aurora/src/types/container"
 
 	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
@@ -102,13 +100,6 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		"workspace": nb.WorkspaceID.Hex(),
 		"user":      nb.CreatedBy.Hex(),
 	})
-
-	if workspace.PrimaryVolume == nil {
-		vm := volumemanager.New(s.clientset, s.Session, s.namespace)
-		if err := vm.CreatePrimaryVolume(&workspace); err != nil {
-			return nil, fmt.Errorf("failed to prepare primary volume: %v", err)
-		}
-	}
 
 	pod = AttachWorkspaceVolumes(pod, &workspace)
 

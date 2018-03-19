@@ -15,10 +15,7 @@ import (
 const DefaultNotebookContainerPort = 8888
 
 type NotebookPodParameters struct {
-	// Notebook parameters
 	WorkDir string
-	Image   string
-	BaseURL string
 	Bind    string
 	Port    int32
 }
@@ -69,14 +66,14 @@ func (nb *NotebookPodFactory) NewPod(notebook *entity.Notebook) v1.Pod {
 			Containers: []v1.Container{
 				{
 					Name:            "notebook",
-					Image:           nb.params.Image,
+					Image:           notebook.Image,
 					ImagePullPolicy: v1.PullIfNotPresent,
 					Args: []string{
 						"start-notebook.sh",
 						"--notebook-dir=" + nb.params.WorkDir,
 						"--ip=" + nb.params.Bind,
 						"--port=" + strconv.Itoa(int(nb.params.Port)),
-						"--NotebookApp.base_url=" + nb.params.BaseURL,
+						"--NotebookApp.base_url=" + notebook.Url,
 						"--NotebookApp.token=''",
 						"--NotebookApp.allow_origin='*'",
 						"--NotebookApp.disable_check_xsrf=True",

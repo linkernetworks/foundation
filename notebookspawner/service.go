@@ -19,8 +19,6 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"gopkg.in/mgo.v2/bson"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -55,22 +53,20 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
-	ws := entity.Workspace{}
-	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &ws)
+	// load the workspace from the mongodb
+	ws, err := workspace.Load(s.Session, nb.WorkspaceID)
 	if err != nil {
 		return nil, err
 	}
 
 	factory := NewNotebookPodFactory(NotebookPodParameters{
-		Image:   nb.Image,
 		WorkDir: s.Config.Jupyter.WorkingDir,
 		Bind:    s.Config.Jupyter.Address,
 		Port:    DefaultNotebookContainerPort,
-		BaseURL: nb.Url,
 	})
 
 	pod := factory.NewPod(nb)
-	if err := workspace.AttachVolumesToPod(&ws, &pod); err != nil {
+	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
 		return nil, err
 	}
 

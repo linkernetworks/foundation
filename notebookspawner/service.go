@@ -104,7 +104,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	})
 
 	if workspace.PrimaryVolume == nil {
-		vm := volumemanager.New(s.clientset, s.Session, "default")
+		vm := volumemanager.New(s.clientset, s.Session, s.namespace)
 		if err := vm.CreatePrimaryVolume(&workspace); err != nil {
 			return nil, fmt.Errorf("failed to prepare primary volume: %v", err)
 		}

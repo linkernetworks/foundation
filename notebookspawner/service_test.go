@@ -10,7 +10,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
-	"bitbucket.org/linkernetworks/aurora/src/workspace/volumemanager"
+	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -50,28 +50,27 @@ func TestNotebookSpawnerService(t *testing.T) {
 
 	userId := bson.NewObjectId()
 
-	workspace := entity.Workspace{
+	ws := entity.Workspace{
 		ID:    bson.NewObjectId(),
 		Name:  "testing workspace",
 		Type:  "general",
 		Owner: userId,
 	}
 
-	err = session.C(entity.WorkspaceCollectionName).Insert(workspace)
+	err = session.C(entity.WorkspaceCollectionName).Insert(ws)
 	assert.NoError(t, err)
-	defer session.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": workspace.ID})
+	defer session.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": ws.ID})
 
 	// ensure that the primary volume is created
-	vm := volumemanager.New(clientset, session, "default")
-	err = vm.CreatePrimaryVolume(&workspace)
+	err = workspace.PrepareVolume(session, &ws, kubernetesService)
 	assert.NoError(t, err)
-	assert.NotNil(t, workspace.PrimaryVolume)
+	assert.NotNil(t, ws.PrimaryVolume)
 
 	notebookID := bson.NewObjectId()
 	notebook := entity.Notebook{
 		ID:          notebookID,
 		Image:       notebookImage,
-		WorkspaceID: workspace.ID,
+		WorkspaceID: ws.ID,
 		Url:         cf.Jupyter.BaseURL + "/" + notebookID.Hex(),
 		CreatedBy:   userId,
 	}

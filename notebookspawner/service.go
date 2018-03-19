@@ -86,8 +86,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	podName := nb.DeploymentID()
-	factory := NewNotebookPodFactory(nb, NotebookPodParameters{
+	factory := NewNotebookPodFactory(NotebookPodParameters{
 		Image:   nb.Image,
 		WorkDir: s.Config.Jupyter.WorkingDir,
 		Bind:    s.Config.Jupyter.Address,
@@ -95,12 +94,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		BaseURL: nb.Url,
 	})
 
-	pod := factory.NewPod(podName, map[string]string{
-		"service":   "notebook",
-		"workspace": nb.WorkspaceID.Hex(),
-		"user":      nb.CreatedBy.Hex(),
-	})
-
+	pod := factory.NewPod(nb)
 	pod = AttachWorkspaceVolumes(pod, &workspace)
 
 	// Start tracking first

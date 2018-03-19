@@ -25,16 +25,16 @@ type NotebookPodParameters struct {
 
 // NotebookPodFactory handle the process of creating the jupyter notebook pod
 type NotebookPodFactory struct {
-	notebook *entity.Notebook
-	params   NotebookPodParameters
+	params NotebookPodParameters
 }
 
-func NewNotebookPodFactory(notebook *entity.Notebook, params NotebookPodParameters) *NotebookPodFactory {
-	return &NotebookPodFactory{notebook, params}
+func NewNotebookPodFactory(params NotebookPodParameters) *NotebookPodFactory {
+	return &NotebookPodFactory{params}
 }
 
 // NewPod returns the Pod object of the jupyternotebook
-func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v1.Pod {
+func (nb *NotebookPodFactory) NewPod(notebook *entity.Notebook) v1.Pod {
+	podName := notebook.DeploymentID()
 	volumes := []v1.Volume{
 		{
 			Name: "config-volume",
@@ -57,8 +57,12 @@ func (nb *NotebookPodFactory) NewPod(podName string, labels map[string]string) v
 
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   podName,
-			Labels: labels,
+			Name: podName,
+			Labels: map[string]string{
+				"service":   "notebook",
+				"workspace": notebook.WorkspaceID.Hex(),
+				"user":      notebook.CreatedBy.Hex(),
+			},
 		},
 		Spec: v1.PodSpec{
 			RestartPolicy: v1.RestartPolicyNever,

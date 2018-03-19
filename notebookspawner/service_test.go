@@ -81,7 +81,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 
 	tracker, err := spawner.Start(&notebook)
 	assert.NoError(t, err)
-	tracker.WaitFor(v1.PodPhase("Running"))
+	tracker.WaitForPhase(v1.PodPhase("Running"))
 
 	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)

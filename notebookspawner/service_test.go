@@ -78,6 +78,23 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	defer session.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
+	pod, err := spawner.NewPod(&notebook)
+	assert.NoError(t, err)
+
+	for _, v := range pod.Spec.Volumes {
+		t.Logf("Added Volume: %s", v.Name)
+	}
+	for _, m := range pod.Spec.Containers[0].VolumeMounts {
+		if len(m.SubPath) == 0 {
+			t.Logf("Added Mount: mount %s at %s", m.Name, m.MountPath)
+		} else {
+			t.Logf("Added Mount: mount %s from %s at %s", m.Name, m.SubPath, m.MountPath)
+		}
+	}
+
+	assert.Equal(t, 2, len(pod.Spec.Volumes))
+	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
+
 	tracker, err := spawner.Start(&notebook)
 	assert.NoError(t, err)
 	tracker.WaitForPhase(v1.PodPhase("Running"))

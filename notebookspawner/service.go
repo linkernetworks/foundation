@@ -28,6 +28,7 @@ var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 type NotebookSpawnerService struct {
 	Config  config.Config
 	Session *mongo.Session
+	Factory *NotebookPodFactory
 
 	Updater *podproxy.DocumentProxyInfoUpdater
 
@@ -37,6 +38,11 @@ type NotebookSpawnerService struct {
 
 func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{
+		Factory: NewNotebookPodFactory(NotebookPodParameters{
+			WorkDir: c.Jupyter.WorkingDir,
+			Bind:    c.Jupyter.Address,
+			Port:    DefaultNotebookContainerPort,
+		}),
 		Config:    c,
 		Session:   session,
 		namespace: "default",
@@ -52,21 +58,27 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 	}
 }
 
-func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
+func (s *NotebookSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
+	pod := s.Factory.NewPod(nb)
+
 	// load the workspace from the mongodb
 	ws, err := workspace.Load(s.Session, nb.WorkspaceID)
 	if err != nil {
-		return nil, err
+		return pod, err
 	}
 
-	factory := NewNotebookPodFactory(NotebookPodParameters{
-		WorkDir: s.Config.Jupyter.WorkingDir,
-		Bind:    s.Config.Jupyter.Address,
-		Port:    DefaultNotebookContainerPort,
-	})
-
-	pod := factory.NewPod(nb)
+	// attach the primary volumes to the pod spec
 	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+		return pod, err
+	}
+
+	return pod, nil
+}
+
+func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
+	pod, err := s.NewPod(nb)
+
+	if err != nil {
 		return nil, err
 	}
 

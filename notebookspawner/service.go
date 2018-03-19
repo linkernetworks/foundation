@@ -89,7 +89,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	_, err = s.getPod(nb)
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.Updater.TrackAndSyncAdd(nb)
+		tracker, err = s.Updater.TrackAndSyncUpdate(nb)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 		return nil, err
 	}
 
-	tracker, err = s.Updater.TrackAndSyncAdd(nb)
+	tracker, err = s.Updater.TrackAndSyncUpdate(nb)
 	return tracker, err
 }
 

@@ -27,8 +27,8 @@ import (
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type NotebookSpawnerService struct {
-	Config  config.Config
-	Session *mongo.Session
+	Config config.Config
+	Mongo  *mongo.Service
 
 	Updater *podproxy.DocumentProxyInfoUpdater
 
@@ -36,17 +36,17 @@ type NotebookSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
+func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *NotebookSpawnerService {
 	return &NotebookSpawnerService{
 		Config:    c,
-		Session:   session,
+		Mongo:     service,
 		namespace: "default",
 		clientset: clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
-			Session:        session,
+			MongoService:   service,
 			CollectionName: entity.NotebookCollectionName,
 			PortName:       "notebook",
 		},
@@ -54,8 +54,11 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
+	session := s.Mongo.NewSession()
+	defer session.Clone()
+
 	workspace := entity.Workspace{}
-	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
+	err = session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
 	if err != nil {
 		return nil, err
 	}

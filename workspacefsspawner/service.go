@@ -1,9 +1,10 @@
 package workspacefsspawner
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"sync"
+
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
@@ -37,8 +38,8 @@ type WorkspacePodDeployment interface {
 }
 
 type WorkspaceFileServerSpawner struct {
-	Config  config.Config
-	Session *mongo.Session
+	Config       config.Config
+	MongoService *mongo.Service
 
 	Updater   *podproxy.DocumentProxyInfoUpdater
 	clientset *kubernetes.Clientset
@@ -46,17 +47,16 @@ type WorkspaceFileServerSpawner struct {
 }
 
 func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *WorkspaceFileServerSpawner {
-	session := m.NewSession()
 	return &WorkspaceFileServerSpawner{
-		Config:    c,
-		Session:   session,
-		namespace: "default",
-		clientset: clientset,
+		Config:       c,
+		MongoService: m,
+		namespace:    "default",
+		clientset:    clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
-			Session:        session,
+			MongoService:   m,
 			CollectionName: entity.WorkspaceCollectionName,
 			PortName:       fileserver.FileServerPortName,
 		},
@@ -209,7 +209,10 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 			"secondaryVolumes": ws.SecondaryVolumes,
 		},
 	}
-	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)
+
+	session := s.MongoService.NewSession()
+	defer session.Clone()
+	session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
 }
 

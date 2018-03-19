@@ -45,8 +45,8 @@ func AttachWorkspaceVolumes(pod v1.Pod, workspace *entity.Workspace) v1.Pod {
 	mounts = append(mounts, secondaryMounts...)
 
 	pod.Spec.Volumes = append(pod.Spec.Volumes, volumes...)
-	for _, container := range pod.Spec.Containers {
-		container.VolumeMounts = append(container.VolumeMounts, mounts...)
+	for idx, container := range pod.Spec.Containers {
+		pod.Spec.Containers[idx].VolumeMounts = append(pod.Spec.Containers[idx].VolumeMounts, mounts...)
 	}
 
 	return pod

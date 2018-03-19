@@ -11,10 +11,9 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	// "bitbucket.org/linkernetworks/aurora/src/types/container"
 
-	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
-
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -27,30 +26,6 @@ import (
 )
 
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
-
-// Attach the workspace volumes
-func AttachWorkspaceVolumes(pod v1.Pod, workspace *entity.Workspace) v1.Pod {
-	var volumes = []v1.Volume{}
-	var mounts = []v1.VolumeMount{}
-
-	if workspace.PrimaryVolume != nil {
-		volumes = append(volumes, kvolume.NewVolume(*workspace.PrimaryVolume))
-		mounts = append(mounts, kvolume.NewVolumeMount(*workspace.PrimaryVolume))
-	}
-
-	var secondaryVolumes = kvolume.NewVolumes(workspace.SecondaryVolumes)
-	volumes = append(volumes, secondaryVolumes...)
-
-	secondaryMounts := kvolume.NewVolumeMounts(workspace.SecondaryVolumes)
-	mounts = append(mounts, secondaryMounts...)
-
-	pod.Spec.Volumes = append(pod.Spec.Volumes, volumes...)
-	for idx, container := range pod.Spec.Containers {
-		pod.Spec.Containers[idx].VolumeMounts = append(pod.Spec.Containers[idx].VolumeMounts, mounts...)
-	}
-
-	return pod
-}
 
 type NotebookSpawnerService struct {
 	Config  config.Config
@@ -80,8 +55,8 @@ func New(c config.Config, session *mongo.Session, clientset *kubernetes.Clientse
 }
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
-	workspace := entity.Workspace{}
-	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)
+	ws := entity.Workspace{}
+	err = s.Session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &ws)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +70,7 @@ func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker
 	})
 
 	pod := factory.NewPod(nb)
-	pod = AttachWorkspaceVolumes(pod, &workspace)
+	workspace.AttachVolumesToPod(&ws, &pod)
 
 	// Start tracking first
 	_, err = s.getPod(nb)

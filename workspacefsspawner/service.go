@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
+	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/volumechecker"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
@@ -228,7 +229,8 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
 	//Deploy a Check POD
-	pod := volumechecker.NewVolumeCheckPod(id, volume)
+	pod := volumechecker.NewVolumeCheckPod(id)
+	kvolume.AttachVolumesToPod(volume, &pod)
 	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
 	if err != nil {
 		return err

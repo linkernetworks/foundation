@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
+	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
@@ -78,6 +79,11 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 			"workspace": ws.ID.Hex(),
 		})
 
+		// attach the primary volumes to the pod spec
+		if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+			return nil, err
+		}
+
 		tracker, err = s.Updater.TrackAndSync(ws)
 		if err != nil {
 			return nil, err
@@ -105,6 +111,11 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 		"service": "workspce-fs",
 		"user":    ws.Owner.Hex(),
 	})
+
+	// attach the primary volumes to the pod spec
+	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+		return nil, err
+	}
 
 	tracker, err = s.Updater.TrackAndSync(ws)
 	if err != nil {

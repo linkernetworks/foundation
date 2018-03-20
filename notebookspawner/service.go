@@ -46,7 +46,7 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
-			MongoService:   service,
+			Mongo:          service,
 			CollectionName: entity.NotebookCollectionName,
 			PortName:       "notebook",
 		},

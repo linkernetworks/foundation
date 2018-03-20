@@ -38,8 +38,8 @@ type WorkspacePodDeployment interface {
 }
 
 type WorkspaceFileServerSpawner struct {
-	Config       config.Config
-	MongoService *mongo.Service
+	Config config.Config
+	Mongo  *mongo.Service
 
 	Updater   *podproxy.DocumentProxyInfoUpdater
 	clientset *kubernetes.Clientset
@@ -48,15 +48,15 @@ type WorkspaceFileServerSpawner struct {
 
 func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *WorkspaceFileServerSpawner {
 	return &WorkspaceFileServerSpawner{
-		Config:       c,
-		MongoService: m,
-		namespace:    "default",
-		clientset:    clientset,
+		Config:    c,
+		Mongo:     m,
+		namespace: "default",
+		clientset: clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{
 			Clientset:      clientset,
 			Namespace:      "default",
 			Redis:          rds,
-			MongoService:   m,
+			Mongo:          m,
 			CollectionName: entity.WorkspaceCollectionName,
 			PortName:       fileserver.FileServerPortName,
 		},
@@ -210,7 +210,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 		},
 	}
 
-	session := s.MongoService.NewSession()
+	session := s.Mongo.NewSession()
 	defer session.Close()
 	session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil

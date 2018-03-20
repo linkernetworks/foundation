@@ -55,7 +55,7 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 
 func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
 	session := s.Mongo.NewSession()
-	defer session.Clone()
+	defer session.Close()
 
 	workspace := entity.Workspace{}
 	err = session.FindOne(entity.WorkspaceCollectionName, bson.M{"_id": nb.WorkspaceID}, &workspace)

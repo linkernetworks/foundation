@@ -211,7 +211,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	}
 
 	session := s.MongoService.NewSession()
-	defer session.Clone()
+	defer session.Close()
 	session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
 }

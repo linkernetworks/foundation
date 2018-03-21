@@ -17,7 +17,7 @@ type ServiceConfig interface {
 	GetInterface() string
 	Unresolved() bool
 	GetPublic() ServiceConfig
-	LoadDefaults() error
+	DefaultLoader
 }
 
 type Config struct {
@@ -105,6 +105,57 @@ func SetupAddressFromInterface(c *Config) {
 	SetupServiceAddressFromInterface(c.Memcached)
 }
 
+func CanLoadDefaults(c interface{}) bool {
+	rf := reflect.ValueOf(c)
+	if rf.Kind() != reflect.Ptr {
+		return false
+	}
+	if rf.IsNil() {
+		return false
+	}
+	inf := rf.Interface()
+	if inf == nil {
+		return false
+	}
+	_, ok := inf.(DefaultLoader)
+	return ok
+}
+
+// LoadDefaults iterates the config fields and calls the load default if it
+// implements the interface.
+func LoadDefaults(c interface{}) {
+	rp := reflect.ValueOf(c)
+	if rp.Kind() == reflect.Struct {
+		panic(fmt.Errorf("You can not pass value to LoadDefaults. It needs a pointer"))
+	}
+	if CanLoadDefaults(rp.Interface()) {
+		if inf := rp.Interface(); inf != nil {
+			if loader, ok := inf.(DefaultLoader); ok {
+				if err := loader.LoadDefaults(); err != nil {
+					panic(fmt.Errorf("failed to load default values: %v", err))
+				}
+				return
+			}
+		}
+	}
+
+	var rv = reflect.ValueOf(c).Elem()
+	for i := 0; i < rv.NumField(); i++ {
+		rf := rv.Field(i)
+		if CanLoadDefaults(rf.Interface()) {
+			var inf = rf.Interface()
+			if inf == nil {
+				continue
+			}
+			if loader, ok := inf.(DefaultLoader); ok {
+				if err := loader.LoadDefaults(); err != nil {
+					panic(fmt.Errorf("failed to load default values: %v", err))
+				}
+			}
+		}
+	}
+}
+
 func Read(path string) (c Config, err error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -116,6 +167,9 @@ func Read(path string) (c Config, err error) {
 		return c, fmt.Errorf("Failed to load the config file: %v\n", err)
 	}
 	SetupAddressFromInterface(&c)
+
+	LoadDefaults(&c)
+
 	return c, nil
 }
 

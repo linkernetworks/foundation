@@ -121,16 +121,14 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 
 func (suite *WorkspaceServiceSuite) TestCheckAvailability() {
 	id := bson.NewObjectId().Hex()
-	err := suite.WsService.CheckAvailability(id, []container.Volume{}, 15)
+	err := suite.WsService.CheckAvailability(id, nil, 15)
 	assert.NoError(suite.T(), err)
 
-	err = suite.WsService.CheckAvailability(id, []container.Volume{
-		{
-			ClaimName: "unexist",
-			VolumeMount: container.VolumeMount{
-				Name:      "unexist",
-				MountPath: "Fake",
-			},
+	err = suite.WsService.CheckAvailability(id, &container.Volume{
+		ClaimName: "nonexistent",
+		VolumeMount: container.VolumeMount{
+			Name:      "nonexistent",
+			MountPath: "Fake",
 		},
 	}, 10)
 	assert.Error(suite.T(), err)

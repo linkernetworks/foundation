@@ -229,6 +229,10 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume *container.Volume, timeout int) error {
 	//Deploy a Check POD
+	if volume == nil {
+		return nil
+	}
+
 	pod := volumechecker.NewVolumeCheckPod(id)
 	kvolume.AttachVolumeToPod(volume, &pod)
 	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)

@@ -52,8 +52,10 @@ PIPE:
 // emit chan message to socket event
 func (c *Client) write() {
 	for msg := range c.C {
-		if err := c.Socket.Emit(c.toEvent, msg); err != nil {
-			logger.Errorf("socketio: emit error. %s", err.Error())
+		if c.Socket != nil {
+			if err := c.Socket.Emit(c.toEvent, msg); err != nil {
+				logger.Errorf("socketio: event '%s' emit error: %v", c.toEvent, err)
+			}
 		}
 	}
 }

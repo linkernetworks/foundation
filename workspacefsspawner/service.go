@@ -1,9 +1,10 @@
 package workspacefsspawner
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"errors"
 	"sync"
+
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
@@ -12,7 +13,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
-	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 	"k8s.io/apimachinery/pkg/fields"
@@ -222,17 +222,4 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	}
 	s.Session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
-}
-
-func (s *WorkspaceFileServerSpawner) GetKubeVolume(ws *entity.Workspace) (volumes []container.Volume, err error) {
-	volumes = append(volumes, container.Volume{
-		ClaimName: ws.PrimaryVolumeParams.Name,
-		VolumeMount: container.VolumeMount{
-			Name:      ws.PrimaryVolumeParams.Name,
-			MountPath: fileserver.MainVolumeMountPoint,
-		},
-	})
-
-	volumes = append(volumes, ws.SecondaryVolumes...)
-	return volumes, nil
 }

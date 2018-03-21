@@ -48,12 +48,10 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 		namespace: "default",
 		clientset: clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{
-			Clientset:      clientset,
-			Namespace:      "default",
-			Redis:          rds,
-			Mongo:          service,
-			CollectionName: entity.NotebookCollectionName,
-			PortName:       "notebook",
+			Clientset: clientset,
+			Namespace: "default",
+			Redis:     rds,
+			PortName:  "notebook",
 		},
 	}
 }

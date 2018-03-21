@@ -96,7 +96,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
 	t.Logf("starting notebook: %v", notebook.ID)
-	tracker, err := spawner.Start(&notebook)
+	tracker, err := spawner.Start(&ws, &notebook)
 	assert.NoError(t, err)
 
 	t.Logf("waiting for pod phase")
@@ -106,7 +106,7 @@ func TestNotebookSpawnerService(t *testing.T) {
 	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)
 
-	_, err = spawner.Stop(&notebook)
+	_, err = spawner.Stop(&ws, &notebook)
 	assert.NoError(t, err)
 
 	err = spawner.Updater.Sync(&notebook)

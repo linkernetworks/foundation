@@ -76,7 +76,7 @@ func (s *NotebookSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
 	return pod, nil
 }
 
-func (s *NotebookSpawnerService) Start(nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
+func (s *NotebookSpawnerService) Start(ws *entity.Workspace, nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
 	pod, err := s.NewPod(nb)
 
 	if err != nil {
@@ -113,7 +113,7 @@ func (s *NotebookSpawnerService) getPod(doc types.DeploymentIDProvider) (*v1.Pod
 }
 
 // Stop returns nil if it's already stopped
-func (s *NotebookSpawnerService) Stop(notebook *entity.Notebook) (*podtracker.PodTracker, error) {
+func (s *NotebookSpawnerService) Stop(ws *entity.Workspace, notebook *entity.Notebook) (*podtracker.PodTracker, error) {
 	// if it's not created
 	_, err := s.getPod(notebook)
 	if kerrors.IsNotFound(err) {

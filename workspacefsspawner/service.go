@@ -83,7 +83,6 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 			return nil, err
 		}
 
-		tracker, err = s.Updater.TrackAndSync(ws)
 		tracker, err = s.Updater.TrackAndSyncUpdate(ws)
 		if err != nil {
 			return nil, err

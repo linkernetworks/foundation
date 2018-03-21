@@ -227,10 +227,10 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	return tracker, nil
 }
 
-func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []container.Volume, timeout int) error {
+func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume *container.Volume, timeout int) error {
 	//Deploy a Check POD
 	pod := volumechecker.NewVolumeCheckPod(id)
-	kvolume.AttachVolumesToPod(volume, &pod)
+	kvolume.AttachVolumeToPod(volume, &pod)
 	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
 	if err != nil {
 		return err
@@ -240,6 +240,7 @@ func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume []conta
 	//Wait the POD
 	o := make(chan *v1.Pod)
 	stop := make(chan struct{})
+	defer close(stop)
 	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod, ok := newObj.(*v1.Pod)

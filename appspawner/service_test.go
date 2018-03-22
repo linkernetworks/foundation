@@ -87,8 +87,12 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	defer session.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
-	pod, err := spawner.NewPod(&notebook)
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
+	assert.Equal(t, "notebook-"+ws.ID.Hex(), wsApp.PodName())
+
+	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)
+	t.Logf("pod=%s", wsApp.PodName())
 
 	for _, v := range pod.Spec.Volumes {
 		t.Logf("Added Volume: %s", v.Name)
@@ -104,21 +108,24 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Volumes))
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
-	t.Logf("Starting notebook: %v", notebook.ID)
-	_, err = spawner.Start(&ws, &notebook)
+	t.Logf("Starting notebook: pod=%s", wsApp.PodName())
+	_, err = spawner.Start(&ws, app)
 	assert.NoError(t, err)
 
-	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, notebook.DeploymentID())
+	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, wsApp.PodName())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 
-	t.Logf("Syncing notebook document")
-	err = spawner.Updater.Sync(&notebook)
+	t.Logf("Syncing notebook document: pod=%s", wsApp.PodName())
+	err = spawner.Updater.Sync(wsApp)
 	assert.NoError(t, err)
 
-	_, err = spawner.Stop(&ws, &notebook)
+	t.Logf("Stoping notebook document: pod=%s", wsApp.PodName())
+	_, err = spawner.Stop(&ws, app)
 	assert.NoError(t, err)
 
-	err = spawner.Updater.Sync(&notebook)
+	err = spawner.Updater.Sync(wsApp)
 	assert.NoError(t, err)
 
+	err = spawner.Updater.Reset(wsApp)
+	assert.NoError(t, err)
 }

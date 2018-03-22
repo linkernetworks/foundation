@@ -2,13 +2,14 @@ package appspawner
 
 import (
 	"errors"
+	"fmt"
 
 	// "bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
-	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
 	// "bitbucket.org/linkernetworks/aurora/src/types/container"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -26,9 +27,10 @@ import (
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type AppSpawnerService struct {
-	Config  config.Config
-	Mongo   *mongo.Service
-	Factory *NotebookPodFactory
+	Config config.Config
+	Mongo  *mongo.Service
+
+	Factories map[string]entity.WorkspaceAppPodFactory
 
 	Updater *podproxy.DocumentProxyInfoUpdater
 
@@ -38,10 +40,13 @@ type AppSpawnerService struct {
 
 func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawnerService {
 	return &AppSpawnerService{
-		Factory: &NotebookPodFactory{
-			WorkDir: c.Jupyter.WorkingDir,
-			Bind:    c.Jupyter.Address,
-			Port:    DefaultNotebookContainerPort,
+		Factories: map[string]entity.WorkspaceAppPodFactory{
+			"notebook": &podfactory.NotebookPodFactory{
+				Config:  c.Jupyter,
+				WorkDir: c.Jupyter.WorkingDir,
+				Bind:    c.Jupyter.Address,
+				Port:    podfactory.DefaultNotebookContainerPort,
+			},
 		},
 		Config:    c,
 		Mongo:     service,
@@ -56,43 +61,40 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 	}
 }
 
-func (s *AppSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
-	session := s.Mongo.NewSession()
-	defer session.Close()
-
-	pod := s.Factory.NewPod(nb)
-
-	// load the workspace from the mongodb
-	ws, err := workspace.Load(session, nb.WorkspaceID)
-	if err != nil {
-		return pod, err
+func (s *AppSpawnerService) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
+	factory, ok := s.Factories[app.ContainerApp.Type]
+	if !ok {
+		return nil, fmt.Errorf("pod factory for type '%s' is not defined.", app.ContainerApp.Type)
 	}
+	pod := factory.NewPod(app)
 
 	// attach the primary volumes to the pod spec
-	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+	if err := workspace.AttachVolumesToPod(app.Workspace, pod); err != nil {
 		return pod, err
 	}
 
 	return pod, nil
 }
 
-func (s *AppSpawnerService) Start(ws *entity.Workspace, nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
-	pod, err := s.NewPod(nb)
+func (s *AppSpawnerService) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+
+	pod, err := s.NewPod(wsApp)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Start tracking first
-	_, err = s.getPod(nb)
+	_, err = s.getPod(wsApp.PodName())
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.Updater.TrackAndSyncUpdate(nb)
+		tracker, err = s.Updater.TrackAndSyncUpdate(wsApp)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(pod)
 		if err != nil {
 			tracker.Stop()
 			return nil, err
@@ -104,33 +106,34 @@ func (s *AppSpawnerService) Start(ws *entity.Workspace, nb *entity.Notebook) (tr
 		return nil, err
 	}
 
-	tracker, err = s.Updater.TrackAndSyncUpdate(nb)
-	return tracker, err
+	return s.Updater.TrackAndSyncUpdate(wsApp)
 }
 
-func (s *AppSpawnerService) getPod(doc types.DeploymentIDProvider) (*v1.Pod, error) {
-	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
+func (s *AppSpawnerService) getPod(name string) (*v1.Pod, error) {
+	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
-func (s *AppSpawnerService) Stop(ws *entity.Workspace, notebook *entity.Notebook) (*podtracker.PodTracker, error) {
+func (s *AppSpawnerService) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podtracker.PodTracker, error) {
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+
 	// if it's not created
-	_, err := s.getPod(notebook)
+	_, err := s.getPod(wsApp.PodName())
 	if kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		return nil, err
 	}
 
-	s.Updater.Reset(notebook)
+	s.Updater.Reset(wsApp)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	tracker, err := s.Updater.TrackAndSyncDelete(notebook)
+	tracker, err := s.Updater.TrackAndSyncDelete(wsApp)
 	if err != nil {
 		return nil, err
 	}
 
-	podName := notebook.DeploymentID()
+	podName := wsApp.PodName()
 	err = s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
 	if err != nil {
 		defer tracker.Stop()

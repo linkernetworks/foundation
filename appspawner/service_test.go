@@ -31,7 +31,6 @@ func TestNotebookSpawnerService(t *testing.T) {
 		return
 	}
 
-	var notebookImage = "jupyter/minimal-notebook"
 	var err error
 
 	//Get mongo service
@@ -74,18 +73,6 @@ func TestNotebookSpawnerService(t *testing.T) {
 
 	app := ws.FindApp("jupyter/tensorflow-notebook")
 	assert.NotNil(t, app)
-
-	notebookID := bson.NewObjectId()
-	notebook := entity.Notebook{
-		ID:          notebookID,
-		Image:       notebookImage,
-		WorkspaceID: ws.ID,
-		Url:         cf.Jupyter.BaseURL + "/" + notebookID.Hex(),
-		CreatedBy:   userId,
-	}
-	err = session.C(entity.NotebookCollectionName).Insert(notebook)
-	assert.NoError(t, err)
-	defer session.C(entity.NotebookCollectionName).Remove(bson.M{"_id": notebook.ID})
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
 	assert.Equal(t, "notebook-"+ws.ID.Hex(), wsApp.PodName())

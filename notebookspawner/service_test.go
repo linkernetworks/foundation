@@ -6,6 +6,7 @@ import (
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
@@ -95,14 +96,14 @@ func TestNotebookSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Volumes))
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
-	t.Logf("starting notebook: %v", notebook.ID)
-	tracker, err := spawner.Start(&ws, &notebook)
+	t.Logf("Starting notebook: %v", notebook.ID)
+	_, err = spawner.Start(&ws, &notebook)
 	assert.NoError(t, err)
 
-	t.Logf("waiting for pod phase")
+	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, notebook.DeploymentID())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 
-	t.Logf("syncing notebook document")
+	t.Logf("Syncing notebook document")
 	err = spawner.Updater.Sync(&notebook)
 	assert.NoError(t, err)
 

@@ -14,19 +14,11 @@ import (
 // The container port of jupyter notebook
 const DefaultNotebookContainerPort = 8888
 
-type NotebookPodParameters struct {
+// NotebookPodFactory handle the process of creating the jupyter notebook pod
+type NotebookPodFactory struct {
 	WorkDir string
 	Bind    string
 	Port    int32
-}
-
-// NotebookPodFactory handle the process of creating the jupyter notebook pod
-type NotebookPodFactory struct {
-	params NotebookPodParameters
-}
-
-func NewNotebookPodFactory(params NotebookPodParameters) *NotebookPodFactory {
-	return &NotebookPodFactory{params}
 }
 
 // NewPod returns the Pod object of the jupyternotebook
@@ -70,9 +62,9 @@ func (nb *NotebookPodFactory) NewPod(notebook *entity.Notebook) v1.Pod {
 					ImagePullPolicy: v1.PullIfNotPresent,
 					Args: []string{
 						"start-notebook.sh",
-						"--notebook-dir=" + nb.params.WorkDir,
-						"--ip=" + nb.params.Bind,
-						"--port=" + strconv.Itoa(int(nb.params.Port)),
+						"--notebook-dir=" + nb.WorkDir,
+						"--ip=" + nb.Bind,
+						"--port=" + strconv.Itoa(int(nb.Port)),
 						"--NotebookApp.base_url=" + notebook.Url,
 						"--NotebookApp.token=''",
 						"--NotebookApp.allow_origin='*'",
@@ -84,7 +76,7 @@ func (nb *NotebookPodFactory) NewPod(notebook *entity.Notebook) v1.Pod {
 					Ports: []v1.ContainerPort{
 						{
 							Name:          "notebook",
-							ContainerPort: nb.params.Port,
+							ContainerPort: nb.Port,
 							Protocol:      v1.ProtocolTCP,
 						},
 					},

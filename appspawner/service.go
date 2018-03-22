@@ -38,11 +38,11 @@ type AppSpawnerService struct {
 
 func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawnerService {
 	return &AppSpawnerService{
-		Factory: NewNotebookPodFactory(NotebookPodParameters{
+		Factory: &NotebookPodFactory{
 			WorkDir: c.Jupyter.WorkingDir,
 			Bind:    c.Jupyter.Address,
 			Port:    DefaultNotebookContainerPort,
-		}),
+		},
 		Config:    c,
 		Mongo:     service,
 		namespace: "default",

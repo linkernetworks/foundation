@@ -31,7 +31,8 @@ func (c *Client) KeepAlive(timeout time.Duration) {
 func (c *Client) read() {
 PIPE:
 	for {
-		switch v := c.Receive().(type) {
+		msg := c.Receive()
+		switch v := msg.(type) {
 		case redigo.Subscription:
 			logger.Infof("subscription: kind=%s channel=%s count=%d", v.Kind, v.Channel, v.Count)
 			if v.Count == 0 {

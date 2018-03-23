@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
+	"log"
 
 	"gopkg.in/mgo.v2"
 )
@@ -14,6 +15,7 @@ type Service struct {
 func New(url string) *Service {
 	session, err := mgo.Dial(url)
 	if err != nil {
+		log.Printf("Mongo Panic %v", err)
 		panic(err)
 	}
 	return &Service{

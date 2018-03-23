@@ -25,7 +25,7 @@ import (
 
 var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
-type AppSpawnerService struct {
+type AppSpawner struct {
 	Config config.Config
 
 	Factories map[string]entity.WorkspaceAppPodFactory
@@ -36,14 +36,11 @@ type AppSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawnerService {
-	return &AppSpawnerService{
+func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawner {
+	return &AppSpawner{
 		Factories: map[string]entity.WorkspaceAppPodFactory{
 			"notebook": &podfactory.NotebookPodFactory{
-				Config:  c.Jupyter,
-				WorkDir: c.Jupyter.WorkingDir,
-				Bind:    c.Jupyter.Address,
-				Port:    podfactory.DefaultNotebookContainerPort,
+				Config: c.Jupyter,
 			},
 		},
 		Config:    c,
@@ -58,7 +55,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *
 	}
 }
 
-func (s *AppSpawnerService) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
+func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	factory, ok := s.Factories[app.ContainerApp.Type]
 	if !ok {
 		return nil, fmt.Errorf("pod factory for type '%s' is not defined.", app.ContainerApp.Type)
@@ -73,7 +70,7 @@ func (s *AppSpawnerService) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	return pod, nil
 }
 
-func (s *AppSpawnerService) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
+func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
 
 	pod, err := s.NewPod(wsApp)
@@ -106,12 +103,12 @@ func (s *AppSpawnerService) Start(ws *entity.Workspace, app *entity.ContainerApp
 	return s.Updater.TrackAndSyncUpdate(wsApp)
 }
 
-func (s *AppSpawnerService) getPod(name string) (*v1.Pod, error) {
+func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
 }
 
 // Stop returns nil if it's already stopped
-func (s *AppSpawnerService) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podtracker.PodTracker, error) {
+func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podtracker.PodTracker, error) {
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
 
 	// if it's not created

@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
-	"log"
 
 	"gopkg.in/mgo.v2"
 )

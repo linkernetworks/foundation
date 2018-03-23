@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
-	"log"
 
 	"gopkg.in/mgo.v2"
 )
@@ -13,7 +12,6 @@ type Service struct {
 }
 
 func New(url string) *Service {
-	log.Printf("Try to connect to Mongodb at %s", url)
 	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)

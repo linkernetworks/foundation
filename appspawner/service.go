@@ -28,7 +28,6 @@ var ErrAlreadyStopped = errors.New("Notebook is already stopped")
 
 type AppSpawnerService struct {
 	Config config.Config
-	Mongo  *mongo.Service
 
 	Factories map[string]entity.WorkspaceAppPodFactory
 
@@ -38,7 +37,7 @@ type AppSpawnerService struct {
 	namespace string
 }
 
-func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawnerService {
+func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawnerService {
 	return &AppSpawnerService{
 		Factories: map[string]entity.WorkspaceAppPodFactory{
 			"notebook": &podfactory.NotebookPodFactory{
@@ -49,7 +48,6 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 			},
 		},
 		Config:    c,
-		Mongo:     service,
 		namespace: "default",
 		clientset: clientset,
 		Updater: &podproxy.DocumentProxyInfoUpdater{

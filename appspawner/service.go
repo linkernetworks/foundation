@@ -12,7 +12,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	// "bitbucket.org/linkernetworks/aurora/src/types/container"
 
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 

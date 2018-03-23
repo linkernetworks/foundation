@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var ErrAlreadyStopped = errors.New("Notebook is already stopped")
+var ErrAlreadyStopped = errors.New("Application is already stopped")
 
 type AppSpawner struct {
 	Config config.Config

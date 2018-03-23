@@ -25,7 +25,7 @@ const (
 	testingConfigPath = "../../../config/testing.json"
 )
 
-func TestNotebookSpawnerService(t *testing.T) {
+func TestAppSpawnerService(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return

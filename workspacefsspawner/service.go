@@ -41,7 +41,7 @@ type WorkspaceFileServerSpawner struct {
 	Config config.Config
 	Mongo  *mongo.Service
 
-	Updater   *podproxy.DocumentProxyInfoUpdater
+	Updater   *podproxy.ProxyAddressUpdater
 	clientset *kubernetes.Clientset
 	namespace string
 }
@@ -52,7 +52,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 		Mongo:     m,
 		namespace: "default",
 		clientset: clientset,
-		Updater: &podproxy.DocumentProxyInfoUpdater{
+		Updater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
 			Redis:     rds,

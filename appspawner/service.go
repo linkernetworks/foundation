@@ -30,7 +30,7 @@ type AppSpawner struct {
 
 	Factories map[string]entity.WorkspaceAppPodFactory
 
-	Updater *podproxy.DocumentProxyInfoUpdater
+	Updater *podproxy.ProxyAddressUpdater
 
 	clientset *kubernetes.Clientset
 	namespace string
@@ -46,7 +46,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *
 		Config:    c,
 		namespace: "default",
 		clientset: clientset,
-		Updater: &podproxy.DocumentProxyInfoUpdater{
+		Updater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
 			Redis:     rds,

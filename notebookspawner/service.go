@@ -30,7 +30,7 @@ type NotebookSpawnerService struct {
 	Mongo   *mongo.Service
 	Factory *NotebookPodFactory
 
-	Updater *podproxy.DocumentProxyInfoUpdater
+	Updater *podproxy.ProxyAddressUpdater
 
 	clientset *kubernetes.Clientset
 	namespace string
@@ -47,7 +47,7 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 		Mongo:     service,
 		namespace: "default",
 		clientset: clientset,
-		Updater: &podproxy.DocumentProxyInfoUpdater{
+		Updater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
 			Redis:     rds,

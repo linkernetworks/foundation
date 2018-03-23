@@ -43,11 +43,7 @@ func TestAppSpawnerService(t *testing.T) {
 	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
 
-	spawner := New(cf, mongoService, clientset, redisService)
-
-	// proxyURL := "/v1/notebooks/proxy/"
-	session := mongoService.NewSession()
-	defer session.Close()
+	spawner := New(cf, clientset, redisService)
 
 	userId := bson.NewObjectId()
 
@@ -62,6 +58,9 @@ func TestAppSpawnerService(t *testing.T) {
 		},
 	}
 
+	session := mongoService.NewSession()
+	defer session.Close()
+
 	err = session.C(entity.WorkspaceCollectionName).Insert(ws)
 	assert.NoError(t, err)
 	defer session.C(entity.WorkspaceCollectionName).Remove(bson.M{"_id": ws.ID})
@@ -75,7 +74,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	assert.Equal(t, "notebook-"+ws.ID.Hex(), wsApp.PodName())
+	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-e5c2c1c9", wsApp.PodName())
 
 	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)

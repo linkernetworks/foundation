@@ -118,7 +118,6 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 
 		var session = s.mongo.NewSession()
 		defer session.Close()
-
 		if err := workspace.AddInstance(session, ws.ID, wsApp.PodName()); err != nil {
 			logger.Errorf("failed to store instance id: %v", err)
 		}
@@ -151,20 +150,28 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 
 	s.Updater.Reset(wsApp)
 
+	var session = s.mongo.NewSession()
+	defer session.Close()
+	if err := workspace.RemoveInstance(session, ws.ID, wsApp.PodName()); err != nil {
+		logger.Errorf("failed to remove instance id: %v", err)
+	}
+
 	// We found the pod, let's start a tracker first, and then delete the pod
 	tracker, err := s.Updater.TrackAndSyncDelete(wsApp)
 	if err != nil {
 		return nil, err
 	}
 
-	podName := wsApp.PodName()
-	err = s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{})
-	if err != nil {
+	var podName = wsApp.PodName()
+	var gracePeriodSeconds int64 = 0
+
+	if err := s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriodSeconds}); err != nil {
 		defer tracker.Stop()
 		if kerrors.IsNotFound(err) {
 			return nil, ErrAlreadyStopped
 		}
 		return nil, err
 	}
+
 	return tracker, nil
 }

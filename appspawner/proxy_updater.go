@@ -33,9 +33,6 @@ type ProxyAddressUpdater struct {
 	Namespace string
 
 	Cache *podproxy.ProxyCache
-
-	// The PortName of the Pod
-	PortName string
 }
 
 func (u *ProxyAddressUpdater) getPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
@@ -179,15 +176,18 @@ func (u *ProxyAddressUpdater) Reset(app *entity.WorkspaceApp) error {
 // SyncWith updates the given document's "backend" and "pod" field by the given
 // pod object.
 func (u *ProxyAddressUpdater) SyncWithPod(app *entity.WorkspaceApp, pod *v1.Pod) (err error) {
-	logger.Debugf("podproxy: syncing document proxy info: %s", app.DeploymentID())
+	if len(app.Container.ExposePortName) > 0 {
+		logger.Debugf("podproxy: syncing document proxy info: %s", app.DeploymentID())
+		port, ok := podutil.FindContainerPort(pod, app.Container.ExposePortName)
+		if !ok {
+			return ErrPortNotFound
+		}
 
-	port, ok := podutil.FindContainerPort(pod, u.PortName)
-	if !ok {
-		return ErrPortNotFound
+		backend := NewProxyBackendFromPod(pod, port)
+		return u.Cache.SetAddress(app.DeploymentID(), backend.Addr())
 	}
 
-	backend := NewProxyBackendFromPod(pod, port)
-	return u.Cache.SetAddress(app.DeploymentID(), backend.Addr())
+	return nil
 }
 
 // NewProxyBackendFromPod creates the proxy backend struct from the pod object.

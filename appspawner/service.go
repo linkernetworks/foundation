@@ -118,7 +118,7 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 
 		var session = s.mongo.NewSession()
 		defer session.Close()
-		if err := workspace.AddInstance(session, ws.ID, wsApp.PodName()); err != nil {
+		if err := workspace.AddInstances(session, ws.ID, wsApp.PodName()); err != nil {
 			logger.Errorf("failed to store instance id: %v", err)
 		}
 
@@ -152,7 +152,7 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 
 	var session = s.mongo.NewSession()
 	defer session.Close()
-	if err := workspace.RemoveInstance(session, ws.ID, wsApp.PodName()); err != nil {
+	if err := workspace.RemoveInstances(session, ws.ID, wsApp.PodName()); err != nil {
 		logger.Errorf("failed to remove instance id: %v", err)
 	}
 

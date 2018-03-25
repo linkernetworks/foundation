@@ -76,6 +76,17 @@ func (s *NotebookSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
 	return pod, nil
 }
 
+func (s *NotebookSpawnerService) IsRunning(ws *entity.Workspace, nb *entity.Notebook) (bool, error) {
+	pod, err := s.getPod(nb)
+	if err != nil {
+		return false, err
+	}
+	if pod.Status.Phase == "Running" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (s *NotebookSpawnerService) Start(ws *entity.Workspace, nb *entity.Notebook) (tracker *podtracker.PodTracker, err error) {
 	pod, err := s.NewPod(nb)
 

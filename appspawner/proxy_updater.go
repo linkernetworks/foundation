@@ -21,15 +21,6 @@ import (
 
 var ErrPortNotFound = errors.New("Container port not found.")
 
-func NewPodInfo(pod *v1.Pod) *entity.PodInfo {
-	return &entity.PodInfo{
-		Phase:     podproxy.HandlePodPhase(pod),
-		Message:   pod.Status.Message,
-		Reason:    pod.Status.Reason,
-		StartTime: pod.Status.StartTime,
-	}
-}
-
 type ProxyAddressUpdater struct {
 	Clientset *kubernetes.Clientset
 	Namespace string
@@ -132,9 +123,7 @@ func (u *ProxyAddressUpdater) NewSyncHandler(app *entity.WorkspaceApp) func(pod 
 
 func (u *ProxyAddressUpdater) TrackAndSyncAdd(app *entity.WorkspaceApp) (*podtracker.PodTracker, error) {
 	podName := app.DeploymentID()
-
 	tracker := podtracker.New(u.Clientset, u.Namespace, podName)
-
 	tracker.TrackAdd(u.NewSyncHandler(app))
 	return tracker, nil
 }

@@ -79,6 +79,9 @@ func (s *NotebookSpawnerService) NewPod(nb *entity.Notebook) (v1.Pod, error) {
 func (s *NotebookSpawnerService) IsRunning(ws *entity.Workspace, nb *entity.Notebook) (bool, error) {
 	pod, err := s.getPod(nb)
 	if err != nil {
+		if kerrors.IsNotFound(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	if pod.Status.Phase == "Running" {

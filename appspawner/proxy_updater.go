@@ -2,6 +2,8 @@ package appspawner
 
 import (
 	"errors"
+	"net"
+	"strconv"
 
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
@@ -183,18 +185,8 @@ func (u *ProxyAddressUpdater) UpdateFromPod(app *entity.WorkspaceApp, pod *v1.Po
 			return ErrPortNotFound
 		}
 
-		backend := NewProxyBackendFromPod(pod, port)
-		return u.Cache.SetAddress(app.DeploymentID(), backend.Addr())
+		return u.Cache.SetAddress(app.DeploymentID(), net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(port)))
 	}
 
 	return nil
-}
-
-// NewProxyBackendFromPod creates the proxy backend struct from the pod object.
-func NewProxyBackendFromPod(pod *v1.Pod, port int32) *entity.ProxyBackend {
-	return &entity.ProxyBackend{
-		Connected: pod.Status.PodIP != "",
-		Host:      pod.Status.PodIP,
-		Port:      int(port),
-	}
 }

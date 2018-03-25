@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -103,16 +104,23 @@ func TestAppSpawnerService(t *testing.T) {
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 
 	t.Logf("Syncing notebook document: pod=%s", wsApp.PodName())
-	err = spawner.Updater.Sync(wsApp)
+	err = spawner.AddressUpdater.Sync(wsApp)
 	assert.NoError(t, err)
+
+	var conn = redisService.GetConnection()
+	addr, err := conn.GetString(podproxy.DefaultPrefix + wsApp.PodName() + ":address")
+	assert.NoError(t, err)
+	assert.True(t, len(addr) > 0)
+	t.Logf("pod address: %s", addr)
 
 	t.Logf("Stoping notebook document: pod=%s", wsApp.PodName())
 	_, err = spawner.Stop(&ws, app)
 	assert.NoError(t, err)
 
-	err = spawner.Updater.Sync(wsApp)
+	err = spawner.AddressUpdater.Sync(wsApp)
 	assert.NoError(t, err)
 
-	err = spawner.Updater.Reset(wsApp)
+	err = spawner.AddressUpdater.Reset(wsApp)
 	assert.NoError(t, err)
+
 }

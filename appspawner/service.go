@@ -25,10 +25,14 @@ import (
 
 var ErrAlreadyStopped = errors.New("Application is already stopped")
 
+type WorkspaceAppPodFactory interface {
+	NewPod(app *entity.WorkspaceApp) *v1.Pod
+}
+
 type AppSpawner struct {
 	Config config.Config
 
-	Factories map[string]entity.WorkspaceAppPodFactory
+	Factories map[string]WorkspaceAppPodFactory
 
 	Updater *podproxy.ProxyAddressUpdater
 
@@ -38,7 +42,7 @@ type AppSpawner struct {
 
 func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawner {
 	return &AppSpawner{
-		Factories: map[string]entity.WorkspaceAppPodFactory{
+		Factories: map[string]WorkspaceAppPodFactory{
 			"notebook": &podfactory.NotebookPodFactory{
 				Config: c.Jupyter,
 			},
@@ -68,6 +72,20 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	}
 
 	return pod, nil
+}
+
+func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+	podName := wsApp.PodName()
+	pod, err := s.getPod(podName)
+	if err != nil {
+		return false, err
+	}
+	if pod.Status.Phase == "Running" {
+		s.Updater.SyncWithPod(wsApp, pod)
+		return true, nil
+	}
+	return false, nil
 }
 
 func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {

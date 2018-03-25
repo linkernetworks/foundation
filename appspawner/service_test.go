@@ -74,7 +74,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-e5c2c1c9", wsApp.PodName())
+	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 
 	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)
@@ -98,6 +98,7 @@ func TestAppSpawnerService(t *testing.T) {
 	_, err = spawner.Start(&ws, app)
 	assert.NoError(t, err)
 
+	// allocattte anew podtracker to track the pod is running
 	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, wsApp.PodName())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 

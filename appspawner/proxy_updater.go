@@ -185,7 +185,7 @@ func (u *ProxyAddressUpdater) UpdateFromPod(app *entity.WorkspaceApp, pod *v1.Po
 			return ErrPortNotFound
 		}
 
-		return u.Cache.SetAddress(app.DeploymentID(), net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(port)))
+		return u.Cache.SetAddress(app.DeploymentID(), net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(int(port))))
 	}
 
 	return nil

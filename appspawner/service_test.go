@@ -98,6 +98,7 @@ func TestAppSpawnerService(t *testing.T) {
 	_, err = spawner.Start(&ws, app)
 	assert.NoError(t, err)
 
+	// allocattte anew podtracker to track the pod is running
 	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, wsApp.PodName())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 

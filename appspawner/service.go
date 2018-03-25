@@ -35,7 +35,7 @@ type AppSpawner struct {
 
 	Factories map[string]WorkspaceAppPodFactory
 
-	Updater *podproxy.ProxyAddressUpdater
+	AddressUpdater *podproxy.ProxyAddressUpdater
 
 	mongo *mongo.Service
 
@@ -52,7 +52,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 		namespace: "default",
 		clientset: clientset,
 		mongo:     m,
-		Updater: &podproxy.ProxyAddressUpdater{
+		AddressUpdater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
 			PortName:  "notebook",
@@ -89,7 +89,7 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 	_, err = s.getPod(wsApp.PodName())
 	if kerrors.IsNotFound(err) {
 		// Pod not found. Start a pod for notebook in workspace(batch)
-		tracker, err = s.Updater.TrackAndSyncUpdate(wsApp)
+		tracker, err = s.AddressUpdater.TrackAndSyncUpdate(wsApp)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 		return nil, err
 	}
 
-	return s.Updater.TrackAndSyncUpdate(wsApp)
+	return s.AddressUpdater.TrackAndSyncUpdate(wsApp)
 }
 
 func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
@@ -124,7 +124,7 @@ func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (
 		return false, err
 	}
 	if pod.Status.Phase == "Running" {
-		s.Updater.SyncWithPod(wsApp, pod)
+		s.AddressUpdater.SyncWithPod(wsApp, pod)
 		return true, nil
 	}
 	return false, nil
@@ -142,7 +142,7 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 		return nil, err
 	}
 
-	s.Updater.Reset(wsApp)
+	s.AddressUpdater.Reset(wsApp)
 
 	var session = s.mongo.NewSession()
 	defer session.Close()
@@ -151,7 +151,7 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 	}
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	tracker, err := s.Updater.TrackAndSyncDelete(wsApp)
+	tracker, err := s.AddressUpdater.TrackAndSyncDelete(wsApp)
 	if err != nil {
 		return nil, err
 	}

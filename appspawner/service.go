@@ -82,6 +82,7 @@ func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (
 		return false, err
 	}
 	if pod.Status.Phase == "Running" {
+		s.Updater.SyncWithPod(wsApp, pod)
 		return true, nil
 	}
 	return false, nil

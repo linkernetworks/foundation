@@ -43,7 +43,7 @@ func TestAppSpawnerService(t *testing.T) {
 	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
 
-	spawner := New(cf, clientset, redisService)
+	spawner := New(cf, clientset, redisService, mongoService)
 
 	userId := bson.NewObjectId()
 

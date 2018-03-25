@@ -4,15 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	// "bitbucket.org/linkernetworks/aurora/src/aurora/provision/path"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
-	// "bitbucket.org/linkernetworks/aurora/src/types/container"
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 
+	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
 	"k8s.io/client-go/kubernetes"
@@ -36,11 +37,13 @@ type AppSpawner struct {
 
 	Updater *podproxy.ProxyAddressUpdater
 
+	mongo *mongo.Service
+
 	clientset *kubernetes.Clientset
 	namespace string
 }
 
-func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *AppSpawner {
+func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m *mongo.Service) *AppSpawner {
 	return &AppSpawner{
 		Factories: map[string]WorkspaceAppPodFactory{
 			"notebook": &podfactory.NotebookPodFactory{
@@ -50,6 +53,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service) *
 		Config:    c,
 		namespace: "default",
 		clientset: clientset,
+		mongo:     m,
 		Updater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
@@ -111,6 +115,14 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 			tracker.Stop()
 			return nil, err
 		}
+
+		var session = s.mongo.NewSession()
+		defer session.Close()
+
+		if err := workspace.AddInstance(session, ws.ID, wsApp.PodName()); err != nil {
+			logger.Errorf("failed to store instance id: %v", err)
+		}
+
 		return tracker, nil
 
 	} else if err != nil {

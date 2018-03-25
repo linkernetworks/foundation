@@ -13,17 +13,20 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/types"
+	kvolume "bitbucket.org/linkernetworks/aurora/src/kubernetes/volume"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/volumechecker"
+	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/client-go/tools/cache"
 
 	//FIXME, wait PR#444
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	"gopkg.in/mgo.v2/bson"
 	v1 "k8s.io/api/core/v1"
@@ -222,4 +225,41 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 	defer session.Close()
 	session.C(entity.WorkspaceCollectionName).Update(q, m)
 	return tracker, nil
+}
+
+func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume *container.Volume, timeout int) error {
+	//Deploy a Check POD
+	if volume == nil {
+		return nil
+	}
+
+	pod := volumechecker.NewVolumeCheckPod(id)
+	kvolume.AttachVolumeToPod(volume, &pod)
+	newPod, err := s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+	if err != nil {
+		return err
+	}
+
+	defer s.clientset.CoreV1().Pods(s.namespace).Delete(newPod.ObjectMeta.Name, &metav1.DeleteOptions{})
+	//Wait the POD
+	o := make(chan *v1.Pod)
+	stop := make(chan struct{})
+	defer close(stop)
+	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod, ok := newObj.(*v1.Pod)
+			if !ok {
+				return
+			}
+			o <- pod
+		},
+	})
+	go controller.Run(stop)
+
+	logger.Info("Try to wait the POD", newPod.ObjectMeta.Name)
+	if err := volumechecker.Check(o, newPod.ObjectMeta.Name, timeout); err != nil {
+		return err
+	}
+
+	return nil
 }

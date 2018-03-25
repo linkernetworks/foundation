@@ -78,15 +78,22 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
 
-	pod, err := s.NewPod(wsApp)
+	// Start tracking first
+	runningPod, err := s.getPod(wsApp.PodName())
 
-	if err != nil {
-		return nil, err
+	if runningPod != nil && err == nil {
+		// already exist, we can update the information from the pod
+		s.AddressUpdater.UpdateFromPod(wsApp, runningPod)
+		return nil, nil
 	}
 
-	// Start tracking first
-	_, err = s.getPod(wsApp.PodName())
-	if kerrors.IsNotFound(err) {
+	if err != nil && kerrors.IsNotFound(err) {
+
+		pod, err := s.NewPod(wsApp)
+		if err != nil {
+			return nil, err
+		}
+
 		// Pod not found. Start a pod for notebook in workspace(batch)
 		tracker, err = s.AddressUpdater.TrackAndSyncUpdate(wsApp)
 		if err != nil {
@@ -106,13 +113,10 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 		}
 
 		return tracker, nil
-
-	} else if err != nil {
-		// unknown error
-		return nil, err
 	}
 
-	return s.AddressUpdater.TrackAndSyncUpdate(wsApp)
+	// unknown error
+	return nil, err
 }
 
 func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {

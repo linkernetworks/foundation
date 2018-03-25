@@ -59,7 +59,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 			Namespace: "default",
 			Redis:     rds,
 			PortName:  "notebook",
-			Cache:     &podproxy.NewDefaultProxyCache(rds),
+			Cache:     podproxy.NewDefaultProxyCache(rds),
 		},
 	}
 }

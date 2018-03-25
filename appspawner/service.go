@@ -156,8 +156,7 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 	}
 
 	var podName = wsApp.PodName()
-	var gracePeriodSeconds int64 = 0
-
+	var gracePeriodSeconds int64 = 1
 	if err := s.clientset.CoreV1().Pods(s.namespace).Delete(podName, &metav1.DeleteOptions{GracePeriodSeconds: &gracePeriodSeconds}); err != nil {
 		defer tracker.Stop()
 		if kerrors.IsNotFound(err) {

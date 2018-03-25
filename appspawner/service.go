@@ -123,7 +123,7 @@ func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (
 		return false, err
 	}
 	if pod.Status.Phase == "Running" {
-		s.AddressUpdater.SyncWithPod(wsApp, pod)
+		s.AddressUpdater.UpdateFromPod(wsApp, pod)
 		return true, nil
 	}
 	return false, nil

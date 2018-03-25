@@ -79,7 +79,7 @@ func (u *ProxyAddressUpdater) NewSyncHandler(app *entity.WorkspaceApp) func(pod 
 
 		switch phase {
 		case v1.PodPending:
-			if err := u.SyncWithPod(app, pod); err != nil {
+			if err := u.UpdateFromPod(app, pod); err != nil {
 				logger.Errorf("podproxy: failed to sync address: pod=%s error=%v", podName, err)
 			}
 
@@ -113,7 +113,7 @@ func (u *ProxyAddressUpdater) NewSyncHandler(app *entity.WorkspaceApp) func(pod 
 		// Stop the tracker if the status is completion status.
 		// Terminating won't be catched
 		case v1.PodRunning, v1.PodFailed, v1.PodSucceeded, v1.PodUnknown:
-			if err := u.SyncWithPod(app, pod); err != nil {
+			if err := u.UpdateFromPod(app, pod); err != nil {
 				logger.Errorf("podproxy: failed to sync document: pod=%s error=%v", podName, err)
 			}
 
@@ -166,7 +166,7 @@ func (u *ProxyAddressUpdater) Sync(app *entity.WorkspaceApp) error {
 		return err
 	}
 
-	return u.SyncWithPod(app, pod)
+	return u.UpdateFromPod(app, pod)
 }
 
 func (u *ProxyAddressUpdater) Reset(app *entity.WorkspaceApp) error {
@@ -175,7 +175,7 @@ func (u *ProxyAddressUpdater) Reset(app *entity.WorkspaceApp) error {
 
 // SyncWith updates the given document's "backend" and "pod" field by the given
 // pod object.
-func (u *ProxyAddressUpdater) SyncWithPod(app *entity.WorkspaceApp, pod *v1.Pod) (err error) {
+func (u *ProxyAddressUpdater) UpdateFromPod(app *entity.WorkspaceApp, pod *v1.Pod) (err error) {
 	if len(app.Container.ExposePortName) > 0 {
 		logger.Debugf("podproxy: syncing document proxy info: %s", app.DeploymentID())
 		port, ok := podutil.FindContainerPort(pod, app.Container.ExposePortName)

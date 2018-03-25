@@ -70,6 +70,19 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	return pod, nil
 }
 
+func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+	podName := wsApp.PodName()
+	pod, err := s.getPod(podName)
+	if err != nil {
+		return false, err
+	}
+	if pod.Status.Phase == "Running" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
 

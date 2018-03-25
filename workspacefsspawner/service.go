@@ -58,8 +58,8 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 		Updater: &podproxy.ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
-			Redis:     rds,
 			PortName:  fileserver.FileServerPortName,
+			Cache:     podproxy.NewDefaultProxyCache(rds),
 		},
 	}
 }

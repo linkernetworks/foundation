@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -43,7 +44,7 @@ func TestAppSpawnerService(t *testing.T) {
 	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
 
-	spawner := New(cf, clientset, redisService)
+	spawner := New(cf, clientset, redisService, mongoService)
 
 	userId := bson.NewObjectId()
 
@@ -74,7 +75,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-e5c2c1c9", wsApp.PodName())
+	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 
 	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)
@@ -98,20 +99,28 @@ func TestAppSpawnerService(t *testing.T) {
 	_, err = spawner.Start(&ws, app)
 	assert.NoError(t, err)
 
+	// allocattte anew podtracker to track the pod is running
 	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, wsApp.PodName())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 
 	t.Logf("Syncing notebook document: pod=%s", wsApp.PodName())
-	err = spawner.Updater.Sync(wsApp)
+	err = spawner.AddressUpdater.Sync(wsApp)
 	assert.NoError(t, err)
+
+	var conn = redisService.GetConnection()
+	addr, err := conn.GetString(podproxy.DefaultPrefix + wsApp.PodName() + ":address")
+	assert.NoError(t, err)
+	assert.True(t, len(addr) > 0)
+	t.Logf("pod address: %s", addr)
 
 	t.Logf("Stoping notebook document: pod=%s", wsApp.PodName())
 	_, err = spawner.Stop(&ws, app)
 	assert.NoError(t, err)
 
-	err = spawner.Updater.Sync(wsApp)
+	err = spawner.AddressUpdater.Sync(wsApp)
 	assert.NoError(t, err)
 
-	err = spawner.Updater.Reset(wsApp)
+	err = spawner.AddressUpdater.Reset(wsApp)
 	assert.NoError(t, err)
+
 }

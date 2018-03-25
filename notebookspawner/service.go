@@ -52,6 +52,7 @@ func New(c config.Config, service *mongo.Service, clientset *kubernetes.Clientse
 			Namespace: "default",
 			Redis:     rds,
 			PortName:  "notebook",
+			Cache:     &podproxy.NewDefaultProxyCache(rds),
 		},
 	}
 }

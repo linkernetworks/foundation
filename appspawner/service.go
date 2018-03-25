@@ -35,7 +35,7 @@ type AppSpawner struct {
 
 	Factories map[string]WorkspaceAppPodFactory
 
-	AddressUpdater *podproxy.ProxyAddressUpdater
+	AddressUpdater *ProxyAddressUpdater
 
 	mongo *mongo.Service
 
@@ -52,7 +52,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 		namespace: "default",
 		clientset: clientset,
 		mongo:     m,
-		AddressUpdater: &podproxy.ProxyAddressUpdater{
+		AddressUpdater: &ProxyAddressUpdater{
 			Clientset: clientset,
 			Namespace: "default",
 			PortName:  "notebook",

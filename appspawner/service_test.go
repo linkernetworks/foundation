@@ -74,7 +74,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-e5c2c1c9", wsApp.PodName())
+	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 
 	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)

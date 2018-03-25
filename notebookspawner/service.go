@@ -84,7 +84,8 @@ func (s *NotebookSpawnerService) IsRunning(ws *entity.Workspace, nb *entity.Note
 		}
 		return false, err
 	}
-	if pod.Status.Phase == "Running" {
+	if pod != nil && pod.Status.Phase == "Running" {
+		s.Updater.SyncWithPod(nb, pod)
 		return true, nil
 	}
 	return false, nil

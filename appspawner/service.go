@@ -46,9 +46,7 @@ type AppSpawner struct {
 func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m *mongo.Service) *AppSpawner {
 	return &AppSpawner{
 		Factories: map[string]WorkspaceAppPodFactory{
-			"notebook": &podfactory.NotebookPodFactory{
-				Config: c.Jupyter,
-			},
+			"notebook": &podfactory.NotebookPodFactory{Config: c.Jupyter},
 		},
 		Config:    c,
 		namespace: "default",
@@ -76,20 +74,6 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	}
 
 	return pod, nil
-}
-
-func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
-	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
-	podName := wsApp.PodName()
-	pod, err := s.getPod(podName)
-	if err != nil {
-		return false, err
-	}
-	if pod.Status.Phase == "Running" {
-		s.Updater.SyncWithPod(wsApp, pod)
-		return true, nil
-	}
-	return false, nil
 }
 
 func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
@@ -132,8 +116,18 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 	return s.Updater.TrackAndSyncUpdate(wsApp)
 }
 
-func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
-	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
+func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+	podName := wsApp.PodName()
+	pod, err := s.getPod(podName)
+	if err != nil {
+		return false, err
+	}
+	if pod.Status.Phase == "Running" {
+		s.Updater.SyncWithPod(wsApp, pod)
+		return true, nil
+	}
+	return false, nil
 }
 
 // Stop returns nil if it's already stopped
@@ -174,4 +168,8 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podt
 	}
 
 	return tracker, nil
+}
+
+func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
+	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
 }

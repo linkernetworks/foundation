@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"mime"
 	"os"
 	"os/exec"
@@ -13,6 +12,7 @@ import (
 	"regexp"
 	"time"
 
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 )
 
@@ -74,25 +74,25 @@ func CopyFile(srcDir, destDir, file string) error {
 	return err
 }
 
-//FolderCopy copy whole folder using os console command to avoid edge effect of golang file copy.
-func FolderCopy(src, dst string) error {
-	cmd := exec.Command("cp", "-a", src, dst)
+//Rsync copies the whole folder using os console command to avoid edge effect of golang file copy.
+func Rsync(src, dst string) error {
+	cmd := exec.Command("rsync", "-av", src, dst)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Println(err)
+		logger.Infoln("[rsync]", err)
 		return err
 	}
 	defer stdout.Close()
 	if err := cmd.Start(); err != nil {
-		log.Println(err)
+		logger.Infoln("[rsync]", err)
 		return err
 	}
 	opBytes, err := ioutil.ReadAll(stdout)
 	if err != nil {
-		log.Println(err)
+		logger.Infoln("[rsync]", err)
 		return err
 	}
-	log.Println(string(opBytes))
+	logger.Infoln("[rsync]", string(opBytes))
 	return nil
 }
 

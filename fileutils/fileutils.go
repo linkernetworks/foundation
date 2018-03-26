@@ -76,7 +76,7 @@ func CopyFile(srcDir, destDir, file string) error {
 
 //FolderCopy copy whole folder using os console command to avoid edge effect of golang file copy.
 func FolderCopy(src, dst string) error {
-	cmd := exec.Command("cp", "-R", src, dst)
+	cmd := exec.Command("cp", "-a", src, dst)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Println(err)

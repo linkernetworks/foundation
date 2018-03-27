@@ -10,6 +10,7 @@ import (
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
+	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
@@ -18,7 +19,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/volumechecker"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
-	"bitbucket.org/linkernetworks/aurora/src/workspace/fileserver"
 
 	//FIXME, wait PR#444
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
@@ -60,7 +60,7 @@ func New(c config.Config, m *mongo.Service, clientset *kubernetes.Clientset, rds
 			Clientset: clientset,
 			Namespace: "default",
 			Redis:     rds,
-			PortName:  fileserver.FileServerPortName,
+			PortName:  "http-server",
 			Cache:     podproxy.NewDefaultProxyCache(rds),
 		},
 	}
@@ -74,8 +74,8 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
 		wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
-		podFactory := fileserver.NewPodFactory()
-		pod := podFactory.NewPod(wsApp)
+		factory := &podfactory.FileServerPodFactory{}
+		pod := factory.NewPod(wsApp)
 
 		// attach the primary volumes to the pod spec
 		if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
@@ -104,8 +104,8 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 
 func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
-	podFactory := fileserver.NewPodFactory()
-	pod := podFactory.NewPod(wsApp)
+	factory := &podfactory.FileServerPodFactory{}
+	pod := factory.NewPod(wsApp)
 
 	// attach the primary volumes to the pod spec
 	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
@@ -251,7 +251,7 @@ func (s *WorkspaceFileServerSpawner) CheckAvailability(id string, volume *contai
 	})
 	go controller.Run(stop)
 
-	logger.Info("Try to wait the POD", newPod.ObjectMeta.Name)
+	logger.Info("Try to wait the POD: ", newPod.ObjectMeta.Name)
 	if err := volumechecker.Check(o, newPod.ObjectMeta.Name, timeout); err != nil {
 		return err
 	}

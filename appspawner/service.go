@@ -54,7 +54,6 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 		mongo:     m,
 		AddressUpdater: &ProxyAddressUpdater{
 			Clientset: clientset,
-			Redis:     rds,
 			Namespace: "default",
 			Cache:     podproxy.NewDefaultProxyCache(rds),
 		},

@@ -73,11 +73,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
 		podFactory := fileserver.NewPodFactory()
-		pod := podFactory.NewPod(ws, map[string]string{
-			"service":   "workspace",
-			"user":      ws.Owner.Hex(),
-			"workspace": ws.ID.Hex(),
-		})
+		pod := podFactory.NewPod(ws)
 
 		// attach the primary volumes to the pod spec
 		if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
@@ -105,12 +101,8 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 }
 
 func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
-	podFactory := fileserver.NewPodFactory(ws)
-
-	pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
-		"service": "workspce-fs",
-		"user":    ws.Owner.Hex(),
-	})
+	podFactory := fileserver.NewPodFactory()
+	pod := podFactory.NewPod(ws)
 
 	// attach the primary volumes to the pod spec
 	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {

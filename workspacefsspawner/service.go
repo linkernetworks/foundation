@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"bitbucket.org/linkernetworks/aurora/src/apps"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
@@ -72,8 +73,9 @@ func (s *WorkspaceFileServerSpawner) getPod(doc types.DeploymentIDProvider) (*v1
 func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
+		wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
 		podFactory := fileserver.NewPodFactory()
-		pod := podFactory.NewPod(ws)
+		pod := podFactory.NewPod(wsApp)
 
 		// attach the primary volumes to the pod spec
 		if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
@@ -101,8 +103,9 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 }
 
 func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
 	podFactory := fileserver.NewPodFactory()
-	pod := podFactory.NewPod(ws)
+	pod := podFactory.NewPod(wsApp)
 
 	// attach the primary volumes to the pod spec
 	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {

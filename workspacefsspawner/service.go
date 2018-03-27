@@ -72,9 +72,8 @@ func (s *WorkspaceFileServerSpawner) getPod(doc types.DeploymentIDProvider) (*v1
 func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
 	_, err = s.getPod(ws)
 	if kerrors.IsNotFound(err) {
-		podFactory := fileserver.NewPodFactory(ws)
-
-		pod := podFactory.NewPod(ws.DeploymentID(), map[string]string{
+		podFactory := fileserver.NewPodFactory()
+		pod := podFactory.NewPod(ws, map[string]string{
 			"service":   "workspace",
 			"user":      ws.Owner.Hex(),
 			"workspace": ws.ID.Hex(),

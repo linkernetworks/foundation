@@ -78,7 +78,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 		pod := factory.NewPod(wsApp)
 
 		// attach the primary volumes to the pod spec
-		if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+		if err := workspace.AttachVolumesToPod(ws, pod); err != nil {
 			return nil, err
 		}
 
@@ -87,7 +87,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 			return nil, err
 		}
 
-		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+		_, err = s.clientset.CoreV1().Pods(s.namespace).Create(pod)
 		if err != nil {
 			tracker.Stop()
 			return nil, err
@@ -108,7 +108,7 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 	pod := factory.NewPod(wsApp)
 
 	// attach the primary volumes to the pod spec
-	if err := workspace.AttachVolumesToPod(ws, &pod); err != nil {
+	if err := workspace.AttachVolumesToPod(ws, pod); err != nil {
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 		return nil, err
 	}
 
-	_, err = s.clientset.CoreV1().Pods(s.namespace).Create(&pod)
+	_, err = s.clientset.CoreV1().Pods(s.namespace).Create(pod)
 	if err != nil {
 		tracker.Stop()
 		return nil, err

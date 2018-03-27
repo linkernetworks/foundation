@@ -70,8 +70,9 @@ func (s *WorkspaceFileServerSpawner) getPod(doc types.DeploymentIDProvider) (*v1
 	return s.clientset.CoreV1().Pods(s.namespace).Get(doc.DeploymentID(), metav1.GetOptions{})
 }
 
-func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
-	_, err = s.getPod(ws)
+func (s *WorkspaceFileServerSpawner) WakeUp(wsApp *entity.WorkspaceApp) (tracker *podtracker.PodTracker, err error) {
+	ws := wsApp.Workspace
+	_, err = s.getPod(wsApp)
 	if kerrors.IsNotFound(err) {
 		wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
 		factory := &podfactory.FileServerPodFactory{}
@@ -102,8 +103,8 @@ func (s *WorkspaceFileServerSpawner) WakeUp(ws *entity.Workspace) (tracker *podt
 	return tracker, err
 }
 
-func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
-	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
+func (s *WorkspaceFileServerSpawner) Start(wsApp *entity.WorkspaceApp) (tracker *podtracker.PodTracker, err error) {
+	ws := wsApp.Workspace
 	factory := &podfactory.FileServerPodFactory{}
 	pod := factory.NewPod(wsApp)
 
@@ -126,24 +127,24 @@ func (s *WorkspaceFileServerSpawner) Start(ws *entity.Workspace) (tracker *podtr
 	return tracker, nil
 }
 
-func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) Stop(wsApp *entity.WorkspaceApp) (tracker *podtracker.PodTracker, err error) {
 	// if it's not created
-	_, err = s.getPod(ws)
+	_, err = s.getPod(wsApp)
 	if kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	} else if err != nil {
 		return nil, err
 	}
 
-	s.Updater.Reset(ws)
+	s.Updater.Reset(wsApp)
 
 	// We found the pod, let's start a tracker first, and then delete the pod
-	tracker, err = s.Updater.TrackAndSyncDelete(ws)
+	tracker, err = s.Updater.TrackAndSyncDelete(wsApp)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.clientset.CoreV1().Pods(s.namespace).Delete(ws.DeploymentID(), &metav1.DeleteOptions{})
+	err = s.clientset.CoreV1().Pods(s.namespace).Delete(wsApp.DeploymentID(), &metav1.DeleteOptions{})
 	if kerrors.IsNotFound(err) {
 		tracker.Stop()
 		return nil, ErrAlreadyStopped
@@ -155,9 +156,11 @@ func (s *WorkspaceFileServerSpawner) Stop(ws *entity.Workspace) (tracker *podtra
 	return tracker, nil
 }
 
-func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *podtracker.PodTracker, err error) {
+func (s *WorkspaceFileServerSpawner) Restart(wsApp *entity.WorkspaceApp) (tracker *podtracker.PodTracker, err error) {
+	ws := wsApp.Workspace
+
 	//Stop the current worksapce-fs pod
-	_, err = s.getPod(ws)
+	_, err = s.getPod(wsApp)
 	if err != nil && !kerrors.IsNotFound(err) {
 		return nil, ErrAlreadyStopped
 	}
@@ -178,7 +181,7 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 					return
 				}
 
-				if pod.ObjectMeta.Name != ws.DeploymentID() {
+				if pod.ObjectMeta.Name != wsApp.DeploymentID() {
 					return
 				}
 
@@ -190,21 +193,21 @@ func (s *WorkspaceFileServerSpawner) Restart(ws *entity.Workspace) (tracker *pod
 
 		c.L.Lock()
 		go controller.Run(stop)
-		tracker, err = s.Stop(ws)
+		tracker, err = s.Stop(wsApp)
 		if err != nil && err != ErrAlreadyStopped {
 			c.Signal()
 			return nil, err
 		}
 
-		logger.Info("Wait for pod=", ws.DeploymentID())
+		logger.Info("Wait for pod=", wsApp.DeploymentID())
 		c.Wait()
 		c.L.Unlock()
-		logger.Infof("pod=%s has beend deleted", ws.DeploymentID())
+		logger.Infof("pod=%s has beend deleted", wsApp.DeploymentID())
 	}
 
 	//Start the new fileserver.fs with new config
-	logger.Info("Start the pod=%s", ws.DeploymentID())
-	tracker, err = s.Start(ws)
+	logger.Info("Start the pod=%s", wsApp.DeploymentID())
+	tracker, err = s.Start(wsApp)
 	if err != nil {
 		return nil, err
 	}

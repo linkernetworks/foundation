@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"bitbucket.org/linkernetworks/aurora/src/apps"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
@@ -43,7 +44,8 @@ func (suite *WorkspaceServiceSuite) SetupTest() {
 }
 
 func (suite *WorkspaceServiceSuite) TestCRUD() {
-	vName := bson.NewObjectId().Hex()
+	vName := "test-pvc-" + bson.NewObjectId().Hex()
+
 	//Setup the workspace
 	ws := &entity.Workspace{
 		ID:    bson.NewObjectId(),
@@ -59,18 +61,20 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 		},
 	}
 
+	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
+
 	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)
 	defer suite.Session.C(entity.WorkspaceCollectionName).Remove((bson.M{"_id": ws.ID}))
 	assert.NoError(suite.T(), err)
 
-	_, err = suite.WsService.WakeUp(ws)
+	_, err = suite.WsService.WakeUp(wsApp)
 	assert.NoError(suite.T(), err)
 
-	_, err = suite.WsService.getPod(ws)
+	_, err = suite.WsService.getPod(wsApp)
 	assert.NoError(suite.T(), err)
 	assert.False(suite.T(), kerrors.IsNotFound(err))
 
-	_, err = suite.WsService.Stop(ws)
+	_, err = suite.WsService.Stop(wsApp)
 	assert.NoError(suite.T(), err)
 }
 
@@ -95,7 +99,9 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 	defer suite.Session.C(entity.WorkspaceCollectionName).Remove((bson.M{"_id": ws.ID}))
 	assert.NoError(suite.T(), err)
 
-	_, err = suite.WsService.WakeUp(ws)
+	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
+
+	_, err = suite.WsService.WakeUp(wsApp)
 	assert.NoError(suite.T(), err)
 
 	ws.SecondaryVolumes = []container.Volume{
@@ -108,19 +114,20 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 		},
 	}
 
-	_, err = suite.WsService.getPod(ws)
+	_, err = suite.WsService.getPod(wsApp)
 	assert.NoError(suite.T(), err)
 	assert.False(suite.T(), kerrors.IsNotFound(err))
 
-	_, err = suite.WsService.Restart(ws)
+	_, err = suite.WsService.Restart(wsApp)
 	assert.NoError(suite.T(), err)
 
-	_, err = suite.WsService.Stop(ws)
+	_, err = suite.WsService.Stop(wsApp)
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *WorkspaceServiceSuite) TestCheckAvailability() {
 	id := bson.NewObjectId().Hex()
+
 	err := suite.WsService.CheckAvailability(id, nil, 15)
 	assert.NoError(suite.T(), err)
 

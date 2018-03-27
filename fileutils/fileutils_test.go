@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -49,4 +50,28 @@ func TestScanDir(t *testing.T) {
 	assert.Equal(t, fileInfos[0].Size, int64(0))
 	assert.Equal(t, fileInfos[0].IsDir, false)
 	assert.Equal(t, fileInfos[0].Type, "")
+}
+
+func TestRemoveDirContents(t *testing.T) {
+	dir, err := ioutil.TempDir(".", "test-")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	ioutil.TempFile(dir, "file-")
+	ioutil.TempFile(dir, "file-")
+	ioutil.TempFile(dir, "file-")
+	count := 0
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		count++
+		return nil
+	})
+	assert.Equal(t, count, 4)
+
+	RemoveDirContents(dir)
+	count = 0
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		count++
+		return nil
+	})
+	assert.Equal(t, count, 1)
 }

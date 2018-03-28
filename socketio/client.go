@@ -73,8 +73,12 @@ func (c *Client) Start() {
 	go c.read()  // from redigo to chan
 }
 
-func (c *Client) Stop() {
+func (c *Client) Stop() error {
 	// unsubscribe all channels
-	c.PubSubConn.Unsubscribe()
-	<-c.done
+	defer func() { <-c.done }()
+	if err := c.PubSubConn.Unsubscribe(); err != nil {
+		logger.Errorf("unsubscribe error: %v", err)
+		return err
+	}
+	return nil
 }

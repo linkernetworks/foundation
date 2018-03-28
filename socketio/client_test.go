@@ -76,10 +76,18 @@ func TestStream(t *testing.T) {
 
 	go func() {
 		var err error
+
 		c2 := r.GetConnection()
 		_, err = c2.Do("PUBLISH", "_test_socket_1_", "message1")
 		assert.NoError(t, err)
+
+		err = c2.Flush()
+		assert.NoError(t, err)
+
 		_, err = c2.Do("PUBLISH", "_test_socket_2_", "message2")
+		assert.NoError(t, err)
+
+		err = c2.Flush()
 		assert.NoError(t, err)
 	}()
 

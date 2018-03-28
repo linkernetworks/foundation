@@ -92,10 +92,13 @@ func TestStream(t *testing.T) {
 	}()
 
 	m1 := <-socket.C
+	t.Logf("received the first message: %+v", m1)
 	assert.Equal(t, "message1", m1.Messages[0])
 
 	m2 := <-socket.C
+	t.Logf("received the second message: %+v", m2)
 	assert.Equal(t, "message2", m2.Messages[0])
 
-	client.Stop()
+	err := client.Stop()
+	assert.NoError(t, err)
 }

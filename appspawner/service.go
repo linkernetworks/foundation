@@ -48,6 +48,7 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 		Factories: map[string]WorkspaceAppPodFactory{
 			"notebook":   &podfactory.NotebookPodFactory{Config: c.Jupyter},
 			"fileserver": &podfactory.FileServerPodFactory{},
+			"console":    &podfactory.ConsolePodFactory{},
 		},
 		Config:    c,
 		namespace: "default",

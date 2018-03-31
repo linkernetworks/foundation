@@ -33,6 +33,7 @@ type Config struct {
 	Migration     *MigrationConfig  `json:"migration"`
 	Kudis         *KudisConfig      `json:"kudis"`
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
+	GoogleMap     *GoogleMapConfig  `json:"googlemap"`
 	Data          *DataConfig       `json:"data"`
 
 	Socketio *SocketioConfig `json:"socketio"`

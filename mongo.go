@@ -29,3 +29,7 @@ func NewFromConfig(cf *config.MongoConfig) *Service {
 func (s *Service) NewSession() *Session {
 	return &Session{s.globalSession.Copy()}
 }
+
+func (s *Service) NewClient() (*mgo.Session, error) {
+	return mgo.Dial(s.Url)
+}

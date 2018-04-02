@@ -46,7 +46,7 @@ type AppSpawner struct {
 func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m *mongo.Service) *AppSpawner {
 	return &AppSpawner{
 		Factories: map[string]WorkspaceAppPodFactory{
-			"notebook":   &podfactory.NotebookPodFactory{Config: c.Jupyter},
+			"notebook":   &podfactory.NotebookPodFactory{},
 			"fileserver": &podfactory.FileServerPodFactory{},
 			"console":    &podfactory.ConsolePodFactory{},
 		},

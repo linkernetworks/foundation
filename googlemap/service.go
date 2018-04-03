@@ -27,6 +27,9 @@ func (s *GoogleMapService) GetPosition(address string) (entity.GeoCode, error) {
 		"https://maps.googleapis.com/maps/api/geocode/json?key=%s&address=%s",
 		s.Key, address)
 	rowData, err := http.Get(url)
+	if err != nil {
+		return position, err
+	}
 	defer rowData.Body.Close()
 
 	body, err := ioutil.ReadAll(rowData.Body)

@@ -35,6 +35,7 @@ type Config struct {
 	Influxdb      *InfluxdbConfig   `json:"influxdb"`
 	GoogleMap     *GoogleMapConfig  `json:"googlemap"`
 	Data          *DataConfig       `json:"data"`
+	Features      *FeatureConfig    `json:"features"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

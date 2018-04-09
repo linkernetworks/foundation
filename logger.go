@@ -55,18 +55,18 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 	if filePattern == "" {
 		filePattern = "access_log.%Y%m%d"
 	}
-
 	linkName := c.LinkName
 	if linkName == "" {
 		linkName = "access_log"
 	}
+	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
 
 	var maxAge = 24 * time.Hour
 	if d, err := time.ParseDuration(c.MaxAge); err == nil {
 		maxAge = d
 	}
+	logger.Infof("Max age of logs: %s", maxAge.String())
 
-	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
 	writer, err := rotatelogs.New(
 		path.Join(dir, filePattern),
 		rotatelogs.WithLinkName(path.Join(dir, linkName)),

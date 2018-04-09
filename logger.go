@@ -5,5 +5,5 @@ type LoggerConfig struct {
 	FilePattern string `json:"filePattern"`
 	LinkName    string `json:"linkName"`
 	Level       string `json:"level"`
-	Reserve     int    `json:"reserve"` // MaxAge in days
+	MaxAge      int    `json:"maxAge"`
 }

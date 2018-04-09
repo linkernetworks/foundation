@@ -14,7 +14,7 @@ func TestLoggerConfig(t *testing.T) {
             "filePattern": "migration.log.%Y%m%d",
             "linkName": "migration",
             "level": "debug",
-            "reserve": 30
+            "maxAge": 30
         }`
 	err := json.Unmarshal([]byte(jsontext), &cf)
 	assert.NoError(t, err)
@@ -23,5 +23,5 @@ func TestLoggerConfig(t *testing.T) {
 	assert.Equal(t, cf.FilePattern, "migration.log.%Y%m%d")
 	assert.Equal(t, cf.LinkName, "migration")
 	assert.Equal(t, cf.Level, "debug")
-	assert.Equal(t, cf.Reserve, 30)
+	assert.Equal(t, cf.MaxAge, 30)
 }

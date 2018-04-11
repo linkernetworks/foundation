@@ -17,7 +17,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	// "bitbucket.org/linkernetworks/aurora/src/service/appspawner/notebook"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -75,7 +74,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	assert.Equal(t, "notebook-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
+	assert.Equal(t, "webapp-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 
 	pod, err := spawner.NewPod(wsApp)
 	assert.NoError(t, err)
@@ -95,7 +94,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Volumes))
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
-	t.Logf("Starting notebook: pod=%s", wsApp.PodName())
+	t.Logf("Starting webapp: pod=%s", wsApp.PodName())
 	_, err = spawner.Start(&ws, app)
 	assert.NoError(t, err)
 
@@ -103,7 +102,7 @@ func TestAppSpawnerService(t *testing.T) {
 	tracker := podtracker.New(clientset, kubernetesService.Config.Namespace, wsApp.PodName())
 	tracker.WaitForPhase(v1.PodPhase("Running"))
 
-	t.Logf("Syncing notebook document: pod=%s", wsApp.PodName())
+	t.Logf("Syncing webapp document: pod=%s", wsApp.PodName())
 	err = spawner.AddressUpdater.Sync(wsApp)
 	assert.NoError(t, err)
 
@@ -113,7 +112,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.True(t, len(addr) > 0)
 	t.Logf("pod address: %s", addr)
 
-	t.Logf("Stoping notebook document: pod=%s", wsApp.PodName())
+	t.Logf("Stoping webapp document: pod=%s", wsApp.PodName())
 	_, err = spawner.Stop(&ws, app)
 	assert.NoError(t, err)
 

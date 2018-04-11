@@ -46,7 +46,7 @@ type AppSpawner struct {
 func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m *mongo.Service) *AppSpawner {
 	return &AppSpawner{
 		Factories: map[string]WorkspaceAppPodFactory{
-			"notebook":   &podfactory.GenericPodFactory{},
+			"webapp":     &podfactory.GenericPodFactory{},
 			"fileserver": &podfactory.GenericPodFactory{},
 			"console":    &podfactory.GenericPodFactory{},
 		},
@@ -96,7 +96,7 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 			return nil, err
 		}
 
-		// Pod not found. Start a pod for notebook in workspace(batch)
+		// Pod not found. Start a pod of an app in workspace
 		tracker, err = s.AddressUpdater.TrackAndSyncUpdate(wsApp)
 		if err != nil {
 			return nil, err

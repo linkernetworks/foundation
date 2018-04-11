@@ -75,7 +75,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(wsApp *entity.WorkspaceApp) (tracker
 	_, err = s.getPod(wsApp)
 	if kerrors.IsNotFound(err) {
 		wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
-		factory := &podfactory.FileServerPodFactory{}
+		factory := &podfactory.GenericPodFactory{}
 		pod := factory.NewPod(wsApp)
 
 		// attach the primary volumes to the pod spec
@@ -105,7 +105,7 @@ func (s *WorkspaceFileServerSpawner) WakeUp(wsApp *entity.WorkspaceApp) (tracker
 
 func (s *WorkspaceFileServerSpawner) Start(wsApp *entity.WorkspaceApp) (tracker *podtracker.PodTracker, err error) {
 	ws := wsApp.Workspace
-	factory := &podfactory.FileServerPodFactory{}
+	factory := &podfactory.GenericPodFactory{}
 	pod := factory.NewPod(wsApp)
 
 	// attach the primary volumes to the pod spec

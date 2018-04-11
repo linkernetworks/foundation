@@ -71,7 +71,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, ws.PrimaryVolume)
 
-	app := ws.FindApp("jupyter/tensorflow-notebook")
+	app := ws.FindApp("linkernetworks/tensorflow-notebook:1.3")
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}

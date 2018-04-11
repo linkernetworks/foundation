@@ -47,8 +47,8 @@ func New(c config.Config, clientset *kubernetes.Clientset, rds *redis.Service, m
 	return &AppSpawner{
 		Factories: map[string]WorkspaceAppPodFactory{
 			"notebook":   &podfactory.GenericPodFactory{},
-			"fileserver": &podfactory.FileServerPodFactory{},
-			"console":    &podfactory.ConsolePodFactory{},
+			"fileserver": &podfactory.GenericPodFactory{},
+			"console":    &podfactory.GenericPodFactory{},
 		},
 		Config:    c,
 		namespace: "default",

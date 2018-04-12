@@ -52,7 +52,7 @@ func TestAppSpawnerService(t *testing.T) {
 		Name:        "testing workspace",
 		Type:        "general",
 		Owner:       userId,
-		Environment: &environment.TensorflowEnvironment,
+		Environment: &environment.Tensorflow13Environment,
 	}
 
 	session := mongoService.NewSession()

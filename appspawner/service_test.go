@@ -48,14 +48,11 @@ func TestAppSpawnerService(t *testing.T) {
 	userId := bson.NewObjectId()
 
 	ws := entity.Workspace{
-		ID:    bson.NewObjectId(),
-		Name:  "testing workspace",
-		Type:  "general",
-		Owner: userId,
-		EnvironmentSettings: &entity.EnvironmentSettings{
-			Type:     "training",
-			Training: &environment.TensorflowEnvironment,
-		},
+		ID:          bson.NewObjectId(),
+		Name:        "testing workspace",
+		Type:        "general",
+		Owner:       userId,
+		Environment: &environment.TensorflowEnvironment,
 	}
 
 	session := mongoService.NewSession()

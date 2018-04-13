@@ -79,6 +79,9 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 
 func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+	if image := ws.GetCurrentCPUImage(); len(image) > 0 {
+		app.ApplyImage(image)
+	}
 
 	// Start tracking first
 	runningPod, err := s.getPod(wsApp.PodName())

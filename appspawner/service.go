@@ -81,6 +81,7 @@ func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp) (t
 	app := appRef.Copy()
 	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 	if image := ws.GetCurrentCPUImage(); len(image) > 0 {
+		logger.Infof("[appspawner] starting app %s with image %s", app.Identifier, app.Container.Image)
 		app.ApplyImage(image)
 	}
 

@@ -77,8 +77,9 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	return pod, nil
 }
 
-func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
-	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
+	app := appRef.Copy()
+	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 	if image := ws.GetCurrentCPUImage(); len(image) > 0 {
 		app.ApplyImage(image)
 	}
@@ -124,8 +125,9 @@ func (s *AppSpawner) Start(ws *entity.Workspace, app *entity.ContainerApp) (trac
 	return nil, err
 }
 
-func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (bool, error) {
-	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+func (s *AppSpawner) IsRunning(ws *entity.Workspace, appRef *entity.ContainerApp) (bool, error) {
+	app := appRef.Copy()
+	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 	podName := wsApp.PodName()
 	pod, err := s.getPod(podName)
 	if err != nil {
@@ -139,8 +141,9 @@ func (s *AppSpawner) IsRunning(ws *entity.Workspace, app *entity.ContainerApp) (
 }
 
 // Stop returns nil if it's already stopped
-func (s *AppSpawner) Stop(ws *entity.Workspace, app *entity.ContainerApp) (*podtracker.PodTracker, error) {
-	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: ws}
+func (s *AppSpawner) Stop(ws *entity.Workspace, appRef *entity.ContainerApp) (*podtracker.PodTracker, error) {
+	app := appRef.Copy()
+	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 
 	// if it's not created
 	_, err := s.getPod(wsApp.PodName())

@@ -1,19 +1,49 @@
 package fileutils
 
 import (
-	"github.com/stretchr/testify/assert"
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestWriteLines(t *testing.T) {
+	testLines := []string{"testString\ntestString", "testString", "", " ", "中文", "!@#$"}
+	err := WriteLines("test/path/dont/exit", testLines)
+	assert.Error(t, err)
+
+	targetDir, err := ioutil.TempDir(".", "target")
+	assert.NoError(t, err)
+	defer os.RemoveAll(targetDir)
+
+	err = WriteLines(targetDir+"/test", testLines)
+	assert.NoError(t, err)
+
+	content, err := ioutil.ReadFile(targetDir + "/test")
+	assert.NoError(t, err)
+
+	writeLines := strings.Split(string(content), "\n")
+	var buffer bytes.Buffer
+	for _, testLine := range testLines {
+		buffer.WriteString(testLine + "\n")
+	}
+	testLines = strings.Split(buffer.String(), "\n")
+	assert.True(t, reflect.DeepEqual(testLines, writeLines))
+}
 
 func TestCopyFile(t *testing.T) {
 	srcDir, err := ioutil.TempDir(".", "source")
 	assert.NoError(t, err)
+	defer os.RemoveAll(srcDir)
 
 	destDir, err := ioutil.TempDir(".", "destination")
 	assert.NoError(t, err)
+	defer os.RemoveAll(destDir)
 
 	testFile := "test"
 	f, err := os.Create(srcDir + "/" + testFile)
@@ -26,10 +56,6 @@ func TestCopyFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	_, err = os.Stat(destDir + "/" + testFile)
-	assert.NoError(t, err)
-	err = os.RemoveAll(srcDir)
-	assert.NoError(t, err)
-	err = os.RemoveAll(destDir)
 	assert.NoError(t, err)
 }
 

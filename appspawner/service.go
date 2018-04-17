@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
@@ -219,6 +220,7 @@ func (s *AppSpawner) checkNetworkConnectivity(ch chan *v1.Pod, wsApp *entity.Wor
 	var find error
 	find = nil
 	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
+	fmt.Println("A")
 Watch:
 	for {
 		select {
@@ -226,21 +228,28 @@ Watch:
 			if v1.PodRunning != pod.Status.Phase {
 				continue
 			}
+			fmt.Println("Is running")
 			//Check the Connectivity
 			for {
 				port := &wsApp.Container.Ports[0]
 				host := net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(int(port.ContainerPort)))
-				if conn, err := net.Dial(port.Protocol, host); err == nil {
+				fmt.Println("connect to ", host, " ", port.Protocol)
+
+				if conn, err := net.Dial(strings.ToLower(port.Protocol), host); err == nil {
+					fmt.Println("Connect success, ready break")
 					conn.Close()
 					break Watch
+				} else {
+					fmt.Println(err)
 				}
 				time.Sleep(time.Duration(1) * time.Second)
 			}
 		case <-ticker.C:
+			fmt.Println("ticker QQ")
 			find = fmt.Errorf("AA")
 			break Watch
 		}
 	}
-
+	fmt.Println("Bye")
 	return find
 }

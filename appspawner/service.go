@@ -3,10 +3,14 @@ package appspawner
 import (
 	"errors"
 	"fmt"
+	"net"
+	"strconv"
+	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
@@ -16,7 +20,9 @@ import (
 
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -185,4 +191,56 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, appRef *entity.ContainerApp) (*p
 
 func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
+}
+
+func (s *AppSpawner) checkAppIsRunning(wsApp *entity.WorkspaceApp, timeout int) error {
+	//Check is running
+	o := make(chan *v1.Pod)
+	var stop chan struct{}
+	defer close(stop)
+	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod, ok := newObj.(*v1.Pod)
+			if !ok {
+				return
+			}
+			if pod.ObjectMeta.Name != wsApp.PodName() {
+				return
+			}
+			o <- pod
+		},
+	})
+	go controller.Run(stop)
+
+	return s.checkNetworkConnectivity(o, wsApp, timeout)
+}
+
+func (s *AppSpawner) checkNetworkConnectivity(ch chan *v1.Pod, wsApp *entity.WorkspaceApp, timeout int) error {
+	var find error
+	find = nil
+	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
+Watch:
+	for {
+		select {
+		case pod := <-ch:
+			if v1.PodRunning != pod.Status.Phase {
+				continue
+			}
+			//Check the Connectivity
+			for {
+				port := &wsApp.Container.Ports[0]
+				host := net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(int(port.ContainerPort)))
+				if conn, err := net.Dial(port.Protocol, host); err == nil {
+					conn.Close()
+					break Watch
+				}
+				time.Sleep(time.Duration(1) * time.Second)
+			}
+		case <-ticker.C:
+			find = fmt.Errorf("AA")
+			break Watch
+		}
+	}
+
+	return find
 }

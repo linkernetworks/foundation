@@ -3,9 +3,6 @@ package appspawner
 import (
 	"errors"
 	"fmt"
-	"net"
-	"strconv"
-	"strings"
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
@@ -15,6 +12,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
@@ -128,6 +126,14 @@ func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp) (t
 			logger.Errorf("failed to store instance id: %v", err)
 		}
 
+		//Check the connect
+		if pod := s.getRunningPod(wsApp, 10); pod != nil {
+			port := &wsApp.Container.Ports[0]
+			if err := netutils.CheckNetworkConnectivity(pod.Status.PodIP, int(port.ContainerPort), port.Protocol, 10); err != nil {
+				return nil, err
+			}
+		}
+
 		return tracker, nil
 	}
 
@@ -194,11 +200,11 @@ func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
 }
 
-func (s *AppSpawner) checkAppIsRunning(wsApp *entity.WorkspaceApp, timeout int) error {
+func (s *AppSpawner) getRunningPod(wsApp *entity.WorkspaceApp, timeout int) *v1.Pod {
 	//Check is running
 	o := make(chan *v1.Pod)
 	var stop chan struct{}
-	defer close(stop)
+
 	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod, ok := newObj.(*v1.Pod)
@@ -208,48 +214,31 @@ func (s *AppSpawner) checkAppIsRunning(wsApp *entity.WorkspaceApp, timeout int) 
 			if pod.ObjectMeta.Name != wsApp.PodName() {
 				return
 			}
+
 			o <- pod
 		},
 	})
+
+	stop = make(chan struct{})
+	defer close(stop)
 	go controller.Run(stop)
 
-	return s.checkNetworkConnectivity(o, wsApp, timeout)
-}
-
-func (s *AppSpawner) checkNetworkConnectivity(ch chan *v1.Pod, wsApp *entity.WorkspaceApp, timeout int) error {
-	var find error
-	find = nil
+	var pod *v1.Pod
+	pod = nil
 	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
-	fmt.Println("A")
 Watch:
 	for {
 		select {
-		case pod := <-ch:
-			if v1.PodRunning != pod.Status.Phase {
-				continue
-			}
-			fmt.Println("Is running")
-			//Check the Connectivity
-			for {
-				port := &wsApp.Container.Ports[0]
-				host := net.JoinHostPort(pod.Status.PodIP, strconv.Itoa(int(port.ContainerPort)))
-				fmt.Println("connect to ", host, " ", port.Protocol)
-
-				if conn, err := net.Dial(strings.ToLower(port.Protocol), host); err == nil {
-					fmt.Println("Connect success, ready break")
-					conn.Close()
-					break Watch
-				} else {
-					fmt.Println(err)
-				}
-				time.Sleep(time.Duration(1) * time.Second)
-			}
 		case <-ticker.C:
-			fmt.Println("ticker QQ")
-			find = fmt.Errorf("AA")
 			break Watch
+		case p := <-o:
+			if v1.PodRunning == p.Status.Phase {
+				pod = p
+				ticker.Stop()
+				break Watch
+			}
 		}
 	}
-	fmt.Println("Bye")
-	return find
+
+	return pod
 }

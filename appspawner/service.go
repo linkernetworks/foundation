@@ -69,6 +69,17 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	}
 	pod := factory.NewPod(app)
 
+	// attach the environment to the pod
+	env := []v1.EnvVar{
+		{Name: "OWNER_ID", Value: app.Workspace.Owner.Hex()},
+		{Name: "WORKSPACE_ID", Value: app.Workspace.GetID().Hex()},
+		{Name: "APP_ID", Value: app.ID},
+	}
+
+	for _, v := range pod.Spec.Containers {
+		v.Env = append(v.Env, env...)
+	}
+
 	// attach the primary volumes to the pod spec
 	if err := workspace.AttachVolumesToPod(app.Workspace, pod); err != nil {
 		return pod, err

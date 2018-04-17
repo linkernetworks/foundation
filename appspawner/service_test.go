@@ -93,7 +93,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
 	t.Logf("Starting webapp: pod=%s", wsApp.PodName())
-	_, err = spawner.Start(&ws, app)
+	_, err = spawner.Start(&ws, app, false)
 	assert.NoError(t, err)
 
 	// allocattte anew podtracker to track the pod is running

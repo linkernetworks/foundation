@@ -156,6 +156,45 @@ func TestAppsIsRunningSuccess(t *testing.T) {
 	_, err = clientset.CoreV1().Pods("default").Create(pod)
 	assert.NoError(t, err)
 	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
-	err = spawner.checkAppIsRunning(wsApp, 5)
+	pod = spawner.getRunningPod(wsApp, 5)
+	assert.NotNil(t, pod)
+}
+
+func TestAppsIsRunningFail(t *testing.T) {
+	cf := config.MustRead(testingConfigPath)
+
+	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
+	mongoService := mongo.New(cf.Mongo.Url)
+	redisService := redis.New(cf.Redis)
+
+	clientset, err := kubernetesService.NewClientset()
 	assert.NoError(t, err)
+
+	spawner := New(cf, clientset, redisService, mongoService)
+
+	//Create a workspaceApp
+	//Create a k8s Pod
+	//Watchout
+	userId := bson.NewObjectId()
+	ws := entity.Workspace{
+		ID:          bson.NewObjectId(),
+		Name:        "testing fileserver",
+		Type:        "general",
+		Owner:       userId,
+		Environment: nil,
+	}
+
+	app := &apps.FileServerApp
+	assert.NotNil(t, app)
+
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
+	app.Container.Image = "I'm Exist"
+	pod, err := spawner.NewPod(wsApp)
+	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
+
+	_, err = clientset.CoreV1().Pods("default").Create(pod)
+	assert.NoError(t, err)
+	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
+	pod = spawner.getRunningPod(wsApp, 5)
+	assert.Nil(t, pod)
 }

@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/logger"
@@ -57,8 +56,7 @@ func FindFilesByExtension(pathS, ext string) []string {
 	var files []string
 	filepath.Walk(pathS, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
-			r, err := regexp.MatchString(ext, f.Name())
-			if err == nil && r {
+			if filepath.Ext(path) == ext {
 				files = append(files, f.Name())
 			}
 		}

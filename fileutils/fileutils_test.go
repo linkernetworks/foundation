@@ -2,17 +2,13 @@ package fileutils
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/mholt/archiver"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +59,7 @@ func TestWriteLines(t *testing.T) {
 
 func TestFindFilesDontExistByExtension(t *testing.T) {
 	var findResult []string
-	assert.Equal(t, FindFilesByExtension(".", "apple"), findResult)
+	assert.Equal(t, FindFilesByExtension(".", ".ext"), findResult)
 }
 
 func TestFindFilesByExtension(t *testing.T) {
@@ -72,15 +68,15 @@ func TestFindFilesByExtension(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	var findResult []string
-	_, err = os.Create(testDir + "/apple")
-	_, err = os.Create(testDir + "/pineapple")
-	_, err = os.Create(testDir + "/pen")
-	testSubDir, err := ioutil.TempDir("./"+testDir, "appleDir")
-	_, err = os.Create(testSubDir + "/appleInDir")
-	_, err = os.Create(testSubDir + "/bananaInDir")
+	_, err = os.Create(testDir + "/testFile1.go")
+	_, err = os.Create(testDir + "/go.ext")
+	testSubDir, err := ioutil.TempDir("./"+testDir, "testSubDir")
+	_, err = os.Create(testSubDir + "/testFile3.go")
+	_, err = os.Create(testSubDir + "/testFile4.gogogo")
+	_, err = os.Create(testSubDir + "/testFile5.go.ext")
 
-	findResult = []string{"apple", "appleInDir", "pineapple"}
-	assert.Equal(t, FindFilesByExtension(".", "apple"), findResult)
+	findResult = []string{"testFile1.go", "testFile3.go"}
+	assert.Equal(t, FindFilesByExtension(testDir, ".go"), findResult)
 }
 
 func TestCopyFile(t *testing.T) {
@@ -104,69 +100,6 @@ func TestCopyFile(t *testing.T) {
 
 	_, err = os.Stat(destDir + "/" + testFile)
 	assert.NoError(t, err)
-}
-
-func TestRsync(t *testing.T) {
-	srcDir, err := ioutil.TempDir(".", "source")
-	assert.NoError(t, err, "asdf")
-	defer os.RemoveAll(srcDir)
-
-	destDir, err := ioutil.TempDir(".", "destination")
-	assert.NoError(t, err, "asdf")
-	defer os.RemoveAll(destDir)
-
-	_, err = os.Create(srcDir + "/testFile1")
-	_, err = os.Create(srcDir + "/testFile2")
-	_, err = os.Create(srcDir + "/testFile3")
-	testSubDir, err := ioutil.TempDir("./"+srcDir, "testSubDir")
-	_, err = os.Create(testSubDir + "/testFile4")
-	_, err = os.Create(testSubDir + "/testFile5")
-
-	// Check if the sync successful.
-	err = Rsync(srcDir, destDir)
-	assert.NoError(t, err, "asdf")
-
-	_, err = os.Stat(destDir + "/" + srcDir)
-	assert.NoError(t, err, "asdf")
-
-	// Check if the contents of the srcDir and destDir the same
-	// Compare the SHA265 checksum of the zip files from two folders
-	err = archiver.Zip.Make("src.zip", []string{srcDir})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.RemoveAll("src.zip")
-
-	err = archiver.Zip.Make("dest.zip", []string{destDir + "/" + srcDir})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.RemoveAll("dest.zip")
-
-	fSrc, err := os.Open("src.zip")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fSrc.Close()
-
-	fDest, err := os.Open("dest.zip")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fDest.Close()
-
-	var hashSrc, hashDest int64
-	hasher := sha256.New()
-
-	if hashSrc, err = io.Copy(hasher, fSrc); err != nil {
-		log.Fatal(err)
-	}
-
-	if hashDest, err = io.Copy(hasher, fDest); err != nil {
-		log.Fatal(err)
-	}
-
-	assert.Equal(t, hashSrc, hashDest, "The contents of the srcDir and destDir not the same.")
 }
 
 func TestScanDir(t *testing.T) {

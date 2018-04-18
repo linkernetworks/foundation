@@ -161,7 +161,7 @@ func TestAppsIsRunningSuccess(t *testing.T) {
 	_, err = clientset.CoreV1().Pods("default").Create(pod)
 	assert.NoError(t, err)
 	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
-	pod = spawner.getRunningPod(wsApp, 5)
+	pod = spawner.getRunningPod(wsApp, 30)
 	assert.NotNil(t, pod)
 }
 

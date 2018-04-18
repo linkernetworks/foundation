@@ -82,7 +82,7 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	return pod, nil
 }
 
-func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp, wait bool) (tracker *podtracker.PodTracker, err error) {
+func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp, startOption StartOption) (tracker *podtracker.PodTracker, err error) {
 	app := appRef.Copy()
 	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 	if appRef.UseEnvironmentImage {
@@ -127,15 +127,14 @@ func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp, wa
 		}
 
 		//Check the connect
-		if wait {
-			timeout := 20
-			pod := s.getRunningPod(wsApp, timeout)
+		if startOption.Wait {
+			pod := s.getRunningPod(wsApp, startOption.Timeout)
 			if pod == nil {
-				return nil, fmt.Errorf("Can't start the application %s in %d seconds", wsApp.PodName(), timeout)
+				return nil, fmt.Errorf("Can't start the application %s in %d seconds", wsApp.PodName(), startOption.Timeout)
 			}
 
 			port := &wsApp.Container.Ports[0]
-			if err := netutils.CheckNetworkConnectivity(pod.Status.PodIP, int(port.ContainerPort), port.Protocol, timeout); err != nil {
+			if err := netutils.CheckNetworkConnectivity(pod.Status.PodIP, int(port.ContainerPort), port.Protocol, startOption.Timeout); err != nil {
 				return nil, fmt.Errorf("Can't connect to %s: %v", wsApp.PodName(), err)
 			}
 		}

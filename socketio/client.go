@@ -34,7 +34,7 @@ PIPE:
 		msg := c.Receive()
 		switch v := msg.(type) {
 		case redigo.Subscription:
-			logger.Infof("subscription: kind=%s channel=%s count=%d", v.Kind, v.Channel, v.Count)
+			logger.Infof("[socketio] subscription: kind=%s channel=%s count=%d", v.Kind, v.Channel, v.Count)
 			if v.Count == 0 {
 				break PIPE
 			}
@@ -42,7 +42,7 @@ PIPE:
 			c.C <- string(v.Data)
 		// when the connection is closed, redigo returns an error "connection closed" here
 		case error:
-			logger.Errorf("redis: error=%v", v)
+			logger.Errorf("[socketio] redis: error=%v", v)
 			break PIPE
 		}
 	}
@@ -55,7 +55,7 @@ func (c *Client) write() {
 	for msg := range c.C {
 		if c.Socket != nil {
 			if err := c.Socket.Emit(c.toEvent, msg); err != nil {
-				logger.Errorf("socketio: event '%s' emit error: %v", c.toEvent, err)
+				logger.Errorf("[socketio] event '%s' emit error: %v", c.toEvent, err)
 			}
 		}
 	}
@@ -77,7 +77,7 @@ func (c *Client) Stop() error {
 	// unsubscribe all channels
 	defer func() { <-c.done }()
 	if err := c.PubSubConn.Unsubscribe(); err != nil {
-		logger.Errorf("unsubscribe error: %v", err)
+		logger.Errorf("[socketio] unsubscribe error: %v", err)
 		return err
 	}
 	return nil

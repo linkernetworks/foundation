@@ -198,7 +198,7 @@ func TestAppsIsRunningFail(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	app.Container.Image = "I'm Exist"
+	app.Container.Image = "make_me_start_pod_fail"
 	pod, err := spawner.NewPod(wsApp)
 	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 

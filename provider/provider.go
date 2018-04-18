@@ -25,7 +25,7 @@ import (
 	"github.com/colinmarc/hdfs"
 )
 
-type Services struct {
+type Container struct {
 	Config    config.Config
 	Redis     *redis.Service
 	Socketio  *socketio.Service
@@ -49,7 +49,7 @@ type Services struct {
 }
 
 type ServiceDiscoverResponse struct {
-	Services map[string]Service `json:"services"`
+	Container map[string]Service `json:"services"`
 }
 
 type Service interface{}
@@ -70,7 +70,7 @@ func NewInfluxdbService(cf *config.InfluxdbConfig) *influxdb.InfluxdbService {
 	return &influxdb.InfluxdbService{Url: cf.Url}
 }
 
-func NewServiceProviderFromConfig(cf config.Config) *Services {
+func NewServiceProviderFromConfig(cf config.Config) *Container {
 	// setup logger configuration
 	logger.Setup(cf.App.Logger)
 
@@ -104,7 +104,7 @@ func NewServiceProviderFromConfig(cf config.Config) *Services {
 	logger.Infof("Connecting to mongodb: %s", cf.Mongo.Url)
 	mongo := mongo.New(cf.Mongo.Url)
 
-	sp := &Services{
+	sp := &Container{
 		Config:    cf,
 		Redis:     redisService,
 		Socketio:  socketService,
@@ -166,12 +166,12 @@ func NewHdfsService(cf config.Config) *hdfs.Client {
 
 }
 
-func NewServiceProvider(configPath string) *Services {
+func NewServiceProvider(configPath string) *Container {
 	cf := config.MustRead(configPath)
 	return NewServiceProviderFromConfig(cf)
 }
 
-func (s *Services) DiscoverServices() map[string]Service {
+func (s *Container) DiscoverServices() map[string]Service {
 	return map[string]Service{
 		"smartTrackerService": SmartTrackerService{
 			Redis:     s.Config.Redis.GetPublic(),

@@ -19,7 +19,6 @@ func CheckNetworkConnectivity(ip string, port int, protocol string, timeout int)
 			defer conn.Close()
 			break
 		}
-		fmt.Println(err)
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 

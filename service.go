@@ -50,7 +50,7 @@ func (s *Service) GetClient(token string) (c *Client, ok bool) {
 // Create client with a given token. Front-End can recover client with ths same token
 func (s *Service) NewClient(token string, socket socketio.Socket, psc *redigo.PubSubConn, toEvent string) *Client {
 	// Create new client
-	logger.Infof("socketio: a new client connected with new token: id=%s token=%s.", socket.Id(), token)
+	logger.Infof("[socketio] a new client connected: id=%s token=%s.", socket.Id(), token)
 	client := &Client{
 		PubSubConn: psc,
 		Socket:     socket,

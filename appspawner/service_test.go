@@ -123,6 +123,11 @@ func TestAppSpawnerService(t *testing.T) {
 }
 
 func TestAppsIsRunningSuccess(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	cf := config.MustRead(testingConfigPath)
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
@@ -161,6 +166,11 @@ func TestAppsIsRunningSuccess(t *testing.T) {
 }
 
 func TestAppsIsRunningFail(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
 	cf := config.MustRead(testingConfigPath)
 
 	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)

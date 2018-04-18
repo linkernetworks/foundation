@@ -116,7 +116,7 @@ func ScanDir(p string) ([]FileInfo, error) {
 	return fileInfos, nil
 }
 
-//This funtion remove all files under the directory but the directory itself
+//This function remove all files under the directory but the directory itself
 func RemoveDirContents(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if dir != path {

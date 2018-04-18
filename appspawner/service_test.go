@@ -6,7 +6,7 @@ import (
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
-	"bitbucket.org/linkernetworks/aurora/src/environment"
+	"bitbucket.org/linkernetworks/aurora/src/environment/presets"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
@@ -52,7 +52,7 @@ func TestAppSpawnerService(t *testing.T) {
 		Name:        "testing workspace",
 		Type:        "general",
 		Owner:       userId,
-		Environment: &environment.Tensorflow13Environment,
+		Environment: &presets.Tensorflow13Environment,
 	}
 
 	session := mongoService.NewSession()

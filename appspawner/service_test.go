@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"bitbucket.org/linkernetworks/aurora/src/apps"
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/presets"
@@ -92,7 +93,7 @@ func TestAppSpawnerService(t *testing.T) {
 	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
 
 	t.Logf("Starting webapp: pod=%s", wsApp.PodName())
-	_, err = spawner.Start(&ws, app)
+	_, err = spawner.Start(&ws, app, StartOption{Wait: false})
 	assert.NoError(t, err)
 
 	// allocattte anew podtracker to track the pod is running
@@ -119,4 +120,91 @@ func TestAppSpawnerService(t *testing.T) {
 	err = spawner.AddressUpdater.Reset(wsApp)
 	assert.NoError(t, err)
 
+}
+
+func TestAppsIsRunningSuccess(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
+	cf := config.MustRead(testingConfigPath)
+
+	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
+	mongoService := mongo.New(cf.Mongo.Url)
+	redisService := redis.New(cf.Redis)
+
+	clientset, err := kubernetesService.NewClientset()
+	assert.NoError(t, err)
+
+	spawner := New(cf, clientset, redisService, mongoService)
+
+	//Create a workspaceApp
+	//Create a k8s Pod
+	//Watchout
+	userId := bson.NewObjectId()
+	ws := entity.Workspace{
+		ID:          bson.NewObjectId(),
+		Name:        "testing fileserver",
+		Type:        "general",
+		Owner:       userId,
+		Environment: nil,
+	}
+
+	app := &apps.FileServerApp
+	assert.NotNil(t, app)
+
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
+	pod, err := spawner.NewPod(wsApp)
+	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
+
+	_, err = clientset.CoreV1().Pods("default").Create(pod)
+	assert.NoError(t, err)
+	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
+	pod = spawner.getRunningPod(wsApp, 30)
+	assert.NotNil(t, pod)
+}
+
+func TestAppsIsRunningFail(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
+	cf := config.MustRead(testingConfigPath)
+
+	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
+	mongoService := mongo.New(cf.Mongo.Url)
+	redisService := redis.New(cf.Redis)
+
+	clientset, err := kubernetesService.NewClientset()
+	assert.NoError(t, err)
+
+	spawner := New(cf, clientset, redisService, mongoService)
+
+	//Create a workspaceApp
+	//Create a k8s Pod
+	//Watchout
+	userId := bson.NewObjectId()
+	ws := entity.Workspace{
+		ID:          bson.NewObjectId(),
+		Name:        "testing fileserver",
+		Type:        "general",
+		Owner:       userId,
+		Environment: nil,
+	}
+
+	app := &apps.FileServerApp
+	assert.NotNil(t, app)
+
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
+	app.Container.Image = "make_me_start_pod_fail"
+	pod, err := spawner.NewPod(wsApp)
+	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
+
+	_, err = clientset.CoreV1().Pods("default").Create(pod)
+	assert.NoError(t, err)
+	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
+	pod = spawner.getRunningPod(wsApp, 5)
+	assert.Nil(t, pod)
 }

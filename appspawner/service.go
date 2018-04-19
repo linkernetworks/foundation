@@ -3,20 +3,25 @@ package appspawner
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
+	"bitbucket.org/linkernetworks/aurora/src/kubernetes/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -87,7 +92,7 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	return pod, nil
 }
 
-func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp) (tracker *podtracker.PodTracker, err error) {
+func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp, startOption StartOption) (tracker *podtracker.PodTracker, err error) {
 	app := appRef.Copy()
 	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
 	if appRef.UseEnvironmentImage {
@@ -131,6 +136,18 @@ func (s *AppSpawner) Start(ws *entity.Workspace, appRef *entity.ContainerApp) (t
 			logger.Errorf("failed to store instance id: %v", err)
 		}
 
+		//Check the connect
+		if startOption.Wait {
+			pod := s.getRunningPod(wsApp, startOption.Timeout)
+			if pod == nil {
+				return nil, fmt.Errorf("Can't start the application %s in %d seconds", wsApp.PodName(), startOption.Timeout)
+			}
+
+			port := &wsApp.Container.Ports[0]
+			if err := netutils.CheckNetworkConnectivity(pod.Status.PodIP, int(port.ContainerPort), port.Protocol, startOption.Timeout); err != nil {
+				return nil, fmt.Errorf("Can't connect to %s: %v", wsApp.PodName(), err)
+			}
+		}
 		return tracker, nil
 	}
 
@@ -195,4 +212,47 @@ func (s *AppSpawner) Stop(ws *entity.Workspace, appRef *entity.ContainerApp) (*p
 
 func (s *AppSpawner) getPod(name string) (*v1.Pod, error) {
 	return s.clientset.CoreV1().Pods(s.namespace).Get(name, metav1.GetOptions{})
+}
+
+func (s *AppSpawner) getRunningPod(wsApp *entity.WorkspaceApp, timeout int) *v1.Pod {
+	//Check is running
+	o := make(chan *v1.Pod)
+	var stop chan struct{}
+
+	_, controller := kubemon.WatchPods(s.clientset, s.namespace, fields.Everything(), cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod, ok := newObj.(*v1.Pod)
+			if !ok {
+				return
+			}
+			if pod.ObjectMeta.Name != wsApp.PodName() {
+				return
+			}
+
+			o <- pod
+		},
+	})
+
+	stop = make(chan struct{})
+	defer close(stop)
+	go controller.Run(stop)
+
+	var pod *v1.Pod
+	pod = nil
+	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
+Watch:
+	for {
+		select {
+		case <-ticker.C:
+			break Watch
+		case p := <-o:
+			if v1.PodRunning == p.Status.Phase {
+				pod = p
+				ticker.Stop()
+				break Watch
+			}
+		}
+	}
+
+	return pod
 }

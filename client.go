@@ -34,20 +34,21 @@ PIPE:
 		msg := c.Receive()
 		switch v := msg.(type) {
 		case redigo.Subscription:
-			logger.Infof("[socketio] subscription: kind=%s channel=%s count=%d", v.Kind, v.Channel, v.Count)
+			logger.Debugf("[socketio] subscription: kind=%s channel=%s count=%d", v.Kind, v.Channel, v.Count)
 			if v.Count == 0 {
+				logger.Debugf("[socketio] subscription count reached 0, exiting")
 				break PIPE
 			}
 		case redigo.Message:
 			c.C <- string(v.Data)
 		// when the connection is closed, redigo returns an error "connection closed" here
 		case error:
-			logger.Errorf("[socketio] redis: error=%v", v)
+			logger.Warnf("[socketio] redis reader error=%v", v)
 			break PIPE
 		}
 	}
 	close(c.C)
-	c.done <- true
+	close(c.done)
 }
 
 // emit chan message to socket event
@@ -55,30 +56,32 @@ func (c *Client) write() {
 	for msg := range c.C {
 		if c.Socket != nil {
 			if err := c.Socket.Emit(c.toEvent, msg); err != nil {
-				logger.Errorf("[socketio] event '%s' emit error: %v", c.toEvent, err)
+				logger.Errorf("[socketio] redis writer: event '%s' emit error: %v", c.toEvent, err)
 			}
 		}
 	}
 }
 
 func (c *Client) Start() {
-	c.C = make(chan string, c.BufSize)
 	c.done = make(chan bool)
+	c.C = make(chan string, c.BufSize)
 
-	// subscribe to system:events by default so the connectxion keeps at least
+	// subscribe to system:events by default so the connection keeps at least
 	// one subscription to prevent the read loop exits.
-	c.Subscribe("system:events")
+	// the loop won't exit if there is no topic subscribed yet
+	c.Subscribe(":magic:")
 
-	go c.write() // to socket event
-	go c.read()  // from redigo to chan
+	// open the redis connection and start reading before we start the go
+	// routine for writing.
+	go c.read() // from redigo to channel
+
+	// the write method is blocking, it will exit when the channel is closed.
+	go c.write() // from channel to socket event
 }
 
 func (c *Client) Stop() error {
-	// unsubscribe all channels
+	// wait for the reader exits, so that we can safely close the connection
 	defer func() { <-c.done }()
-	if err := c.PubSubConn.Unsubscribe(); err != nil {
-		logger.Errorf("[socketio] unsubscribe error: %v", err)
-		return err
-	}
-	return nil
+	// Unsubscribe all channels
+	return c.PubSubConn.Unsubscribe()
 }

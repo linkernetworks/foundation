@@ -1,6 +1,7 @@
 package socketio
 
 import (
+	"crypto/rand"
 	"net/http"
 	"testing"
 	"time"
@@ -70,26 +71,33 @@ func TestStream(t *testing.T) {
 		BufSize:    100,
 		ExpiredAt:  time.Now().Add(10 * time.Minute),
 	}
-	client.Subscribe("_test_socket_1_")
-	client.Subscribe("_test_socket_2_")
+
+	pb := make([]byte, 5)
+	_, err := rand.Read(pb)
+	assert.NoError(t, err)
+
+	client.Subscribe(string(pb) + "_test_socket_1_")
+	client.Subscribe(string(pb) + "_test_socket_2_")
 	client.Start()
 
-	go func() {
-		var err error
+	// we need to wait for the reader started reading from the topic
+	// there are few instructinos are needed before the read loop
+	time.Sleep(20 * time.Millisecond)
 
-		c2 := r.GetConnection()
-		_, err = c2.Do("PUBLISH", "_test_socket_1_", "message1")
-		assert.NoError(t, err)
+	// start a go routine to read the message from the channel
+	// you need to ensure that the client started listening the topic
+	c2 := r.GetConnection()
+	_, err = c2.Do("PUBLISH", string(pb)+"_test_socket_1_", "message1")
+	assert.NoError(t, err)
 
-		err = c2.Flush()
-		assert.NoError(t, err)
+	err = c2.Flush()
+	assert.NoError(t, err)
 
-		_, err = c2.Do("PUBLISH", "_test_socket_2_", "message2")
-		assert.NoError(t, err)
+	_, err = c2.Do("PUBLISH", string(pb)+"_test_socket_2_", "message2")
+	assert.NoError(t, err)
 
-		err = c2.Flush()
-		assert.NoError(t, err)
-	}()
+	err = c2.Flush()
+	assert.NoError(t, err)
 
 	m1 := <-socket.C
 	t.Logf("received the first message: %+v", m1)
@@ -99,6 +107,6 @@ func TestStream(t *testing.T) {
 	t.Logf("received the second message: %+v", m2)
 	assert.Equal(t, "message2", m2.Messages[0])
 
-	err := client.Stop()
+	err = client.Stop()
 	assert.NoError(t, err)
 }

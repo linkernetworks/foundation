@@ -70,7 +70,7 @@ func NewInfluxdbService(cf *config.InfluxdbConfig) *influxdb.InfluxdbService {
 	return &influxdb.InfluxdbService{Url: cf.Url}
 }
 
-func NewServiceProviderFromConfig(cf config.Config) *Container {
+func NewContainerFromConfig(cf config.Config) *Container {
 	// setup logger configuration
 	logger.Setup(cf.App.Logger)
 
@@ -166,9 +166,9 @@ func NewHdfsService(cf config.Config) *hdfs.Client {
 
 }
 
-func NewServiceProvider(configPath string) *Container {
+func NewContainer(configPath string) *Container {
 	cf := config.MustRead(configPath)
-	return NewServiceProviderFromConfig(cf)
+	return NewContainerFromConfig(cf)
 }
 
 func (s *Container) DiscoverServices() map[string]Service {

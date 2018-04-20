@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/logger"
@@ -95,18 +95,25 @@ func Rsync(src, dst string) error {
 	return nil
 }
 
-func ScanDir(p string, excludePrefix string) ([]FileInfo, error) {
+func ScanDir(p string, excludePatterns []string) ([]FileInfo, error) {
 	fileInfos := []FileInfo{}
 	files, err := ioutil.ReadDir(p)
 	if err != nil {
 		return fileInfos, err
 	}
 
-	for _, file := range files {
-		if excludePrefix != "" && strings.HasPrefix(file.Name(), excludePrefix) {
-			continue
-		}
+	exPattern := []regexp.Regexp{}
+	for _, v := range excludePatterns {
+		exPattern = append(exPattern, *regexp.MustCompile(v))
+	}
 
+CheckFile:
+	for _, file := range files {
+		for _, v := range exPattern {
+			if v.MatchString(file.Name()) {
+				continue CheckFile
+			}
+		}
 		fileInfos = append(fileInfos, FileInfo{
 			Name:    file.Name(),
 			Size:    file.Size(),

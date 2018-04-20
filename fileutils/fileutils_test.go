@@ -102,7 +102,7 @@ func TestCopyFile(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestScanDir(t *testing.T) {
+func TestScanDirWithoutFilter(t *testing.T) {
 	srcDir, err := ioutil.TempDir(".", "test")
 	defer os.RemoveAll(srcDir)
 	assert.NoError(t, err)
@@ -112,10 +112,31 @@ func TestScanDir(t *testing.T) {
 	f.Close()
 	assert.NoError(t, err)
 
-	fileInfos, err := ScanDir(srcDir)
+	fileInfos, err := ScanDir(srcDir, "")
 	assert.NoError(t, err)
 
 	assert.Equal(t, fileInfos[0].Name, testFile)
+	assert.Equal(t, fileInfos[0].Size, int64(0))
+	assert.Equal(t, fileInfos[0].IsDir, false)
+	assert.Equal(t, fileInfos[0].Type, "")
+}
+
+func TestScanDirWithFilter(t *testing.T) {
+	srcDir, err := ioutil.TempDir(".", "test")
+	defer os.RemoveAll(srcDir)
+	assert.NoError(t, err)
+
+	for _, file := range []string{".test", "test", ".cccc"} {
+		f, err := os.Create(srcDir + "/" + file)
+		f.Close()
+		assert.NoError(t, err)
+	}
+
+	fileInfos, err := ScanDir(srcDir, ".")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(fileInfos))
+
+	assert.Equal(t, fileInfos[0].Name, "test")
 	assert.Equal(t, fileInfos[0].Size, int64(0))
 	assert.Equal(t, fileInfos[0].IsDir, false)
 	assert.Equal(t, fileInfos[0].Type, "")

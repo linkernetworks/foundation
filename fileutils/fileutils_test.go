@@ -112,7 +112,7 @@ func TestScanDirWithoutFilter(t *testing.T) {
 	f.Close()
 	assert.NoError(t, err)
 
-	fileInfos, err := ScanDir(srcDir, "")
+	fileInfos, err := ScanDir(srcDir, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, fileInfos[0].Name, testFile)
@@ -126,17 +126,17 @@ func TestScanDirWithFilter(t *testing.T) {
 	defer os.RemoveAll(srcDir)
 	assert.NoError(t, err)
 
-	for _, file := range []string{".test", "test", ".cccc"} {
+	for _, file := range []string{".hidden_one", "i.am.normal.file", ".hidden_two"} {
 		f, err := os.Create(srcDir + "/" + file)
 		f.Close()
 		assert.NoError(t, err)
 	}
 
-	fileInfos, err := ScanDir(srcDir, ".")
+	fileInfos, err := ScanDir(srcDir, []string{"^\\."})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(fileInfos))
 
-	assert.Equal(t, fileInfos[0].Name, "test")
+	assert.Equal(t, fileInfos[0].Name, "i.am.normal.file")
 	assert.Equal(t, fileInfos[0].Size, int64(0))
 	assert.Equal(t, fileInfos[0].IsDir, false)
 	assert.Equal(t, fileInfos[0].Type, "")

@@ -14,3 +14,17 @@ func TestTruncateRedisDateTime(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TruncateRedisDateTime(&t1, time.Millisecond), &expect1)
 }
+
+func TestGetNowTime(t *testing.T) {
+	now := Now()
+	assert.NotNil(t, now)
+}
+func TestMax(t *testing.T) {
+	t1 := time.Duration(1)
+	t2 := time.Duration(2)
+
+	max := Max(t1, t2)
+	assert.Equal(t, t2, max)
+	max = Max(t2, t1)
+	assert.Equal(t, t2, max)
+}

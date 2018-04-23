@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
-	"bitbucket.org/linkernetworks/aurora/src/kubeconfig"
+	"github.com/linkernetworks/kubeconfig"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

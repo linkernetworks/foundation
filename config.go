@@ -21,21 +21,21 @@ type ServiceConfig interface {
 }
 
 type Config struct {
-	Redis         *RedisConfig      `json:"redis"`
-	Gearman       *GearmanConfig    `json:"gearman"`
-	Memcached     *MemcachedConfig  `json:"memcached"`
-	Mongo         *MongoConfig      `json:"mongo"`
-	Hdfs          *HdfsConfig       `json:"hdfs"`
-	App           *AppConfig        `json:"app"`
-	Jupyter       *JupyterConfig    `json:"jupyter"`
-	JobController *JobServerConfig  `json:"jobserver"`
-	JobUpdater    *JobUpdaterConfig `json:"jobupdater"`
-	Migration     *MigrationConfig  `json:"migration"`
-	Kudis         *KudisConfig      `json:"kudis"`
-	Influxdb      *InfluxdbConfig   `json:"influxdb"`
-	GoogleMap     *GoogleMapConfig  `json:"googlemap"`
-	Data          *DataConfig       `json:"data"`
-	Features      *FeatureConfig    `json:"features"`
+	Redis      *RedisConfig      `json:"redis"`
+	Gearman    *GearmanConfig    `json:"gearman"`
+	Memcached  *MemcachedConfig  `json:"memcached"`
+	Mongo      *MongoConfig      `json:"mongo"`
+	Hdfs       *HdfsConfig       `json:"hdfs"`
+	App        *AppConfig        `json:"app"`
+	Jupyter    *JupyterConfig    `json:"jupyter"`
+	JobServer  *JobServerConfig  `json:"jobserver"`
+	JobUpdater *JobUpdaterConfig `json:"jobupdater"`
+	Migration  *MigrationConfig  `json:"migration"`
+	Kudis      *KudisConfig      `json:"kudis"`
+	Influxdb   *InfluxdbConfig   `json:"influxdb"`
+	GoogleMap  *GoogleMapConfig  `json:"googlemap"`
+	Data       *DataConfig       `json:"data"`
+	Features   *FeatureConfig    `json:"features"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

@@ -122,7 +122,7 @@ func TestAppSpawnerService(t *testing.T) {
 
 }
 
-func TestAppsIsRunningSuccess(t *testing.T) {
+func TestAppsGetRunningSuccess(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return
@@ -165,7 +165,7 @@ func TestAppsIsRunningSuccess(t *testing.T) {
 	assert.NotNil(t, pod)
 }
 
-func TestAppsIsRunningFail(t *testing.T) {
+func TestAppsGetRunningFail(t *testing.T) {
 	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
 		t.SkipNow()
 		return
@@ -198,8 +198,8 @@ func TestAppsIsRunningFail(t *testing.T) {
 	assert.NotNil(t, app)
 
 	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
-	app.Container.Image = "make_me_start_pod_fail"
 	pod, err := spawner.NewPod(wsApp)
+	pod.Spec.Containers[0].Image = "make_me_Start_pod_fail"
 	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
 
 	_, err = clientset.CoreV1().Pods("default").Create(pod)
@@ -207,4 +207,53 @@ func TestAppsIsRunningFail(t *testing.T) {
 	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
 	pod = spawner.getRunningPod(wsApp, 5)
 	assert.Nil(t, pod)
+}
+
+/*
+	We can't test this function successful in the unit testing.
+	Since the testing is executed by a process which is not in the k8s cluster.
+	the process can't ping the sever in the k8s
+*/
+func TestAppsCheckConnectivityFail(t *testing.T) {
+	if _, defined := os.LookupEnv("TEST_K8S"); !defined {
+		t.SkipNow()
+		return
+	}
+
+	cf := config.MustRead(testingConfigPath)
+
+	kubernetesService := kubernetes.NewFromConfig(cf.Kubernetes)
+	mongoService := mongo.New(cf.Mongo.Url)
+	redisService := redis.New(cf.Redis)
+
+	clientset, err := kubernetesService.NewClientset()
+	assert.NoError(t, err)
+
+	spawner := New(cf, clientset, redisService, mongoService)
+
+	//Create a workspaceApp
+	//Create a k8s Pod
+	//Watchout
+	userId := bson.NewObjectId()
+	ws := entity.Workspace{
+		ID:          bson.NewObjectId(),
+		Name:        "testing fileserver",
+		Type:        "general",
+		Owner:       userId,
+		Environment: nil,
+	}
+
+	app := &apps.FileServerApp
+	assert.NotNil(t, app)
+
+	wsApp := &entity.WorkspaceApp{ContainerApp: app, Workspace: &ws}
+	pod, err := spawner.NewPod(wsApp)
+	assert.Equal(t, "fileserver-"+ws.ID.Hex()+"-"+app.ID, wsApp.PodName())
+
+	_, err = clientset.CoreV1().Pods("default").Create(pod)
+	assert.NoError(t, err)
+	defer clientset.CoreV1().Pods("default").Delete(wsApp.PodName(), nil)
+	exist, err := spawner.CheckConnectivity(&ws, app, 5)
+	assert.False(t, exist)
+	assert.NoError(t, err)
 }

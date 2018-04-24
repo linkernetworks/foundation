@@ -90,7 +90,7 @@ func New(cf config.Config) *Container {
 		time.Sleep(time.Second * 1)
 	}
 
-	logger.Infof("Using jobserver via gPRC: %s", cf.JobController.Addr())
+	logger.Infof("Using jobserver via gPRC: %s", cf.JobServer.Addr())
 
 	logger.Infof("Using kudis via gRPC: %s", cf.Kudis.Addr())
 

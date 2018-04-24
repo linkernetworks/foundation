@@ -2,11 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestJobControllerConfig(t *testing.T) {
+func TestJobServerConfig(t *testing.T) {
 	cf := JobServerConfig{}
 	jsontext := `{
 		"host": "localhost",

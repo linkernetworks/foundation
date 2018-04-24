@@ -256,3 +256,30 @@ Watch:
 
 	return pod
 }
+
+func (s *AppSpawner) CheckConnectivity(ws *entity.Workspace, appRef *entity.ContainerApp, timeout int) (bool, error) {
+	//If not running, return false
+	run, err := s.IsRunning(ws, appRef)
+	if err != nil {
+		return false, err
+	}
+	if !run {
+		return false, nil
+	}
+
+	//Get the Pod Object
+	app := appRef.Copy()
+	wsApp := &entity.WorkspaceApp{ContainerApp: &app, Workspace: ws}
+	pod, err := s.getPod(wsApp.PodName())
+	if err != nil {
+		return false, err
+	}
+
+	//Get the protocol from the wsApp
+	port := &wsApp.Container.Ports[0]
+	if err := netutils.CheckNetworkConnectivity(pod.Status.PodIP, int(port.ContainerPort), port.Protocol, timeout); err != nil {
+		return false, fmt.Errorf("Can't connect to %s: %v", wsApp.PodName(), err)
+	}
+
+	return true, nil
+}

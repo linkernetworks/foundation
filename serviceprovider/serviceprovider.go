@@ -6,8 +6,6 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
-	// "bitbucket.org/linkernetworks/aurora/src/kudisclient"
-	"bitbucket.org/linkernetworks/aurora/src/jobclient"
 	"bitbucket.org/linkernetworks/aurora/src/service/appspawner"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/googlemap"
@@ -33,7 +31,6 @@ type Container struct {
 	Mongo     *mongo.Service
 	Gearman   *gearman.Service
 	WebSocket *websocket.WebSocketService
-	JobClient *jobclient.Service
 	Kudis     *kudis.Service
 	Influxdb  *influxdb.InfluxdbService
 	GoogleMap *googlemap.GoogleMapService
@@ -93,11 +90,7 @@ func New(cf config.Config) *Container {
 		time.Sleep(time.Second * 1)
 	}
 
-	logger.Infof("Connecting to jobserver via gRPC: %s", cf.JobController.Addr())
-	jobClient, err := jobclient.NewInsecure(cf.JobController.Addr())
-	if err != nil {
-		panic(err)
-	}
+	logger.Infof("Using jobserver via gPRC: %s", cf.JobController.Addr())
 
 	logger.Infof("Using kudis via gRPC: %s", cf.Kudis.Addr())
 
@@ -111,7 +104,6 @@ func New(cf config.Config) *Container {
 		Timer:     gcService,
 		Mongo:     mongo,
 		WebSocket: websocket.NewWebSocketService(),
-		JobClient: &jobclient.Service{Client: jobClient},
 		Influxdb:  NewInfluxdbService(cf.Influxdb),
 		GoogleMap: googlemap.New(cf.GoogleMap.Key),
 	}

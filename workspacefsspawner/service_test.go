@@ -59,6 +59,7 @@ func (suite *WorkspaceServiceSuite) TestCRUD() {
 				MountPath: "fake",
 			},
 		},
+		Environment: &entity.TrainingEnvironment{},
 	}
 
 	wsApp := &entity.WorkspaceApp{Workspace: ws, ContainerApp: &apps.FileServerApp}
@@ -93,6 +94,7 @@ func (suite *WorkspaceServiceSuite) TestRestart() {
 				MountPath: "fake",
 			},
 		},
+		Environment: &entity.TrainingEnvironment{},
 	}
 
 	err := suite.Session.C(entity.WorkspaceCollectionName).Insert(ws)

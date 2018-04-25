@@ -240,7 +240,7 @@ func TestAppsCheckConnectivityFail(t *testing.T) {
 		Name:        "testing fileserver",
 		Type:        "general",
 		Owner:       userId,
-		Environment: nil,
+		Environment: presets.Alpine37,
 	}
 
 	app := &apps.FileServerApp

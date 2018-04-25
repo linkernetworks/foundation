@@ -91,7 +91,7 @@ func (u *ProxyAddressUpdater) NewSyncHandler(app *entity.WorkspaceApp) func(pod 
 					"ErrImageNeverPull",
 					"RegistryUnavailable",
 					"ErrInvalidImageName":
-					logger.Errorf("podproxy: container is waiting: reason=%s", cs.ContainerID, reason)
+					logger.Errorf("podproxy: container(id=%s) is waiting: reason=%s", cs.ContainerID, reason)
 
 					// stop tracking
 					stop = true

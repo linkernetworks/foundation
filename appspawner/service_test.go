@@ -148,7 +148,7 @@ func TestAppsGetRunningSuccess(t *testing.T) {
 		Name:        "testing fileserver",
 		Type:        "general",
 		Owner:       userId,
-		Environment: nil,
+		Environment: &entity.TrainingEnvironment{},
 	}
 
 	app := &apps.FileServerApp
@@ -191,7 +191,7 @@ func TestAppsGetRunningFail(t *testing.T) {
 		Name:        "testing fileserver",
 		Type:        "general",
 		Owner:       userId,
-		Environment: nil,
+		Environment: &entity.TrainingEnvironment{},
 	}
 
 	app := &apps.FileServerApp

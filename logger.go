@@ -28,11 +28,24 @@ func Setup(c config.LoggerConfig) {
 	configure(Logger, c)
 }
 
-// New a logger in scope
+// TODO Deprecate this:
+// dependent on type struct LoggerConfig in config pacakge
 func New(c config.LoggerConfig) *logrus.Logger {
 	var logger = logrus.New()
 	configure(logger, c)
 	return logger
+}
+
+// New a logger in scope
+func NewWithVars(dir, filePattern, linkName, maxAge, level string) {
+	c := config.LoggerConfig{
+		Dir:         dir,
+		FilePattern: filePattern,
+		LinkName:    linkName,
+		MaxAge:      maxAge,
+		Level:       level,
+	}
+	configure(Logger, c)
 }
 
 func configure(logger *logrus.Logger, c config.LoggerConfig) {

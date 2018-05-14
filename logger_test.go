@@ -12,8 +12,8 @@ func TestLoggerConfig(t *testing.T) {
 	cf := LoggerConfig{}
 	jsontext := `{
             "dir": "./logs",
-            "filePattern": "migration.log.%Y%m%d",
-            "linkName": "migration",
+            "suffixPattern": ".%Y%m%d",
+            "linkName": "migration.log",
             "level": "debug",
             "maxAge": "720h"
         }`
@@ -21,8 +21,8 @@ func TestLoggerConfig(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, cf.Dir, "./logs")
-	assert.Equal(t, cf.FilePattern, "migration.log.%Y%m%d")
-	assert.Equal(t, cf.LinkName, "migration")
+	assert.Equal(t, cf.SuffixPattern, ".%Y%m%d")
+	assert.Equal(t, cf.LinkName, "migration.log")
 	assert.Equal(t, cf.Level, "debug")
 	assert.Equal(t, cf.MaxAge, "720h")
 

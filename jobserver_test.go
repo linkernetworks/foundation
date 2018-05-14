@@ -21,7 +21,8 @@ func TestJobServerConfig(t *testing.T) {
 					"namespace": "default"
 				}
 			}
-		}
+		},
+    "logFileName": "jobupdater.log"
 	}`
 	err := json.Unmarshal([]byte(jsontext), &cf)
 	assert.NoError(t, err)

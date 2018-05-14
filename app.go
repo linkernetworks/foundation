@@ -1,7 +1,6 @@
 package config
 
 type AppConfig struct {
-	Logger   LoggerConfig    `json:"logger"`
 	Brand    BrandConfig     `json:"brand"`
 	Session  *SessionConfig  `json:"session"`
 	Socketio *SocketioConfig `json:"socketio"`
@@ -14,6 +13,7 @@ type AppConfig struct {
 	MaxThumbnailHeight uint   `json:"maxThumbnailHeight"`
 	DbVersion          string `json:"dbVersion"`
 	Version            string `json:"version"`
+	LogFileName        string `json:"logFileName"`
 }
 
 func (a *AppConfig) GetJobSetailURL(jobID string) string {

@@ -9,7 +9,7 @@ import (
 type JobServerConfig struct {
 	Host              string                      `json:"host"`
 	Port              int32                       `json:"port"`
-	Logger            LoggerConfig                `json:"logger"`
+	LogFileName       string                      `json:"logFileName"`
 	DeploymentTargets map[string]DeploymentConfig `json:"deploymentTargets"`
 	TickerSec         time.Duration               `json:"tickerSec"`
 }

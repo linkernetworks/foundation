@@ -26,6 +26,7 @@ type Config struct {
 	Memcached  *MemcachedConfig  `json:"memcached"`
 	Mongo      *MongoConfig      `json:"mongo"`
 	Hdfs       *HdfsConfig       `json:"hdfs"`
+	Logger     LoggerConfig      `json:"logger"`
 	App        *AppConfig        `json:"app"`
 	Jupyter    *JupyterConfig    `json:"jupyter"`
 	JobServer  *JobServerConfig  `json:"jobserver"`

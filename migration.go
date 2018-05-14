@@ -1,5 +1,5 @@
 package config
 
 type MigrationConfig struct {
-	Logger LoggerConfig `json:"logger"`
+	LogFileName string `json:"logFileName"`
 }

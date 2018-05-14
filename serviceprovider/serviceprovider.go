@@ -69,7 +69,7 @@ func NewInfluxdbService(cf *config.InfluxdbConfig) *influxdb.InfluxdbService {
 
 func New(cf config.Config) *Container {
 	// setup logger configuration
-	logger.Setup(cf.App.Logger)
+	logger.Setup(cf.Logger)
 
 	redisService := NewRedisService(cf.Redis)
 	socketService := socketio.New(cf.Socketio)

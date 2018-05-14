@@ -51,15 +51,16 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 		log.Panic(err)
 	}
 
-	filePattern := c.FilePattern
-	if filePattern == "" {
-		filePattern = "access_log.%Y%m%d"
-	}
 	linkName := c.LinkName
 	if linkName == "" {
 		linkName = "access_log"
 	}
 	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
+
+	filePattern := linkName + c.SuffixPattern
+	if filePattern == "" || c.SuffixPattern == "" {
+		filePattern = "access_log.%Y%m%d"
+	}
 
 	var maxAge = 24 * time.Hour
 	if d, err := time.ParseDuration(c.MaxAge); err == nil {

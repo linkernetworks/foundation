@@ -20,11 +20,11 @@ func TestLogger(t *testing.T) {
 func TestLoggerConfigure(t *testing.T) {
 	logger := logrus.New()
 	c := config.LoggerConfig{
-		Dir:         "./logs",
-		FilePattern: "access_log.%Y%m%d",
-		LinkName:    "access_log",
-		Level:       "info",
-		MaxAge:      "7d",
+		Dir:           "./logs",
+		SuffixPattern: ".%Y%m%d",
+		LinkName:      "access_log",
+		Level:         "info",
+		MaxAge:        "7d",
 	}
 	configure(logger, c)
 

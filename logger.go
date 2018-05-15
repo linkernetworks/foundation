@@ -20,7 +20,7 @@ func init() {
 	Logger = logrus.New()
 }
 
-// Setup Logger in packge. Enable Logger after import
+// Setup Logger in package. Enable Logger after import
 func Setup(c config.LoggerConfig) {
 	if Logger == nil {
 		Logger = logrus.New()
@@ -28,24 +28,11 @@ func Setup(c config.LoggerConfig) {
 	configure(Logger, c)
 }
 
-// TODO Deprecate this:
-// dependent on type struct LoggerConfig in config pacakge
+// Create Logger in package
 func New(c config.LoggerConfig) *logrus.Logger {
 	var logger = logrus.New()
 	configure(logger, c)
 	return logger
-}
-
-// New a logger in scope
-func NewWithVars(dir, filePattern, linkName, maxAge, level string) {
-	c := config.LoggerConfig{
-		Dir:         dir,
-		FilePattern: filePattern,
-		LinkName:    linkName,
-		MaxAge:      maxAge,
-		Level:       level,
-	}
-	configure(Logger, c)
 }
 
 func configure(logger *logrus.Logger, c config.LoggerConfig) {
@@ -68,7 +55,6 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 	if linkName == "" {
 		linkName = "access_log"
 	}
-	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
 
 	filePattern := linkName + c.SuffixPattern
 	if filePattern == "" || c.SuffixPattern == "" {
@@ -79,7 +65,6 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 	if d, err := time.ParseDuration(c.MaxAge); err == nil {
 		maxAge = d
 	}
-	logger.Infof("Max age of logs: %s", maxAge.String())
 
 	writer, err := rotatelogs.New(
 		path.Join(dir, filePattern),
@@ -115,6 +100,10 @@ func configure(logger *logrus.Logger, c config.LoggerConfig) {
 	default:
 		logger.SetLevel(logrus.InfoLevel)
 	}
+
+	logger.Infof("Starting Logger with log level: %s", c.Level)
+	logger.Infof("Start writing log to %s", path.Join(dir, linkName))
+	logger.Infof("Max age of logs: %s", maxAge.String())
 }
 
 func Info(args ...interface{}) {

@@ -48,7 +48,7 @@ func TestCheckNetworkFail(t *testing.T) {
 
 	go func() {
 		err := srv.ListenAndServe()
-		assert.Equal(t, err, http.ErrServerClosed)
+		assert.Equal(t, http.ErrServerClosed, err)
 		close(idleConnsClosed)
 	}()
 	err := CheckNetworkConnectivity("127.0.0.1", port-1, "tcp", 3)

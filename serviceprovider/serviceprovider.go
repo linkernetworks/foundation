@@ -58,12 +58,12 @@ type SmartTrackerService struct {
 	Memcached serviceconfig.ServiceConfig `json:"memcached"`
 }
 
-func NewRedisService(cf *config.RedisConfig) *redis.Service {
+func NewRedisService(cf *redis.RedisConfig) *redis.Service {
 	logger.Infof("Connecting to redis: %s", cf.Addr())
 	return redis.New(cf)
 }
 
-func NewInfluxdbService(cf *config.InfluxdbConfig) *influxdb.InfluxdbService {
+func NewInfluxdbService(cf *influxdb.InfluxdbConfig) *influxdb.InfluxdbService {
 	logger.Infof("Connecting to influxdb: %s", cf.Url)
 	return &influxdb.InfluxdbService{Url: cf.Url}
 }

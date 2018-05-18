@@ -1,14 +1,15 @@
 package config
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"net"
 	"strconv"
 )
 
 type KudisConfig struct {
-	Host   string       `json:"host"`
-	Port   int32        `json:"port"`
-	Logger LoggerConfig `json:"logger"`
+	Host   string              `json:"host"`
+	Port   int32               `json:"port"`
+	Logger logger.LoggerConfig `json:"logger"`
 }
 
 func (c *KudisConfig) LoadDefaults() error {

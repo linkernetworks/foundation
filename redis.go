@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"net"
 	"strconv"
 	"time"
@@ -56,7 +57,7 @@ func (c *RedisConfig) GetInterface() string {
 	return c.Interface
 }
 
-func (c *RedisConfig) GetPublic() ServiceConfig {
+func (c *RedisConfig) GetPublic() serviceconfig.ServiceConfig {
 	return c.Public
 }
 

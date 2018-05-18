@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"net"
 	"strconv"
 )
@@ -35,7 +36,7 @@ func (c *MemcachedConfig) GetInterface() string {
 	return c.Interface
 }
 
-func (c *MemcachedConfig) GetPublic() ServiceConfig {
+func (c *MemcachedConfig) GetPublic() serviceconfig.ServiceConfig {
 	return c.Public
 }
 

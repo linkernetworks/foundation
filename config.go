@@ -8,35 +8,29 @@ import (
 	"os"
 	"reflect"
 
+	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
+	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 
-type ServiceConfig interface {
-	SetHost(host string)
-	SetPort(port int32)
-	GetInterface() string
-	Unresolved() bool
-	GetPublic() ServiceConfig
-	DefaultLoader
-}
-
 type Config struct {
-	Redis      *RedisConfig      `json:"redis"`
-	Gearman    *GearmanConfig    `json:"gearman"`
-	Memcached  *MemcachedConfig  `json:"memcached"`
-	Mongo      *MongoConfig      `json:"mongo"`
-	Hdfs       *HdfsConfig       `json:"hdfs"`
-	Logger     LoggerConfig      `json:"logger"`
-	App        *AppConfig        `json:"app"`
-	Jupyter    *JupyterConfig    `json:"jupyter"`
-	JobServer  *JobServerConfig  `json:"jobserver"`
-	JobUpdater *JobUpdaterConfig `json:"jobupdater"`
-	Migration  *MigrationConfig  `json:"migration"`
-	Kudis      *KudisConfig      `json:"kudis"`
-	Influxdb   *InfluxdbConfig   `json:"influxdb"`
-	GoogleMap  *GoogleMapConfig  `json:"googlemap"`
-	Data       *DataConfig       `json:"data"`
-	Features   *FeatureConfig    `json:"features"`
+	Redis      *RedisConfig           `json:"redis"`
+	Gearman    *gearman.GearmanConfig `json:"gearman"`
+	Memcached  *MemcachedConfig       `json:"memcached"`
+	Mongo      *MongoConfig           `json:"mongo"`
+	Hdfs       *HdfsConfig            `json:"hdfs"`
+	Logger     logger.LoggerConfig    `json:"logger"`
+	App        *AppConfig             `json:"app"`
+	Jupyter    *JupyterConfig         `json:"jupyter"`
+	JobServer  *JobServerConfig       `json:"jobserver"`
+	JobUpdater *JobUpdaterConfig      `json:"jobupdater"`
+	Migration  *MigrationConfig       `json:"migration"`
+	Kudis      *KudisConfig           `json:"kudis"`
+	Influxdb   *InfluxdbConfig        `json:"influxdb"`
+	GoogleMap  *GoogleMapConfig       `json:"googlemap"`
+	Data       *DataConfig            `json:"data"`
+	Features   *FeatureConfig         `json:"features"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 
@@ -78,7 +72,7 @@ func (c *Config) GetModelArchiveDir() string {
 	return c.Data.ModelArchiveDir
 }
 
-func SetupServiceAddressFromInterface(c ServiceConfig) {
+func SetupServiceAddressFromInterface(c serviceconfig.ServiceConfig) {
 	if reflect.ValueOf(c).IsNil() {
 		return
 	}
@@ -120,7 +114,7 @@ func CanLoadDefaults(c interface{}) bool {
 	if inf == nil {
 		return false
 	}
-	_, ok := inf.(DefaultLoader)
+	_, ok := inf.(serviceconfig.DefaultLoader)
 	return ok
 }
 
@@ -133,7 +127,7 @@ func LoadDefaults(c interface{}) {
 	}
 	if CanLoadDefaults(rp.Interface()) {
 		if inf := rp.Interface(); inf != nil {
-			if loader, ok := inf.(DefaultLoader); ok {
+			if loader, ok := inf.(serviceconfig.DefaultLoader); ok {
 				if err := loader.LoadDefaults(); err != nil {
 					panic(fmt.Errorf("failed to load default values: %v", err))
 				}
@@ -150,7 +144,7 @@ func LoadDefaults(c interface{}) {
 			if inf == nil {
 				continue
 			}
-			if loader, ok := inf.(DefaultLoader); ok {
+			if loader, ok := inf.(serviceconfig.DefaultLoader); ok {
 				if err := loader.LoadDefaults(); err != nil {
 					panic(fmt.Errorf("failed to load default values: %v", err))
 				}

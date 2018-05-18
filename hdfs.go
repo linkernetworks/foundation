@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"net"
 	"strconv"
 )
@@ -45,7 +46,7 @@ func (c *HdfsConfig) GetInterface() string {
 	return c.Interface
 }
 
-func (c *HdfsConfig) GetPublic() ServiceConfig {
+func (c *HdfsConfig) GetPublic() serviceconfig.ServiceConfig {
 	return c.Public
 
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
+	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/appspawner"
@@ -52,9 +53,9 @@ type ServiceDiscoverResponse struct {
 type Service interface{}
 
 type SmartTrackerService struct {
-	Redis     config.ServiceConfig `json:"redis"`
-	Gearman   config.ServiceConfig `json:"gearman"`
-	Memcached config.ServiceConfig `json:"memcached"`
+	Redis     serviceconfig.ServiceConfig `json:"redis"`
+	Gearman   serviceconfig.ServiceConfig `json:"gearman"`
+	Memcached serviceconfig.ServiceConfig `json:"memcached"`
 }
 
 func NewRedisService(cf *config.RedisConfig) *redis.Service {

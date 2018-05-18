@@ -1,9 +1,7 @@
 package gearman
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/config"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
-
 	"github.com/mikespook/gearman-go/client"
 )
 
@@ -22,7 +20,7 @@ type JobCallbacks struct {
 	OnStatus    func(data []byte, err error) error
 }
 
-func NewFromConfig(cf *config.GearmanConfig) *Service {
+func NewFromConfig(cf *GearmanConfig) *Service {
 	return &Service{Bind: cf.Addr()}
 }
 

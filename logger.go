@@ -6,7 +6,6 @@ import (
 	"path"
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/config"
 	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
@@ -20,22 +19,22 @@ func init() {
 	Logger = logrus.New()
 }
 
-// Setup Logger in package. Enable Logger after import
-func Setup(c config.LoggerConfig) {
+// Setup Logger in packge. Enable Logger after import
+func Setup(c LoggerConfig) {
 	if Logger == nil {
 		Logger = logrus.New()
 	}
 	configure(Logger, c)
 }
 
-// Create Logger in package
-func New(c config.LoggerConfig) *logrus.Logger {
+// New a logger in scope
+func New(c LoggerConfig) *logrus.Logger {
 	var logger = logrus.New()
 	configure(logger, c)
 	return logger
 }
 
-func configure(logger *logrus.Logger, c config.LoggerConfig) {
+func configure(logger *logrus.Logger, c LoggerConfig) {
 	logger.Formatter = new(prefixed.TextFormatter)
 
 	// preparing log dir

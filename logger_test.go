@@ -3,8 +3,6 @@ package logger
 import (
 	"testing"
 
-	"bitbucket.org/linkernetworks/aurora/src/config"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +17,7 @@ func TestLogger(t *testing.T) {
 
 func TestLoggerConfigure(t *testing.T) {
 	logger := logrus.New()
-	c := config.LoggerConfig{
+	c := LoggerConfig{
 		Dir:           "./logs",
 		SuffixPattern: ".%Y%m%d",
 		LinkName:      "access_log",

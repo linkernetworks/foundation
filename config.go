@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
+	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 
@@ -18,7 +19,7 @@ type Config struct {
 	Redis      *RedisConfig           `json:"redis"`
 	Gearman    *gearman.GearmanConfig `json:"gearman"`
 	Memcached  *MemcachedConfig       `json:"memcached"`
-	Mongo      *MongoConfig           `json:"mongo"`
+	Mongo      *mongo.MongoConfig     `json:"mongo"`
 	Hdfs       *HdfsConfig            `json:"hdfs"`
 	Logger     logger.LoggerConfig    `json:"logger"`
 	App        *AppConfig             `json:"app"`

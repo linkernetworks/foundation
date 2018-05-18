@@ -11,27 +11,29 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
+	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"bitbucket.org/linkernetworks/aurora/src/service/redis"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 
 type Config struct {
-	Redis      *RedisConfig           `json:"redis"`
-	Gearman    *gearman.GearmanConfig `json:"gearman"`
-	Memcached  *MemcachedConfig       `json:"memcached"`
-	Mongo      *mongo.MongoConfig     `json:"mongo"`
-	Hdfs       *HdfsConfig            `json:"hdfs"`
-	Logger     logger.LoggerConfig    `json:"logger"`
-	App        *AppConfig             `json:"app"`
-	Jupyter    *JupyterConfig         `json:"jupyter"`
-	JobServer  *JobServerConfig       `json:"jobserver"`
-	JobUpdater *JobUpdaterConfig      `json:"jobupdater"`
-	Migration  *MigrationConfig       `json:"migration"`
-	Kudis      *KudisConfig           `json:"kudis"`
-	Influxdb   *InfluxdbConfig        `json:"influxdb"`
-	GoogleMap  *GoogleMapConfig       `json:"googlemap"`
-	Data       *DataConfig            `json:"data"`
-	Features   *FeatureConfig         `json:"features"`
+	Redis      *redis.RedisConfig       `json:"redis"`
+	Gearman    *gearman.GearmanConfig   `json:"gearman"`
+	Memcached  *MemcachedConfig         `json:"memcached"`
+	Mongo      *mongo.MongoConfig       `json:"mongo"`
+	Hdfs       *HdfsConfig              `json:"hdfs"`
+	Logger     logger.LoggerConfig      `json:"logger"`
+	App        *AppConfig               `json:"app"`
+	Jupyter    *JupyterConfig           `json:"jupyter"`
+	JobServer  *JobServerConfig         `json:"jobserver"`
+	JobUpdater *JobUpdaterConfig        `json:"jobupdater"`
+	Migration  *MigrationConfig         `json:"migration"`
+	Kudis      *KudisConfig             `json:"kudis"`
+	Influxdb   *influxdb.InfluxdbConfig `json:"influxdb"`
+	GoogleMap  *GoogleMapConfig         `json:"googlemap"`
+	Data       *DataConfig              `json:"data"`
+	Features   *FeatureConfig           `json:"features"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

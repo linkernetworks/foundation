@@ -1,7 +1,7 @@
 package gearman
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 	"github.com/mikespook/gearman-go/client"
 )
 

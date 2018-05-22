@@ -2,7 +2,7 @@ package socketio
 
 import (
 	"bitbucket.org/linkernetworks/aurora/src/config"
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 	"errors"
 	"fmt"
 	socketio "github.com/c9s/go-socket.io"

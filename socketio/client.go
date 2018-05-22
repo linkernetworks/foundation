@@ -3,7 +3,7 @@ package socketio
 import (
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 
 	socketio "github.com/c9s/go-socket.io"
 	redigo "github.com/gomodule/redigo/redis"

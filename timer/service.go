@@ -3,7 +3,7 @@ package timer
 import (
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 )
 
 type TimerHandler func() error

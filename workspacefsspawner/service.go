@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"bitbucket.org/linkernetworks/aurora/src/apps"
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 
 	_ "bitbucket.org/linkernetworks/aurora/src/aurora"
 	"bitbucket.org/linkernetworks/aurora/src/config"

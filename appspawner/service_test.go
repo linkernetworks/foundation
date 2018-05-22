@@ -11,7 +11,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"github.com/linkernetworks/mongo"
 	"github.com/linkernetworks/redis"
 
 	"bitbucket.org/linkernetworks/aurora/src/workspace"

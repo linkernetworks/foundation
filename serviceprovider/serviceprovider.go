@@ -14,14 +14,14 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/kudis"
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"github.com/linkernetworks/redis"
 	"bitbucket.org/linkernetworks/aurora/src/service/session"
 	"bitbucket.org/linkernetworks/aurora/src/service/socketio"
 	"bitbucket.org/linkernetworks/aurora/src/service/timer"
 	"bitbucket.org/linkernetworks/aurora/src/service/websocket"
 	"bitbucket.org/linkernetworks/aurora/src/service/workspacefsspawner"
 	"github.com/colinmarc/hdfs"
+	"github.com/linkernetworks/mongo"
+	"github.com/linkernetworks/redis"
 )
 
 type Container struct {

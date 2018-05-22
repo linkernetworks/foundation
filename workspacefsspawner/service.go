@@ -21,7 +21,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 
 	//FIXME, wait PR#444
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"github.com/linkernetworks/mongo"
 	"github.com/linkernetworks/redis"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"

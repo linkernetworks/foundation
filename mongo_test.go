@@ -1,7 +1,7 @@
 package config
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
+	"github.com/linkernetworks/mongo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 

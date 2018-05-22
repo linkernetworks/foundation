@@ -9,12 +9,12 @@ import (
 	"reflect"
 
 	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
-	"github.com/linkernetworks/logger"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
-	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"github.com/linkernetworks/redis"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
+	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/mongo"
+	"github.com/linkernetworks/redis"
 )
 
 type Config struct {

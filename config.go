@@ -9,7 +9,7 @@ import (
 	"reflect"
 
 	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"

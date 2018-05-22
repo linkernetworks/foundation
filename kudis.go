@@ -1,7 +1,7 @@
 package config
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 	"net"
 	"strconv"
 )

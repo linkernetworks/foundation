@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/logger"
+	"github.com/linkernetworks/logger"
 	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
 )
 

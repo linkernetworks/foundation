@@ -8,7 +8,7 @@ import (
 	"os"
 	"reflect"
 
-	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
+	"github.com/linkernetworks/serviceconfig"
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"

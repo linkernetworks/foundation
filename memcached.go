@@ -1,7 +1,7 @@
 package config
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
+	"github.com/linkernetworks/serviceconfig"
 	"net"
 	"strconv"
 )

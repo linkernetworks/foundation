@@ -6,7 +6,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/logger"
 
 	socketio "github.com/c9s/go-socket.io"
-	redigo "github.com/garyburd/redigo/redis"
+	redigo "github.com/gomodule/redigo/redis"
 )
 
 type Client struct {

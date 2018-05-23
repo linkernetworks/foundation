@@ -1,0 +1,6 @@
+**/*.log
+logs
+
+# govendor
+vendor/*
+!/vendor/vendor.json

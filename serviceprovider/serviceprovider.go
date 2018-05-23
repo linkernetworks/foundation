@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/config"
-	"bitbucket.org/linkernetworks/aurora/src/config/serviceconfig"
+	"github.com/linkernetworks/serviceconfig"
 	"github.com/linkernetworks/logger"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/appspawner"

@@ -9,7 +9,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 	"bitbucket.org/linkernetworks/aurora/src/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

@@ -15,7 +15,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/kudis"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 	"bitbucket.org/linkernetworks/aurora/src/service/session"
 	"bitbucket.org/linkernetworks/aurora/src/service/socketio"
 	"bitbucket.org/linkernetworks/aurora/src/service/timer"

@@ -15,7 +15,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 
 	"bitbucket.org/linkernetworks/aurora/src/workspace"
 

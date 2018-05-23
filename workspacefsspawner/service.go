@@ -22,7 +22,7 @@ import (
 
 	//FIXME, wait PR#444
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"

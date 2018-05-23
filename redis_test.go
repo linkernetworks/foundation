@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"bitbucket.org/linkernetworks/aurora/src/jobcontroller/types"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 	"github.com/stretchr/testify/assert"
 )
 

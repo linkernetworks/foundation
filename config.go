@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/service/mongo"
-	"bitbucket.org/linkernetworks/aurora/src/service/redis"
+	"github.com/linkernetworks/redis"
 	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
 )
 

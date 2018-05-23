@@ -12,9 +12,9 @@ import (
 
 // Reverse Proxy that supports both pure HTTP request and
 type AnyProxy struct {
-	backend        string
-	websocketProxy *websocketproxy.WebsocketProxy
-	httpProxy      *httputil.ReverseProxy
+	Backend        string
+	WebsocketProxy *websocketproxy.WebsocketProxy
+	HttpProxy      *httputil.ReverseProxy
 }
 
 func NewWithWebsocketProxy(backend string, wsp *websocketproxy.WebsocketProxy) (*AnyProxy, error) {
@@ -24,9 +24,9 @@ func NewWithWebsocketProxy(backend string, wsp *websocketproxy.WebsocketProxy) (
 	}
 
 	return &AnyProxy{
-		backend:        backend,
-		httpProxy:      httputil.NewSingleHostReverseProxy(httpURL),
-		websocketProxy: wsp,
+		Backend:        backend,
+		HttpProxy:      httputil.NewSingleHostReverseProxy(httpURL),
+		WebsocketProxy: wsp,
 	}, nil
 
 }
@@ -45,9 +45,9 @@ func New(backend string) (*AnyProxy, error) {
 	}
 
 	return &AnyProxy{
-		backend:        backend,
-		httpProxy:      httputil.NewSingleHostReverseProxy(httpURL),
-		websocketProxy: websocketproxy.NewProxy(wsURL),
+		Backend:        backend,
+		HttpProxy:      httputil.NewSingleHostReverseProxy(httpURL),
+		WebsocketProxy: websocketproxy.NewProxy(wsURL),
 	}, nil
 }
 
@@ -55,8 +55,8 @@ func New(backend string) (*AnyProxy, error) {
 // connections.
 func (p *AnyProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Connection") == "Upgrade" || r.Header.Get("Sec-WebSocket-Protocol") != "" {
-		p.websocketProxy.ServeHTTP(w, r)
+		p.WebsocketProxy.ServeHTTP(w, r)
 	} else {
-		p.httpProxy.ServeHTTP(w, r)
+		p.HttpProxy.ServeHTTP(w, r)
 	}
 }

@@ -1,0 +1,120 @@
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "public": {
+            "host": "localhost"
+        }
+    },
+    "memcached": {
+        "host": "localhost",
+        "port": 11211,
+        "public": {
+            "host": "localhost"
+        }
+    },
+    "gearman": {
+        "host": "localhost",
+        "port": 4730,
+        "public": {
+            "host": "localhost"
+        }
+    },
+    "mongo": {
+        "url": "mongodb://localhost:27017/example"
+    },
+    "kubernetes": {
+        "namespace": "default",
+        "context": "contest"
+    },
+    "influxdb": {
+        "url": "http://localhost:8086",
+        "database": "traininglog"
+    },
+    "socketio": {
+        "maxConnection": 10000
+    },
+    "logger":{
+            "dir": "./logs",
+            "level": "debug",
+            "maxAge": "720h",
+            "suffixPattern": ".%Y%m%d",
+            "linkName": "access_log"
+    },
+    "app": {
+        "brand": {
+            "name": "Example",
+            "identifier": "example",
+            "companyName": "Linker Networks Inc."
+        },
+        "session": {
+            "size": 10,
+            "protocal": "tcp",
+            "redisUrl": "localhost:6379",
+            "password": "",
+            "age": 108000,
+            "keyPair": "example"
+        },
+        "socketio": {
+            "maxConnection": 10000
+        },
+        "baseURL": "https://baseurl",
+        "enableAuthentication": false,
+        "maxThumbnailWidth": 200,
+        "maxThumbnailHeight": 200,
+        "dbVersion": "v0.0.1",
+        "version": "testing",
+        "logFileName": "access_log"
+    },
+    "jupyter": {
+        "defaultImage": "jupyter/minimal-notebook",
+        "cache": {
+            "age": 3600
+        },
+        "dev": {
+            "baseUrl": "/proxy",
+            "hostAddress": "localhost:8888"
+        }
+    },
+    "jobserver": {
+        "host": "localhost",
+        "port": 50051,
+        "deploymentTargets": {
+            "default": {
+                "type": "kubernetes",
+                "kubernetes": {
+                    "namespace": "default",
+                    "context": "context"
+                }
+            }
+        },
+        "tickerSec": 300,
+        "logFileName": "jobserver.log"
+    },
+    "jobupdater": {
+        "bufferSize": 120,
+        "logFileName": "jobupdater.log"
+    },
+    "migration": {
+        "logFileName": "migration.log"
+    },
+    "kudis": {
+        "host": "localhost",
+        "port": 52087
+    },
+    "dataDir": "./data",
+    "data": {
+        "imageDir": "./data/images",
+        "thumbnailDIr": "./data/thumbnails",
+        "batchDir": "./data/batches",
+        "archiveDir": "./data/batches/archives",
+        "modelDir": "./data/models",
+        "modelArchiveDir": "./data/models/archives"
+    },
+    "googlemap": {
+        "key": "key"
+    },
+    "features": {
+        "devices": false
+    }
+}

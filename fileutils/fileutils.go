@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/linkernetworks/logger"
-	"bitbucket.org/linkernetworks/aurora/src/utils/sysutils"
+	"github.com/linkernetworks/utils/sysutils"
 )
 
 type FileInfo struct {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/config"
+	"github.com/linkernetworks/config"
 	"github.com/linkernetworks/redis"
 
 	"github.com/stretchr/testify/assert"

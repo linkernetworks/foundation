@@ -1,7 +1,7 @@
 package socketio
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/config"
+	"github.com/linkernetworks/config"
 	"github.com/linkernetworks/logger"
 	"errors"
 	"fmt"

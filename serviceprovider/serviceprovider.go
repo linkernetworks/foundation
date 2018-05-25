@@ -3,7 +3,7 @@ package serviceprovider
 import (
 	"time"
 
-	"bitbucket.org/linkernetworks/aurora/src/config"
+	"github.com/linkernetworks/config"
 	"github.com/linkernetworks/serviceconfig"
 	"github.com/linkernetworks/logger"
 

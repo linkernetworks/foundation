@@ -1,7 +1,7 @@
 package kudis
 
 import (
-	"bitbucket.org/linkernetworks/aurora/src/config"
+	"github.com/linkernetworks/config"
 )
 
 type Service struct {

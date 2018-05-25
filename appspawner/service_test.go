@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"bitbucket.org/linkernetworks/aurora/src/apps"
-	"bitbucket.org/linkernetworks/aurora/src/config"
+	"github.com/linkernetworks/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/presets"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"

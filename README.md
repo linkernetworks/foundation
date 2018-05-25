@@ -1,4 +1,4 @@
-Mongo
+InfluxDB
 ====
 
 [![Build Status](https://travis-ci.org/linkernetworks/influxdb.svg?branch=master)](https://travis-ci.org/linkernetworks/influxdb)

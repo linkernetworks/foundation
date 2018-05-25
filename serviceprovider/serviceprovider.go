@@ -8,10 +8,10 @@ import (
 	"github.com/linkernetworks/logger"
 
 	"bitbucket.org/linkernetworks/aurora/src/service/appspawner"
-	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
+	"github.com/linkernetworks/gearman"
 	"bitbucket.org/linkernetworks/aurora/src/service/googlemap"
 	hdfsservice "bitbucket.org/linkernetworks/aurora/src/service/hdfs"
-	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
+	"github.com/linkernetworks/influxdb"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
 	"bitbucket.org/linkernetworks/aurora/src/service/kudis"
 	"bitbucket.org/linkernetworks/aurora/src/service/session"

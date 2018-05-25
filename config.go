@@ -9,9 +9,9 @@ import (
 	"reflect"
 
 	"github.com/linkernetworks/serviceconfig"
-	"bitbucket.org/linkernetworks/aurora/src/service/gearman"
-	"bitbucket.org/linkernetworks/aurora/src/service/influxdb"
-	"bitbucket.org/linkernetworks/aurora/src/utils/netutils"
+	"github.com/linkernetworks/gearman"
+	"github.com/linkernetworks/influxdb"
+	"github.com/linkernetworks/utils/netutils"
 	"github.com/linkernetworks/logger"
 	"github.com/linkernetworks/mongo"
 	"github.com/linkernetworks/redis"

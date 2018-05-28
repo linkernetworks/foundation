@@ -116,5 +116,22 @@
     },
     "features": {
         "devices": false
+    },
+    "oauth": {
+        "expiryDuration": 3600,
+        "host": "",
+        "port": "",
+        "passwordEnctyption":{
+          "salt": "1234567890abcdef",
+          "n": 16384,
+          "r": 8,
+          "p": 1,
+          "length": 32
+        }
+    },
+    "twilio": {
+        "sid": "123",
+        "token": "456",
+        "callfrom": "+789"
     }
 }

@@ -8,13 +8,14 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/linkernetworks/serviceconfig"
 	"github.com/linkernetworks/gearman"
 	"github.com/linkernetworks/influxdb"
-	"github.com/linkernetworks/utils/netutils"
 	"github.com/linkernetworks/logger"
 	"github.com/linkernetworks/mongo"
+	oauth "github.com/linkernetworks/oauth/app"
 	"github.com/linkernetworks/redis"
+	"github.com/linkernetworks/serviceconfig"
+	"github.com/linkernetworks/utils/netutils"
 )
 
 type Config struct {
@@ -34,6 +35,8 @@ type Config struct {
 	GoogleMap  *GoogleMapConfig         `json:"googlemap"`
 	Data       *DataConfig              `json:"data"`
 	Features   *FeatureConfig           `json:"features"`
+	Oauth      oauth.OauthConfig        `json:"oauth"`
+	Twilio     oauth.TwilioCOnfig       `json:"twilio"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

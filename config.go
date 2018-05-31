@@ -36,8 +36,8 @@ type Config struct {
 	GoogleMap  *GoogleMapConfig         `json:"googlemap"`
 	Data       *DataConfig              `json:"data"`
 	Features   *FeatureConfig           `json:"features"`
-	Oauth      oauth.OAuthConfig        `json:"oauth"`
-	Twilio     sms.TwilioConfig         `json:"twilio"`
+	Oauth      *oauth.OAuthConfig       `json:"oauth"`
+	Twilio     *sms.TwilioConfig        `json:"twilio"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

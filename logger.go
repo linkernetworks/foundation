@@ -84,6 +84,7 @@ func configure(logger *logrus.Logger, c LoggerConfig) {
 				logrus.ErrorLevel: writer,
 				logrus.FatalLevel: writer,
 			},
+			&logrus.JSONFormatter{},
 		),
 	)
 

@@ -80,3 +80,13 @@ func Unauthorized(req *http.Request, resp http.ResponseWriter, errs ...error) (i
 func InternalServerError(req *http.Request, resp http.ResponseWriter, errs ...error) (int, error) {
 	return WriteStatusAndError(req, resp, http.StatusInternalServerError, errs...)
 }
+
+// Response http.StatusConflict
+func Conflict(req *http.Request, resp http.ResponseWriter, errs ...error) (int, error) {
+	return WriteStatusAndError(req, resp, http.StatusConflict, errs...)
+}
+
+// Response http.StatusUnprocessableEntity
+func UnprocessableEntity(req *http.Request, resp http.ResponseWriter, errs ...error) (int, error) {
+	return WriteStatusAndError(req, resp, http.StatusUnprocessableEntity, errs...)
+}

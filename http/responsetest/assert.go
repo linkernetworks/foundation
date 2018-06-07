@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"bitbucket.org/linkernetworks/aurora/src/net/http/response"
+	response "bitbucket.org/linkernetworks/aurora/src/net/http"
 
 	"encoding/json"
 	"encoding/xml"

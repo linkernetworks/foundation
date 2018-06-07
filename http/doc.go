@@ -10,4 +10,4 @@
 // To use the responsetest pacakge to verify the HTTP response:
 //
 //  responsetest.AssertErrorMessage(t, resp, "some error message")
-package response
+package http

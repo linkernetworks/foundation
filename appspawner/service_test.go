@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"bitbucket.org/linkernetworks/aurora/src/apps"
-	"github.com/linkernetworks/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/presets"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
 	"bitbucket.org/linkernetworks/aurora/src/service/kubernetes"
+	"github.com/linkernetworks/config"
 	"github.com/linkernetworks/mongo"
 	"github.com/linkernetworks/redis"
 
@@ -90,7 +90,7 @@ func TestAppSpawnerService(t *testing.T) {
 	}
 
 	assert.Equal(t, 2, len(pod.Spec.Volumes))
-	assert.Equal(t, 2, len(pod.Spec.Containers[0].VolumeMounts))
+	assert.Equal(t, 3, len(pod.Spec.Containers[0].VolumeMounts))
 
 	t.Logf("Starting webapp: pod=%s", wsApp.PodName())
 	_, err = spawner.Start(&ws, app, StartOption{Wait: false})

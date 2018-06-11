@@ -75,10 +75,14 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	}
 	pod := factory.NewPod(app)
 
+	siteURL, existed := os.LookupEnv("SITE_URL")
+	if !existed {
+		siteURL = "http://localhost:9096"
+	}
 	env := []v1.EnvVar{
 		{
 			Name:  "AURORA_BASE_URL",
-			Value: os.Getenv("SITE_URL"),
+			Value: siteURL,
 		},
 	}
 	for i, _ := range pod.Spec.Containers {

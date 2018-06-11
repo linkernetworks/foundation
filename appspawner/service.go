@@ -3,16 +3,17 @@ package appspawner
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/linkernetworks/config"
 	"bitbucket.org/linkernetworks/aurora/src/entity"
 	"bitbucket.org/linkernetworks/aurora/src/environment/podfactory"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/kubemon"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podproxy"
 	"bitbucket.org/linkernetworks/aurora/src/kubernetes/pod/podtracker"
-	"github.com/linkernetworks/utils/netutils"
+	"github.com/linkernetworks/config"
 	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/utils/netutils"
 
 	"github.com/linkernetworks/mongo"
 	"github.com/linkernetworks/redis"
@@ -77,7 +78,7 @@ func (s *AppSpawner) NewPod(app *entity.WorkspaceApp) (*v1.Pod, error) {
 	env := []v1.EnvVar{
 		{
 			Name:  "AURORA_BASE_URL",
-			Value: s.Config.App.BaseURL,
+			Value: os.Getenv("SITE_URL"),
 		},
 	}
 	for i, _ := range pod.Spec.Containers {

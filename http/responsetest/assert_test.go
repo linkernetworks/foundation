@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	response "bitbucket.org/linkernetworks/aurora/src/net/http"
+	response "github.com/linkernetworks/net/http"
 
 	"github.com/stretchr/testify/assert"
 )

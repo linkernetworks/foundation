@@ -1,7 +1,7 @@
 package kudis
 
 import (
-	pb "bitbucket.org/linkernetworks/aurora/src/kubernetes/kudis/pb"
+	pb "github.com/linkernetworks/kube/kudis/pb"
 	"google.golang.org/grpc"
 )
 

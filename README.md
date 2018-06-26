@@ -1,4 +1,4 @@
-logger
+
 ===
 
 [![Build Status](https://travis-ci.org/linkernetworks/session.svg?branch=master)](https://travis-ci.org/linkernetworks/session)

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/linkernetworks/serviceconfig"
+	"github.com/linkernetworks/foundation/service/serviceconfig"
 	"net"
 	"strconv"
 )

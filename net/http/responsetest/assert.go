@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	response "github.com/linkernetworks/net/http"
+	response "github.com/linkernetworks/foundation/net/http"
 
 	"encoding/json"
 	"encoding/xml"

@@ -12,8 +12,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/linkernetworks/logger"
-	"github.com/linkernetworks/utils/sysutils"
+	"github.com/linkernetworks/foundation/logger"
+	"github.com/linkernetworks/foundation/utils/sysutils"
 )
 
 type FileInfo struct {

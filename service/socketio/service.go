@@ -1,8 +1,8 @@
 package socketio
 
 import (
-	"github.com/linkernetworks/config"
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/config"
+	"github.com/linkernetworks/foundation/logger"
 	"errors"
 	"fmt"
 	socketio "github.com/c9s/go-socket.io"

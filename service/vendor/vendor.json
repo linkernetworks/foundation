@@ -845,19 +845,19 @@
 		},
 		{
 			"checksumSHA1": "ZhjkfAPQ1hqwwB+9j6GJ87tEnic=",
-			"path": "github.com/linkernetworks/config",
+			"path": "github.com/linkernetworks/foundation/config",
 			"revision": "cbdafe0080a7c89be42fa877ffb56d4f31456461",
 			"revisionTime": "2018-05-31T09:50:42Z"
 		},
 		{
 			"checksumSHA1": "WCxdMPK7lH+ioCiLYCs7ZE7msHs=",
-			"path": "github.com/linkernetworks/gearman",
+			"path": "github.com/linkernetworks/foundation/service/gearman",
 			"revision": "00fe5cdcf5ea006ce07ee865d773cfd151b9eb4e",
 			"revisionTime": "2018-05-25T05:43:38Z"
 		},
 		{
 			"checksumSHA1": "9t3LloU9ZmgeFE1blkKyXap0jyY=",
-			"path": "github.com/linkernetworks/influxdb",
+			"path": "github.com/linkernetworks/foundation/service/influxdb",
 			"revision": "ad9cd5b7d4402a0cbd0613d043d48fb6e476d8bd",
 			"revisionTime": "2018-05-25T05:46:49Z"
 		},
@@ -921,31 +921,31 @@
 		},
 		{
 			"checksumSHA1": "uCYqD6c+GHNpMwKgK4J5dqg/oho=",
-			"path": "github.com/linkernetworks/logger",
+			"path": "github.com/linkernetworks/foundation/logger",
 			"revision": "a3fc27192cf938c0683015d747a6799102381829",
 			"revisionTime": "2018-05-23T10:12:32Z"
 		},
 		{
 			"checksumSHA1": "d+/a/7GAX6PtYQbbFUY1R/TPfn0=",
-			"path": "github.com/linkernetworks/mongo",
+			"path": "github.com/linkernetworks/foundation/service/mongo",
 			"revision": "5d0f9307d6b6f54a019820c42e132eb503e51028",
 			"revisionTime": "2018-05-23T09:31:59Z"
 		},
 		{
 			"checksumSHA1": "SpB9VyH0SsaCgkpd7bxTVYU/P6E=",
-			"path": "github.com/linkernetworks/net/http",
+			"path": "github.com/linkernetworks/foundation/net/http",
 			"revision": "946701828d6c210239143ab54cb1506fc6131d5e",
 			"revisionTime": "2018-06-19T03:23:25Z"
 		},
 		{
 			"checksumSHA1": "+qQthbnqoC+7df5Z1DjPeimh5tc=",
-			"path": "github.com/linkernetworks/net/http/proxy",
+			"path": "github.com/linkernetworks/foundation/net/http/proxy",
 			"revision": "946701828d6c210239143ab54cb1506fc6131d5e",
 			"revisionTime": "2018-06-19T03:23:25Z"
 		},
 		{
 			"checksumSHA1": "0yX/6zrzHbziopAvvZQZS2nHhJs=",
-			"path": "github.com/linkernetworks/net/http/query",
+			"path": "github.com/linkernetworks/foundation/net/http/query",
 			"revision": "946701828d6c210239143ab54cb1506fc6131d5e",
 			"revisionTime": "2018-06-19T03:23:25Z"
 		},
@@ -997,37 +997,37 @@
 		},
 		{
 			"checksumSHA1": "gPGlywe21cA6SuD6R1xbTntW1fc=",
-			"path": "github.com/linkernetworks/redis",
+			"path": "github.com/linkernetworks/foundation/service/redis",
 			"revision": "5d54c7e9d23f75032121cf5aaa8b27e8914a5c10",
 			"revisionTime": "2018-06-04T18:46:57Z"
 		},
 		{
 			"checksumSHA1": "TQX5BsBmDBaZIBOZDAb0JCAUwKE=",
-			"path": "github.com/linkernetworks/service/hdfs",
+			"path": "github.com/linkernetworks/foundation/service/hdfs",
 			"revision": "3c16efa7ef9b0ca7b54d682a36be096e46902daf",
 			"revisionTime": "2018-06-20T06:20:53Z"
 		},
 		{
 			"checksumSHA1": "LbiUcNbGvjTUPkQOD9tj1rDoVGg=",
-			"path": "github.com/linkernetworks/service/kubernetes",
+			"path": "github.com/linkernetworks/foundation/service/kubernetes",
 			"revision": "3c16efa7ef9b0ca7b54d682a36be096e46902daf",
 			"revisionTime": "2018-06-20T06:20:53Z"
 		},
 		{
 			"checksumSHA1": "8ejg/kxhpSBDPHteEQwFgLqbank=",
-			"path": "github.com/linkernetworks/serviceconfig",
+			"path": "github.com/linkernetworks/foundation/service/serviceconfig",
 			"revision": "1a3a6c6228e3e958b2e42535ef173804470f0884",
 			"revisionTime": "2018-05-18T07:18:51Z"
 		},
 		{
 			"checksumSHA1": "4JsvqaG0QzmGlfcDliSLRETBzlM=",
-			"path": "github.com/linkernetworks/session",
+			"path": "github.com/linkernetworks/foundation/net/http/session",
 			"revision": "d837446a842c81d6eaa6433d9acb27a459afed49",
 			"revisionTime": "2018-05-25T09:31:07Z"
 		},
 		{
 			"checksumSHA1": "644361SzNJWliTa94SioaVw5Cvc=",
-			"path": "github.com/linkernetworks/socketio",
+			"path": "github.com/linkernetworks/foundation/service/socketio",
 			"revision": "e6bf7bf4992b0a8cacdd8806319e946ef36066c2",
 			"revisionTime": "2018-05-25T09:41:46Z"
 		},
@@ -1039,43 +1039,43 @@
 		},
 		{
 			"checksumSHA1": "tjG4ZOolLlEvWSHtqiqy9scyA1c=",
-			"path": "github.com/linkernetworks/utils/fileutils",
+			"path": "github.com/linkernetworks/foundation/utils/fileutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "P+guEMErWKIr5DoM7EPTUF1kBKM=",
-			"path": "github.com/linkernetworks/utils/netutils",
+			"path": "github.com/linkernetworks/foundation/utils/netutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "xpJyMFSBUDIYg1jQJYcbd/7zZE8=",
-			"path": "github.com/linkernetworks/utils/pathutils",
+			"path": "github.com/linkernetworks/foundation/utils/pathutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "NmmOhV05rb6yIaAYP6LOsTjG/uc=",
-			"path": "github.com/linkernetworks/utils/sysutils",
+			"path": "github.com/linkernetworks/foundation/utils/sysutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "VhqBRQc5yPx5d0ZfsT9t+skffa0=",
-			"path": "github.com/linkernetworks/utils/tarutils",
+			"path": "github.com/linkernetworks/foundation/utils/tarutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "8bkCE7r0DcTaPDbKbwaI34Bmrbw=",
-			"path": "github.com/linkernetworks/utils/timeutils",
+			"path": "github.com/linkernetworks/foundation/utils/timeutils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
 		{
 			"checksumSHA1": "TQfCjdEe3lE2tcAwmLscD6/3IDc=",
-			"path": "github.com/linkernetworks/utils/ziputils",
+			"path": "github.com/linkernetworks/foundation/utils/ziputils",
 			"revision": "fc841ef3e077f653b532679e7789c1fd7591e9c0",
 			"revisionTime": "2018-05-25T06:14:58Z"
 		},
@@ -1087,7 +1087,7 @@
 		},
 		{
 			"checksumSHA1": "hsYWfMmKgi/7nrPkdWTiAuDheeg=",
-			"path": "github.com/linkernetworks/websocket",
+			"path": "github.com/linkernetworks/foundation/service/websocket",
 			"revision": "3cdbfbc4a3bcbb3dbdb4dc6e4f646b35f1a13ad4",
 			"revisionTime": "2018-05-25T09:22:46Z"
 		},
@@ -2792,5 +2792,5 @@
 			"revision": ""
 		}
 	],
-	"rootPath": "github.com/linkernetworks/service"
+	"rootPath": "github.com/linkernetworks/foundation/service"
 }

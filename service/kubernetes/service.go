@@ -1,9 +1,9 @@
 package kubernetes
 
 import (
-	"github.com/linkernetworks/config"
+	"github.com/linkernetworks/foundation/config"
 	"github.com/linkernetworks/kubeconfig"
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/logger"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 

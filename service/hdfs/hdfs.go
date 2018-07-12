@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/logger"
 	"github.com/colinmarc/hdfs"
 )
 

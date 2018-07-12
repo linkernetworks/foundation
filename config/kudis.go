@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/logger"
 	"net"
 	"strconv"
 )

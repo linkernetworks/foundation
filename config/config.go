@@ -8,15 +8,15 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/linkernetworks/gearman"
-	"github.com/linkernetworks/influxdb"
-	"github.com/linkernetworks/logger"
-	"github.com/linkernetworks/mongo"
+	"github.com/linkernetworks/foundation/service/gearman"
+	"github.com/linkernetworks/foundation/service/influxdb"
+	"github.com/linkernetworks/foundation/logger"
+	"github.com/linkernetworks/foundation/service/mongo"
 	oauth "github.com/linkernetworks/oauth/app/config"
 	sms "github.com/linkernetworks/oauth/sms"
-	"github.com/linkernetworks/redis"
-	"github.com/linkernetworks/serviceconfig"
-	"github.com/linkernetworks/utils/netutils"
+	"github.com/linkernetworks/foundation/service/redis"
+	"github.com/linkernetworks/foundation/service/serviceconfig"
+	"github.com/linkernetworks/foundation/utils/netutils"
 )
 
 type Config struct {

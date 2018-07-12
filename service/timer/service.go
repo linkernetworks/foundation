@@ -3,7 +3,7 @@ package timer
 import (
 	"time"
 
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/logger"
 )
 
 type TimerHandler func() error

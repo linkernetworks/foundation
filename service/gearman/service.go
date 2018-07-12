@@ -1,7 +1,7 @@
 package gearman
 
 import (
-	"github.com/linkernetworks/logger"
+	"github.com/linkernetworks/foundation/logger"
 	"github.com/mikespook/gearman-go/client"
 )
 

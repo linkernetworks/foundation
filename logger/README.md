@@ -15,7 +15,7 @@ govendor sync
 ##### Example
 
 ```
-import "github.com/linkernetworks/logger"
+import "github.com/linkernetworks/foundation/logger"
 cf := logger.LoggerConfig
 logger.Setup(cf)
 

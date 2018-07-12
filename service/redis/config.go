@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/linkernetworks/serviceconfig"
+	"github.com/linkernetworks/foundation/service/serviceconfig"
 )
 
 type RedisPoolConfig struct {

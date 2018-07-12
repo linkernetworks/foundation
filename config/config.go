@@ -12,8 +12,6 @@ import (
 	"github.com/linkernetworks/foundation/service/influxdb"
 	"github.com/linkernetworks/foundation/logger"
 	"github.com/linkernetworks/foundation/service/mongo"
-	oauth "github.com/linkernetworks/oauth/app/config"
-	sms "github.com/linkernetworks/oauth/sms"
 	"github.com/linkernetworks/foundation/service/redis"
 	"github.com/linkernetworks/foundation/service/serviceconfig"
 	"github.com/linkernetworks/foundation/utils/netutils"
@@ -36,8 +34,6 @@ type Config struct {
 	GoogleMap  *GoogleMapConfig         `json:"googlemap"`
 	Data       *DataConfig              `json:"data"`
 	Features   *FeatureConfig           `json:"features"`
-	Oauth      *oauth.OAuthConfig       `json:"oauth"`
-	Twilio     *sms.TwilioConfig        `json:"twilio"`
 
 	Socketio *SocketioConfig `json:"socketio"`
 

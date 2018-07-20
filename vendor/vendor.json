@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "DriMqHJDIx3WqJIEhMPrG23pE4Q=",
-			"path": "github.com/caarlos0/env",
-			"revision": "bc122c26dc2d72f6904a9e0cb940ca508660067c",
-			"revisionTime": "2018-07-02T19:56:40Z"
+			"checksumSHA1": "d8KsRg6DhXtmC8rg9RCOux5Gi60=",
+			"path": "github.com/joeshaw/envdecode",
+			"revision": "c9e0158544672841c3ebf49308f536d918f2e525",
+			"revisionTime": "2018-03-03T00:14:13Z"
 		}
 	],
 	"rootPath": "github.com/linkernetworks/foundation"

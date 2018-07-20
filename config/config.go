@@ -8,13 +8,15 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/linkernetworks/foundation/logger"
 	"github.com/linkernetworks/foundation/service/gearman"
 	"github.com/linkernetworks/foundation/service/influxdb"
-	"github.com/linkernetworks/foundation/logger"
 	"github.com/linkernetworks/foundation/service/mongo"
 	"github.com/linkernetworks/foundation/service/redis"
 	"github.com/linkernetworks/foundation/service/serviceconfig"
 	"github.com/linkernetworks/foundation/utils/netutils"
+
+	"github.com/joeshaw/envdecode"
 )
 
 type Config struct {
@@ -169,6 +171,9 @@ func Read(path string) (c Config, err error) {
 	SetupAddressFromInterface(&c)
 
 	LoadDefaults(&c)
+
+	// override the variables from the environment variable
+	envdecode.Decode(&c)
 
 	return c, nil
 }

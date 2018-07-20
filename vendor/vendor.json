@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "DriMqHJDIx3WqJIEhMPrG23pE4Q=",
+			"path": "github.com/caarlos0/env",
+			"revision": "bc122c26dc2d72f6904a9e0cb940ca508660067c",
+			"revisionTime": "2018-07-02T19:56:40Z"
+		}
+	],
+	"rootPath": "github.com/linkernetworks/foundation"
+}

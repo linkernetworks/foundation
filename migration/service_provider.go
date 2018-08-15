@@ -5,7 +5,7 @@ import (
 	"github.com/linkernetworks/foundation/service/mongo"
 )
 
-type Container interface {
+type ServiceContainer interface {
 	GetConfig() config.Config
 	GetMongo() *mongo.Service
 }

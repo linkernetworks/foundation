@@ -37,7 +37,7 @@ func (m Migration) GetCollection() string {
 	return MigrationCollectionName
 }
 
-type MigrationFunction func(Container) error
+type MigrationFunction func(ServiceContainer) error
 
 func NewMigration(scriptId string, description string, f MigrationFunction) Migration {
 	ret := strings.Split(scriptId, "-")
@@ -72,7 +72,7 @@ func FindMigrationByScriptId(session *mongo.Session, sid string) (*Migration, er
 	return m, nil
 }
 
-func RunMigration(session *mongo.Session, ms Migration, as Container) error {
+func RunMigration(session *mongo.Session, ms Migration, as ServiceContainer) error {
 	defer func() {
 		if r := recover(); r != nil {
 			var errMsg = fmt.Sprintf("handling panic script=%s error=%v: \n===STACKTRACE===\n%s\n===END OF STACKTRACE===", ms.ScriptId, r, debug.Stack())
@@ -119,7 +119,7 @@ func RunMigration(session *mongo.Session, ms Migration, as Container) error {
 	return nil
 }
 
-func Migrate(as Container, dbVersion string, migrationScripts []Migration) ([]Migration, error) {
+func Migrate(as ServiceContainer, dbVersion string, migrationScripts []Migration) ([]Migration, error) {
 	session := as.GetMongo().NewSession()
 	defer session.Close()
 
